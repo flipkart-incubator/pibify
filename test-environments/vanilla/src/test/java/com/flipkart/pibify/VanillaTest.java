@@ -1,7 +1,10 @@
 package com.flipkart.pibify;
 
 
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.flipkart.pibify.codegen.TagPredictor;
 import com.flipkart.pibify.validation.InvalidPibifyAnnotation;
 import org.junit.jupiter.api.Test;
@@ -39,6 +42,13 @@ public class VanillaTest {
     public void serializeClassWithNativeFieldsJson() throws IOException {
         String serialized = objectMapper.writeValueAsString(nativeFields);
         assertNotNull(serialized);
+    }
+
+    @Test
+    public void getBeanProperties() {
+        JavaType javaType = TypeFactory.defaultInstance().constructType(nativeFields.getClass());
+        BeanDescription beanDescription = objectMapper.getSerializationConfig().introspect(javaType);
+        assertEquals(9, beanDescription.findProperties().size());
     }
 
     @Test

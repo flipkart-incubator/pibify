@@ -11,8 +11,6 @@ import java.io.IOException;
  * Date 27/07/24
  */
 public class ClassWithNativeFieldsSerializer {
-    // TODO This should be estimated based on the fields present in this class, estimation would break with collections
-    private final int estimatedBufferSize = 0;
 
     public static byte[] serialize(ClassWithNativeFields pojo) throws IOException {
         ISerializer serializer = new PibifySerializer();
