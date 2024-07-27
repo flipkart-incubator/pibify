@@ -9,6 +9,7 @@
   <properties>
     <auto-service.version>1.1.1</auto-service.version>
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+    <protobuf-java.version>3.13.0</protobuf-java.version>
   </properties>
 
   <build>
@@ -27,18 +28,24 @@
   <name>pibify-annotation-processor</name>
   <url>http://url-here</url>
   <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
+      <dependency>
+          <groupId>org.junit.jupiter</groupId>
+          <artifactId>junit-jupiter-engine</artifactId>
+          <version>5.9.1</version>
+          <scope>test</scope>
+      </dependency>
 
-    <dependency>
-      <groupId>com.google.auto.service</groupId>
-      <artifactId>auto-service</artifactId>
-      <version>${auto-service.version}</version>
-    </dependency>
+      <dependency>
+          <groupId>com.google.auto.service</groupId>
+          <artifactId>auto-service</artifactId>
+          <version>${auto-service.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.google.protobuf</groupId>
+          <artifactId>protobuf-java</artifactId>
+          <version>${protobuf-java.version}</version>
+      </dependency>
 
   </dependencies>
 </project>

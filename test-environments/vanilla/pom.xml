@@ -16,32 +16,88 @@
   <build>
     <plugins>
       <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <version>${maven-compiler-plugin.version}</version>
-        <configuration>
-          <source>8</source>
-          <target>8</target>
-
-          <annotationProcessors>
-            <annotationProcessor>com.flipkart.pibify.processor.PibifyProcessor</annotationProcessor>
-          </annotationProcessors>
-        </configuration>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${maven-compiler-plugin.version}</version>
+          <configuration>
+              <source>8</source>
+              <target>8</target>
+              <!--          <annotationProcessors>-->
+              <!--            <annotationProcessor>com.flipkart.pibify.processor.PibifyProcessor</annotationProcessor>-->
+              <!--          </annotationProcessors>-->
+              <annotationProcessorPaths>
+                  <path>
+                      <groupId>org.openjdk.jmh</groupId>
+                      <artifactId>jmh-generator-annprocess</artifactId>
+                      <version>1.37</version>
+                  </path>
+                  <path>
+                      <groupId>com.flipkart.pibify</groupId>
+                      <artifactId>pibify-annotation-processor</artifactId>
+                      <version>${pibify-annotation-processor.version}</version>
+                  </path>
+              </annotationProcessorPaths>
+          </configuration>
       </plugin>
+
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <executions>
+                <execution>
+                    <id>run-benchmarks</id>
+                    <phase>integration-test</phase>
+                    <goals>
+                        <goal>exec</goal>
+                    </goals>
+                    <configuration>
+                        <classpathScope>test</classpathScope>
+                        <executable>java</executable>
+                        <arguments>
+                            <argument>-classpath</argument>
+                            <classpath/>
+                            <argument>org.openjdk.jmh.Main</argument>
+                            <argument>.*</argument>
+                        </arguments>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
     </plugins>
   </build>
-  <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>com.flipkart.pibify</groupId>
-      <artifactId>pibify-annotation-processor</artifactId>
-      <version>${pibify-annotation-processor.version}</version>
-      <scope>compile</scope>
-    </dependency>
-  </dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>5.9.1</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>2.17.2</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.37</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-generator-annprocess</artifactId>
+            <version>1.37</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.flipkart.pibify</groupId>
+            <artifactId>pibify-annotation-processor</artifactId>
+            <version>${pibify-annotation-processor.version}</version>
+            <scope>compile</scope>
+        </dependency>
+    </dependencies>
 </project>

@@ -44,6 +44,19 @@ public class PibifyProcessor extends AbstractProcessor {
     }
 
     private static class ElementVisitor implements javax.lang.model.element.ElementVisitor<Object, RoundEnvironment> {
+
+        /**
+         * This visitor should do the following
+         * 1. Get the context of the Class we are processing
+         * 2. Create a serde stub for the class
+         * 3. iterate through elements, keep adding to field level serde
+         * 4. Dump to file
+         *
+         * @param e
+         * @param o
+         * @return
+         */
+
         @Override
         public Object visit(Element e, RoundEnvironment o) {
             return null;
