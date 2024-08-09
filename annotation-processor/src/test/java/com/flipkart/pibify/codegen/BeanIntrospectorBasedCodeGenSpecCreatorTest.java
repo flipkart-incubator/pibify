@@ -212,7 +212,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollections.class);
         assertNotNull(codeGenSpec);
-        assertEquals(3, codeGenSpec.getFields().size());
+        assertEquals(4, codeGenSpec.getFields().size());
 
         Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
@@ -234,6 +234,17 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
         assertNotNull(field.getType().containerType);
         assertEquals(CodeGenSpec.DataType.INT, field.getType().containerType.nativeType);
+
+        field = nameToFields.get("aMap");
+        assertEquals("aMap", field.getName());
+        assertEquals("getaMap", field.getGetter());
+        assertEquals("setaMap", field.getSetter());
+        assertEquals(3, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.MAP, field.getType().nativeType);
+        assertNotNull(field.getType().containerType);
+        assertNotNull(field.getType().followingContainerTypes);
+        assertEquals(CodeGenSpec.DataType.FLOAT, field.getType().containerType.nativeType);
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().followingContainerTypes.get(0).nativeType);
 
         field = nameToFields.get("aCollection");
         assertEquals("aCollection", field.getName());

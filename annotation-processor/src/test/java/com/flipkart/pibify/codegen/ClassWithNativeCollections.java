@@ -20,7 +20,7 @@ public class ClassWithNativeCollections {
     @Pibify(2)
     private Set<Integer> anInt;
 
-    //@Pibify(3)
+    @Pibify(3)
     private Map<Float, Boolean> aMap;
 
     @Pibify(4)

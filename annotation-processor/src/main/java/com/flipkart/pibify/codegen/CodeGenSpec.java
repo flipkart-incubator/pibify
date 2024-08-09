@@ -71,6 +71,7 @@ public class CodeGenSpec {
         /* Containers */
         ARRAY,
         COLLECTION,
+        MAP,
         OBJECT,
 
         UNKNOWN /*These types will be serde'd using json */
@@ -133,5 +134,6 @@ public class CodeGenSpec {
     public static class Type {
         DataType nativeType;
         Type containerType;
+        List<Type> followingContainerTypes;
     }
 }
