@@ -10,6 +10,7 @@
     <auto-service.version>1.1.1</auto-service.version>
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
     <protobuf-java.version>3.13.0</protobuf-java.version>
+    <javapoet.version>1.13.0</javapoet.version>
   </properties>
 
   <build>
@@ -45,6 +46,12 @@
           <groupId>com.google.protobuf</groupId>
           <artifactId>protobuf-java</artifactId>
           <version>${protobuf-java.version}</version>
+      </dependency>
+
+      <dependency>
+          <groupId>com.squareup</groupId>
+          <artifactId>javapoet</artifactId>
+          <version>${javapoet.version}</version>
       </dependency>
 
   </dependencies>
