@@ -71,7 +71,9 @@ public class CodeGenSpec {
         /* Containers */
         ARRAY,
         COLLECTION,
-        OBJECT
+        OBJECT,
+
+        UNKNOWN /*These types will be serde'd using json */
     }
 
     public enum ContainerType {

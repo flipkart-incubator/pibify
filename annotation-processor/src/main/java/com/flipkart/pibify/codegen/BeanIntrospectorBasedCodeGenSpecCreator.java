@@ -8,7 +8,12 @@ import java.beans.FeatureDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -37,7 +42,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     String name = reflectedField.getName();
                     fieldSpec.setIndex(annotation.value());
                     fieldSpec.setName(name);
-                    fieldSpec.setType(getTypeFromJavaType(reflectedField.getType()));
+                    fieldSpec.setType(getTypeFromJavaType(reflectedField, reflectedField.getType()));
                     fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
                     fieldSpec.setSetter(namesToBeanInfo.get(name).getWriteMethod().getName());
                     spec.addField(fieldSpec);
@@ -50,9 +55,9 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
     }
 
-    private CodeGenSpec.Type getTypeFromJavaType(Class<?> type) {
+    private CodeGenSpec.Type getTypeFromJavaType(Field reflectedField, Class<?> type) {
         CodeGenSpec.Type specType = new CodeGenSpec.Type();
-        CodeGenSpec.DataType nativeType = CodeSpecMeta.NATIVE_TYPE_MAP.get(type.getSimpleName());
+        CodeGenSpec.DataType nativeType = CodeSpecMeta.CLASS_TO_TYPE_MAP.get(type);
 
         if (nativeType != null) {
             specType.nativeType = nativeType;
@@ -61,7 +66,19 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             if (type.isArray()) {
                 Class<?> arrayType = type.getComponentType();
                 specType.nativeType = CodeGenSpec.DataType.ARRAY;
-                specType.containerType = getTypeFromJavaType(arrayType);
+                specType.containerType = getTypeFromJavaType(reflectedField, arrayType);
+            } else if (Collection.class.isAssignableFrom(type)) {
+                specType.nativeType = CodeGenSpec.DataType.COLLECTION;
+                ParameterizedType genericType = (ParameterizedType) reflectedField.getGenericType();
+                Type actualTypeArgument = genericType.getActualTypeArguments()[0];
+                if (actualTypeArgument instanceof Class) {
+                    Class<?> typeParamClass = (Class<?>) actualTypeArgument;
+                    specType.containerType = getTypeFromJavaType(reflectedField, typeParamClass);
+                } else if (actualTypeArgument instanceof WildcardType) {
+                    specType.containerType = getUnknownType();
+                } else {
+                    throw new UnsupportedOperationException(type.getSimpleName() + " not supported");
+                }
             } else {
                 // not supported
                 throw new UnsupportedOperationException(type.getSimpleName() + " not supported");
@@ -69,5 +86,11 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
 
         return specType;
+    }
+
+    private CodeGenSpec.Type getUnknownType() {
+        CodeGenSpec.Type type = new CodeGenSpec.Type();
+        type.nativeType = CodeGenSpec.DataType.UNKNOWN;
+        return type;
     }
 }
