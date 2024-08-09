@@ -8,7 +8,6 @@ import java.beans.FeatureDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -29,11 +28,6 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             Map<String, PropertyDescriptor> namesToBeanInfo = Arrays.stream(beanInfo.getPropertyDescriptors())
                     .collect(Collectors.toMap(FeatureDescriptor::getName, f -> f));
 
-            Map<String, Field> namesToField = Arrays.stream(type.getDeclaredFields())
-                    .filter(f -> f.getAnnotation(Pibify.class) != null)
-                    .collect(Collectors.toMap(Field::getName, f -> f));
-
-            // TODO fix package and class name
             CodeGenSpec spec = new CodeGenSpec(type.getCanonicalName(), type.getSimpleName());
 
             for (java.lang.reflect.Field reflectedField : type.getDeclaredFields()) {
@@ -62,10 +56,18 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
         if (nativeType != null) {
             specType.nativeType = nativeType;
-            return specType;
         } else {
-            // not native
-            throw new UnsupportedOperationException(type.getSimpleName() + " not supported");
+
+            if (type.isArray()) {
+                Class<?> arrayType = type.getComponentType();
+                specType.nativeType = CodeGenSpec.DataType.ARRAY;
+                specType.containerType = getTypeFromJavaType(arrayType);
+            } else {
+                // not supported
+                throw new UnsupportedOperationException(type.getSimpleName() + " not supported");
+            }
         }
+
+        return specType;
     }
 }
