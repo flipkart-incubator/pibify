@@ -183,8 +183,8 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setaString", field.getSetter());
         assertEquals(1, field.getIndex());
         assertEquals(CodeGenSpec.DataType.ARRAY, field.getType().nativeType);
-        assertEquals(CodeGenSpec.DataType.STRING, field.getType().containerType.nativeType);
-        assertNull(field.getType().containerType.containerType);
+        assertEquals(CodeGenSpec.DataType.STRING, field.getType().containerTypes.get(0).nativeType);
+        assertNull(field.getType().containerTypes.get(0).containerTypes);
 
         field = nameToFields.get("anInt");
         assertEquals("anInt", field.getName());
@@ -192,8 +192,8 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setAnInt", field.getSetter());
         assertEquals(2, field.getIndex());
         assertEquals(CodeGenSpec.DataType.ARRAY, field.getType().nativeType);
-        assertEquals(CodeGenSpec.DataType.INT, field.getType().containerType.nativeType);
-        assertNull(field.getType().containerType.containerType);
+        assertEquals(CodeGenSpec.DataType.INT, field.getType().containerTypes.get(0).nativeType);
+        assertNull(field.getType().containerTypes.get(0).containerTypes);
 
         field = nameToFields.get("aBoolean");
         assertEquals("aBoolean", field.getName());
@@ -201,8 +201,8 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setaBoolean", field.getSetter());
         assertEquals(3, field.getIndex());
         assertEquals(CodeGenSpec.DataType.ARRAY, field.getType().nativeType);
-        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().containerType.nativeType);
-        assertNull(field.getType().containerType.containerType);
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().containerTypes.get(0).nativeType);
+        assertNull(field.getType().containerTypes.get(0).containerTypes);
 
     }
 
@@ -223,8 +223,8 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setaString", field.getSetter());
         assertEquals(1, field.getIndex());
         assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
-        assertNotNull(field.getType().containerType);
-        assertEquals(CodeGenSpec.DataType.STRING, field.getType().containerType.nativeType);
+        assertNotNull(field.getType().containerTypes);
+        assertEquals(CodeGenSpec.DataType.STRING, field.getType().containerTypes.get(0).nativeType);
 
         field = nameToFields.get("anInt");
         assertEquals("anInt", field.getName());
@@ -232,8 +232,8 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setAnInt", field.getSetter());
         assertEquals(2, field.getIndex());
         assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
-        assertNotNull(field.getType().containerType);
-        assertEquals(CodeGenSpec.DataType.INT, field.getType().containerType.nativeType);
+        assertNotNull(field.getType().containerTypes);
+        assertEquals(CodeGenSpec.DataType.INT, field.getType().containerTypes.get(0).nativeType);
 
         field = nameToFields.get("aMap");
         assertEquals("aMap", field.getName());
@@ -241,10 +241,11 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setaMap", field.getSetter());
         assertEquals(3, field.getIndex());
         assertEquals(CodeGenSpec.DataType.MAP, field.getType().nativeType);
-        assertNotNull(field.getType().containerType);
-        assertNotNull(field.getType().followingContainerTypes);
-        assertEquals(CodeGenSpec.DataType.FLOAT, field.getType().containerType.nativeType);
-        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().followingContainerTypes.get(0).nativeType);
+        assertEquals(2, field.getType().containerTypes.size());
+        assertNotNull(field.getType().containerTypes.get(0));
+        assertNotNull(field.getType().containerTypes.get(1));
+        assertEquals(CodeGenSpec.DataType.FLOAT, field.getType().containerTypes.get(0).nativeType);
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().containerTypes.get(1).nativeType);
 
         field = nameToFields.get("aCollection");
         assertEquals("aCollection", field.getName());
@@ -252,7 +253,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setaCollection", field.getSetter());
         assertEquals(4, field.getIndex());
         assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
-        assertNotNull(field.getType().containerType);
-        assertEquals(CodeGenSpec.DataType.UNKNOWN, field.getType().containerType.nativeType);
+        assertNotNull(field.getType().containerTypes);
+        assertEquals(CodeGenSpec.DataType.UNKNOWN, field.getType().containerTypes.get(0).nativeType);
     }
 }

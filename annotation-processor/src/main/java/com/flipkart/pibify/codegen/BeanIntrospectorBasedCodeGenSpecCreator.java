@@ -63,18 +63,18 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         if (nativeType != null) {
             specType.nativeType = nativeType;
         } else {
+            specType.containerTypes = new ArrayList<>(2);
             if (type.isArray()) {
                 Class<?> arrayType = type.getComponentType();
                 specType.nativeType = CodeGenSpec.DataType.ARRAY;
-                specType.containerType = getTypeFromJavaType(reflectedField, arrayType);
+                specType.containerTypes.add(getTypeFromJavaType(reflectedField, arrayType));
             } else if (Collection.class.isAssignableFrom(type)) {
                 specType.nativeType = CodeGenSpec.DataType.COLLECTION;
-                specType.containerType = getContainerType(reflectedField, type);
+                specType.containerTypes.add(getContainerType(reflectedField, type));
             } else if (Map.class.isAssignableFrom(type)) {
                 specType.nativeType = CodeGenSpec.DataType.MAP;
-                specType.containerType = getContainerType(reflectedField, type, 0);
-                specType.followingContainerTypes = new ArrayList<>();
-                specType.followingContainerTypes.add(getContainerType(reflectedField, type, 1));
+                specType.containerTypes.add(getContainerType(reflectedField, type, 0));
+                specType.containerTypes.add(getContainerType(reflectedField, type, 1));
             } else {
                 throw new UnsupportedOperationException(type.getSimpleName() +
                         " not supported in field " + reflectedField.getName());

@@ -133,7 +133,6 @@ public class CodeGenSpec {
 
     public static class Type {
         DataType nativeType;
-        Type containerType;
-        List<Type> followingContainerTypes;
+        List<Type> containerTypes;
     }
 }
