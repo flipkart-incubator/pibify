@@ -18,6 +18,9 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 
+import java.beans.BeanInfo;
+import java.beans.IntrospectionException;
+import java.beans.Introspector;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -45,10 +48,13 @@ public class VanillaTest {
     }
 
     @Test
-    public void getBeanProperties() {
+    public void getBeanProperties() throws IntrospectionException {
         JavaType javaType = TypeFactory.defaultInstance().constructType(nativeFields.getClass());
         BeanDescription beanDescription = objectMapper.getSerializationConfig().introspect(javaType);
         assertEquals(9, beanDescription.findProperties().size());
+
+        BeanInfo beanInfo = Introspector.getBeanInfo(nativeFields.getClass());
+        assertNotNull(beanInfo);
     }
 
     @Test
