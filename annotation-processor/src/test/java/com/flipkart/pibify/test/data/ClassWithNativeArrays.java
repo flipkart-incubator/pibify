@@ -10,13 +10,13 @@ import com.flipkart.pibify.core.Pibify;
 public class ClassWithNativeArrays {
 
     @Pibify(1)
-    private String[] aString = new String[]{"1"};
+    private String[] aString = null;
 
     @Pibify(2)
-    private int[] anInt = new int[]{2};
+    private int[] anInt = null;
 
     @Pibify(3)
-    private boolean[] aBoolean = new boolean[]{true};
+    private boolean[] aBoolean = null;
 
     public void randomize() {
         aString = new String[]{"str" + Math.random(), "str" + Math.random(), "str" + Math.random()};

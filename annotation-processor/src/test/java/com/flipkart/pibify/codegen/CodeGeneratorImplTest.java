@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
@@ -59,15 +60,13 @@ class CodeGeneratorImplTest {
         CodeGeneratorImpl impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile);
-        javaFile.writeTo(System.out);
+        //javaFile.writeTo(System.out);
         ClassWithNativeArrays testPayload = new ClassWithNativeArrays();
         testPayload.randomize();
         ClassWithNativeArrays deserialized = invokeGeneratedCode(javaFile, testPayload);
 
-
-        assertEquals(testPayload.getAnInt().length, deserialized.getAnInt().length);
-        assertEquals(testPayload.getaBoolean().length, deserialized.getaBoolean().length);
-        assertEquals(testPayload.getaString().length, deserialized.getaString().length);
+        assertArrayEquals(testPayload.getAnInt(), deserialized.getAnInt());
+        assertArrayEquals(testPayload.getaBoolean(), deserialized.getaBoolean());
+        assertArrayEquals(testPayload.getaString(), deserialized.getaString());
     }
-
 }
