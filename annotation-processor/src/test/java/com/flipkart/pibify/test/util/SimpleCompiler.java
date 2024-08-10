@@ -1,4 +1,4 @@
-package com.flipkart.test;
+package com.flipkart.pibify.test.util;
 
 
 import javax.tools.Diagnostic;

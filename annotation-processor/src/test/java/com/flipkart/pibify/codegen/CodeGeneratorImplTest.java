@@ -1,6 +1,6 @@
 package com.flipkart.pibify.codegen;
 
-import com.flipkart.test.SimpleCompiler;
+import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.Test;
 
