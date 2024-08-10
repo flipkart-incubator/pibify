@@ -1,4 +1,4 @@
-package com.flipkart.pibify.codegen;
+package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 

@@ -1,5 +1,10 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
+import com.flipkart.pibify.test.data.ClassWithNativeArrays;
+import com.flipkart.pibify.test.data.ClassWithNativeCollections;
+import com.flipkart.pibify.test.data.ClassWithNativeFields;
+import com.flipkart.pibify.test.data.ClassWithReferences;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
