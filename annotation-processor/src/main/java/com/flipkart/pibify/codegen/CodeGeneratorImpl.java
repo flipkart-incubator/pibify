@@ -5,6 +5,7 @@ import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.serde.PibifyDeserializer;
 import com.flipkart.pibify.serde.PibifySerializer;
+import com.flipkart.pibify.validation.InvalidPibifyAnnotation;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
@@ -13,6 +14,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
+import java.util.Arrays;
 
 /**
  * This class is used for generating the JavaFile given a CodeGenSpec
@@ -33,10 +35,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo))
                 .build();
 
-        JavaFile javaFile = JavaFile.builder("com.flipkart.pibify.generated."
+        return JavaFile.builder("com.flipkart.pibify.generated."
                         + codeGenSpec.getPackageName(), pibifyGeneratedHandler)
                 .build();
-        return javaFile;
     }
 
     private MethodSpec getSerializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -52,9 +53,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .beginControlFlow("try");
 
             for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
-                builder.addStatement("serializer.write" + fieldSpec.getType().nativeType.getReadWriteMethodName()
-                        + "(" + fieldSpec.getIndex() + ", object." + fieldSpec.getGetter() + "())");
-
+                switch (fieldSpec.getType().nativeType) {
+                    case ARRAY:
+                        generateSerializerForArray(fieldSpec, builder);
+                        break;
+                    default:
+                        builder.addStatement("serializer.write" + fieldSpec.getType().nativeType.getReadWriteMethodName()
+                                + "(" + fieldSpec.getIndex() + ", object." + fieldSpec.getGetter() + "())");
+                }
             }
 
             builder.addStatement("return serializer.serialize()")
@@ -66,6 +72,24 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         } catch (Exception e) {
             throw new CodeGenException(e.getMessage(), e);
         }
+    }
+
+    private void generateSerializerForArray(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
+        if (fieldSpec.getType().nativeType != CodeGenSpec.DataType.ARRAY) {
+            throw new IllegalArgumentException("generateSerializerForArray invoked for non-array types");
+        }
+
+        /*
+        serializer.writeShort(9, pojo.getaShort());
+        * * for (int i = 0; i < additionalItems_.size(); i++) {
+         *       output.writeMessage(1, additionalItems_.get(i));
+         *     }
+        * */
+        builder.beginControlFlow("for (int i = 0; i < object." + fieldSpec.getGetter() + "().length; i++)");
+        builder.addStatement("serializer.write" + fieldSpec.getType().containerTypes.get(0).nativeType.getReadWriteMethodName()
+                + "(" + fieldSpec.getIndex() + ", object." + fieldSpec.getGetter() + "()[i])");
+        builder.endControlFlow();
+
     }
 
     private MethodSpec getDeserializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -84,10 +108,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .beginControlFlow("switch (tag) ");
 
             for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
-                builder.addStatement("case " + TagPredictor.getTagBasedOnField(fieldSpec) + ": \n $>"
-                        + "object." + fieldSpec.getSetter()
-                        + "(" + getCastIfRequired(fieldSpec.getType().nativeType)
-                        + "deserializer.read" + fieldSpec.getType().nativeType.getReadWriteMethodName() + "())$<");
+                addFieldDeserializerBlock(fieldSpec, builder);
                 builder.addStatement("$>$> break$<$<");
             }
 
@@ -103,6 +124,52 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             return builder.build();
         } catch (Exception e) {
             throw new CodeGenException(e.getMessage(), e);
+        }
+    }
+
+    private void addFieldDeserializerBlock(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
+        CodeGenSpec.DataType realizedType;
+        switch (fieldSpec.getType().nativeType) {
+            case ARRAY:
+                realizedType = fieldSpec.getType().containerTypes.get(0).nativeType;
+                int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec));
+                builder.addStatement("case " +
+                                tag + ": \n$>" +
+                                "$T[] newArray$L", realizedType.getClazz(), tag)
+                        .addStatement("$>$T[] oldArray$L = object." + fieldSpec.getGetter() + "()$<", realizedType.getClazz(), tag)
+                        .addStatement("$>$T val$L = deserializer.read" + realizedType.getReadWriteMethodName() + "()$<", realizedType.getClazz(), tag)
+                        .beginControlFlow("$>if (oldArray$L == null)$<", tag)
+                        .addStatement("$>newArray$L = new $T[]{val$L}$<", tag, realizedType.getClazz(), tag)
+                        .endControlFlow()
+                        .beginControlFlow("$>else$<")
+                        .addStatement("$>newArray$L = $T.copyOf(oldArray$L, oldArray$L.length + 1)$<", tag, Arrays.class, tag, tag)
+                        .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
+                        .endControlFlow()
+                        .addStatement("$>object." + fieldSpec.getSetter()
+                                + "(newArray$L)$<", tag)
+
+                ;
+
+                break;
+            default:
+                builder.addStatement("case " +
+                        TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)) + ": \n $>" +
+                        "object." + fieldSpec.getSetter()
+                        + "(" + getCastIfRequired(fieldSpec.getType().nativeType)
+                        + "deserializer.read" + fieldSpec.getType().nativeType.getReadWriteMethodName() + "())$<");
+                break;
+        }
+
+
+    }
+
+    private Class<?> getClassForTag(CodeGenSpec.FieldSpec fieldSpec) {
+        switch (fieldSpec.getType().nativeType) {
+            case ARRAY:
+            case COLLECTION:
+                return fieldSpec.getType().containerTypes.get(0).nativeType.getClazz();
+            default:
+                return fieldSpec.getType().nativeType.getClazz();
         }
     }
 

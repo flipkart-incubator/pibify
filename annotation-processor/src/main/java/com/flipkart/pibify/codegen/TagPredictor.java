@@ -47,6 +47,10 @@ public class TagPredictor {
         return makeTag(field.getIndex(), fieldTypeToWireTypeMap.get(field.getType().nativeType.getClazz()));
     }
 
+    public static int getTagBasedOnField(int index, Class<?> clazz) throws InvalidPibifyAnnotation {
+        return makeTag(index, fieldTypeToWireTypeMap.get(clazz));
+    }
+
 
     static int makeTag(final int fieldNumber, final int wireType) {
         return (fieldNumber << TAG_TYPE_BITS) | wireType;
