@@ -11,6 +11,19 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class CodeGeneratorImplTest {
+
+    private <T> T invokeGeneratedCode(JavaFile javaFile, T data) throws Exception {
+        SimpleCompiler simpleCompiler = new SimpleCompiler();
+        simpleCompiler.compile(javaFile.toJavaFileObject());
+        Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
+        Object handlerInstance = handlerClazz.newInstance();
+        Method serialize = handlerClazz.getDeclaredMethod("serialize", ClassWithNativeFields.class);
+        byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
+
+        Method deserialize = handlerClazz.getDeclaredMethod("deserialize", byte[].class);
+        return (T) deserialize.invoke(handlerInstance, result);
+    }
+
     @Test
     public void generateVanilla() throws Exception {
 
@@ -21,18 +34,9 @@ class CodeGeneratorImplTest {
         JavaFile javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
-
-        SimpleCompiler simpleCompiler = new SimpleCompiler();
-        simpleCompiler.compile(javaFile.toJavaFileObject());
-        Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated.com.flipkart.pibify.codegen.ClassWithNativeFieldsHandler");
-        Object handlerInstance = handlerClazz.newInstance();
         ClassWithNativeFields testPayload = new ClassWithNativeFields();
         testPayload.randomize();
-        Method serialize = handlerClazz.getDeclaredMethod("serialize", ClassWithNativeFields.class);
-        byte[] result = (byte[]) serialize.invoke(handlerInstance, testPayload);
-
-        Method deserialize = handlerClazz.getDeclaredMethod("deserialize", byte[].class);
-        ClassWithNativeFields deserialized = (ClassWithNativeFields) deserialize.invoke(handlerInstance, result);
+        ClassWithNativeFields deserialized = invokeGeneratedCode(javaFile, testPayload);
 
         assertEquals(testPayload.getaByte(), deserialized.getaByte());
         assertEquals(testPayload.getaChar(), deserialized.getaChar());
@@ -44,4 +48,5 @@ class CodeGeneratorImplTest {
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.isaBoolean(), deserialized.isaBoolean());
     }
+
 }
