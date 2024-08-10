@@ -48,7 +48,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             Map<String, PropertyDescriptor> namesToBeanInfo = Arrays.stream(beanInfo.getPropertyDescriptors())
                     .collect(Collectors.toMap(FeatureDescriptor::getName, f -> f));
 
-            CodeGenSpec spec = new CodeGenSpec(type.getCanonicalName(), type.getSimpleName());
+            CodeGenSpec spec = new CodeGenSpec(type.getPackage().getName(), type.getSimpleName());
 
             for (java.lang.reflect.Field reflectedField : type.getDeclaredFields()) {
                 Pibify annotation = reflectedField.getAnnotation(Pibify.class);

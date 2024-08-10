@@ -19,12 +19,12 @@ public class CodeGenSpec {
     Instead, the type of the class will be referenced via a member variable.
      */
 
-    private final String fqdn;
+    private final String packageName;
     private final String className;
     private final List<FieldSpec> fieldSpecs;
 
-    public CodeGenSpec(String fqdn, String className) {
-        this.fqdn = fqdn;
+    public CodeGenSpec(String packageName, String className) {
+        this.packageName = packageName;
         this.className = className;
         fieldSpecs = new ArrayList<>();
     }
@@ -37,44 +37,64 @@ public class CodeGenSpec {
         return fieldSpecs;
     }
 
-    public String getFqdn() {
-        return fqdn;
+    public String getPackageName() {
+        return packageName;
     }
 
     public String getClassName() {
         return className;
     }
 
-    public enum DataType {
-        /**
-         * aString = "";
-         * anInt = -1;
-         * aFloat = -1;
-         * aDouble = -1;
-         * aChar = '0';
-         * aBoolean = false;
-         * aLong = -1;
-         * aShort = -1;
-         * aByte = -1;
-         */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        STRING,
-        INT,
-        FLOAT,
-        DOUBLE,
-        CHAR,
-        BOOLEAN,
-        LONG,
-        SHORT,
-        BYTE,
+        CodeGenSpec that = (CodeGenSpec) o;
+
+        return packageName.equals(that.packageName);
+    }
+
+    @Override
+    public int hashCode() {
+        return packageName.hashCode();
+    }
+
+    public enum DataType {
+
+        STRING("String", String.class),
+        INT("Int", int.class),
+        FLOAT("Float", float.class),
+        DOUBLE("Double", double.class),
+        CHAR("Char", char.class),
+        BOOLEAN("Bool", boolean.class),
+        LONG("Long", long.class),
+        SHORT("Short", short.class),
+        BYTE("Byte", byte.class),
 
         /* Containers */
-        ARRAY,
-        COLLECTION,
-        MAP,
-        OBJECT,
+        ARRAY(null, null),
+        COLLECTION(null, null),
+        MAP(null, null),
+        OBJECT(null, null),
 
-        UNKNOWN /*These types will be serde'd using json */
+        UNKNOWN(null, null); /*These types will be serde'd using json */
+
+        private final String readWriteMethodName;
+        private final Class<?> clazz;
+
+        DataType(String readWriteMethodName, Class<?> clazz) {
+            this.readWriteMethodName = readWriteMethodName;
+            this.clazz = clazz;
+        }
+
+        public String getReadWriteMethodName() {
+            return readWriteMethodName;
+        }
+
+        public Class<?> getClazz() {
+            return clazz;
+        }
     }
 
     public static class FieldSpec {

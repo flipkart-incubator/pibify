@@ -50,6 +50,8 @@ public class ClassWithNativeFieldsDeserializer {
                 case 72:
                     object.setaShort((short) deserializer.readShort());
                     break;
+                default:
+                    throw new UnsupportedOperationException();
 
             }
             tag = deserializer.getNextTag();
