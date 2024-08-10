@@ -15,6 +15,7 @@ import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -25,9 +26,22 @@ import java.util.stream.Collectors;
  */
 public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCreator {
 
+    // to memoize results
+    private final Map<Class<?>, CodeGenSpec> cache = new HashMap<>();
+
     @Override
     public CodeGenSpec create(Class<?> type) throws CodeGenException {
 
+        // cannot use computeIfAbsent because of checked exception being thrown
+
+        if (!cache.containsKey(type)) {
+            CodeGenSpec codeGenSpec = createImpl(type);
+            cache.put(type, codeGenSpec);
+        }
+        return cache.get(type);
+    }
+
+    private CodeGenSpec createImpl(Class<?> type) throws CodeGenException {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(type);
 
@@ -56,7 +70,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
     }
 
-    private CodeGenSpec.Type getTypeFromJavaType(Field reflectedField, Class<?> type) {
+    private CodeGenSpec.Type getTypeFromJavaType(Field reflectedField, Class<?> type) throws CodeGenException {
         CodeGenSpec.Type specType = new CodeGenSpec.Type();
         CodeGenSpec.DataType nativeType = CodeSpecMeta.CLASS_TO_TYPE_MAP.get(type);
 
@@ -76,19 +90,21 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.containerTypes.add(getContainerType(reflectedField, type, 0));
                 specType.containerTypes.add(getContainerType(reflectedField, type, 1));
             } else {
-                throw new UnsupportedOperationException(type.getSimpleName() +
-                        " not supported in field " + reflectedField.getName());
+                specType.nativeType = CodeGenSpec.DataType.OBJECT;
+                // release the object, since its not needed
+                specType.containerTypes = null;
+                specType.referenceType = create(type);
             }
         }
 
         return specType;
     }
 
-    private CodeGenSpec.Type getContainerType(Field reflectedField, Class<?> type) {
+    private CodeGenSpec.Type getContainerType(Field reflectedField, Class<?> type) throws CodeGenException {
         return getContainerType(reflectedField, type, 0);
     }
 
-    private CodeGenSpec.Type getContainerType(Field reflectedField, Class<?> type, int index) {
+    private CodeGenSpec.Type getContainerType(Field reflectedField, Class<?> type, int index) throws CodeGenException {
         ParameterizedType genericType = (ParameterizedType) reflectedField.getGenericType();
         Type actualTypeArgument = genericType.getActualTypeArguments()[index];
         if (actualTypeArgument instanceof Class) {

@@ -77,12 +77,6 @@ public class CodeGenSpec {
         UNKNOWN /*These types will be serde'd using json */
     }
 
-    public enum ContainerType {
-        ARRAY,
-        COLLECTION,
-        OBJECT
-    }
-
     public static class FieldSpec {
         String name;
         int index;
@@ -134,5 +128,6 @@ public class CodeGenSpec {
     public static class Type {
         DataType nativeType;
         List<Type> containerTypes;
+        CodeGenSpec referenceType;
     }
 }

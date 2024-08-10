@@ -256,4 +256,70 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNotNull(field.getType().containerTypes);
         assertEquals(CodeGenSpec.DataType.UNKNOWN, field.getType().containerTypes.get(0).nativeType);
     }
+
+
+    @Test
+    void createClassWithReference() throws CodeGenException {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithReferences.class);
+        assertNotNull(codeGenSpec);
+        assertEquals(1, codeGenSpec.getFields().size());
+
+        Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
+                .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
+
+        CodeGenSpec.FieldSpec field = nameToFields.get("reference");
+        assertEquals("reference", field.getName());
+        assertEquals("getReference", field.getGetter());
+        assertEquals("setReference", field.getSetter());
+        assertEquals(1, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.OBJECT, field.getType().nativeType);
+        assertNull(field.getType().containerTypes);
+        assertNotNull(field.getType().referenceType);
+
+
+        // assert on ref class
+        nameToFields = field.getType().referenceType.getFields().stream()
+                .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
+        assertEquals(4, field.getType().referenceType.getFields().size());
+
+        field = nameToFields.get("aString");
+        assertEquals("aString", field.getName());
+        assertEquals("getaString", field.getGetter());
+        assertEquals("setaString", field.getSetter());
+        assertEquals(1, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
+        assertNotNull(field.getType().containerTypes);
+        assertEquals(CodeGenSpec.DataType.STRING, field.getType().containerTypes.get(0).nativeType);
+
+        field = nameToFields.get("anInt");
+        assertEquals("anInt", field.getName());
+        assertEquals("getAnInt", field.getGetter());
+        assertEquals("setAnInt", field.getSetter());
+        assertEquals(2, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
+        assertNotNull(field.getType().containerTypes);
+        assertEquals(CodeGenSpec.DataType.INT, field.getType().containerTypes.get(0).nativeType);
+
+        field = nameToFields.get("aMap");
+        assertEquals("aMap", field.getName());
+        assertEquals("getaMap", field.getGetter());
+        assertEquals("setaMap", field.getSetter());
+        assertEquals(3, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.MAP, field.getType().nativeType);
+        assertEquals(2, field.getType().containerTypes.size());
+        assertNotNull(field.getType().containerTypes.get(0));
+        assertNotNull(field.getType().containerTypes.get(1));
+        assertEquals(CodeGenSpec.DataType.FLOAT, field.getType().containerTypes.get(0).nativeType);
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().containerTypes.get(1).nativeType);
+
+        field = nameToFields.get("aCollection");
+        assertEquals("aCollection", field.getName());
+        assertEquals("getaCollection", field.getGetter());
+        assertEquals("setaCollection", field.getSetter());
+        assertEquals(4, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
+        assertNotNull(field.getType().containerTypes);
+        assertEquals(CodeGenSpec.DataType.UNKNOWN, field.getType().containerTypes.get(0).nativeType);
+    }
 }
