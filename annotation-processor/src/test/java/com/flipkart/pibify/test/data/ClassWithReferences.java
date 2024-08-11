@@ -12,11 +12,22 @@ public class ClassWithReferences {
     @Pibify(1)
     private ClassWithNativeCollections reference;
 
+    @Pibify(2)
+    private String aString;
+
     public ClassWithNativeCollections getReference() {
         return reference;
     }
 
     public void setReference(ClassWithNativeCollections reference) {
         this.reference = reference;
+    }
+
+    public String getaString() {
+        return aString;
+    }
+
+    public void setaString(String aString) {
+        this.aString = aString;
     }
 }

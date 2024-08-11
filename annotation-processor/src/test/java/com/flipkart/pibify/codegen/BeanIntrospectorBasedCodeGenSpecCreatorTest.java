@@ -265,12 +265,19 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithReferences.class);
         assertNotNull(codeGenSpec);
-        assertEquals(1, codeGenSpec.getFields().size());
+        assertEquals(2, codeGenSpec.getFields().size());
 
         Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
 
-        CodeGenSpec.FieldSpec field = nameToFields.get("reference");
+        CodeGenSpec.FieldSpec field = nameToFields.get("aString");
+        assertEquals("aString", field.getName());
+        assertEquals("getaString", field.getGetter());
+        assertEquals("setaString", field.getSetter());
+        assertEquals(2, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.STRING, field.getType().nativeType);
+
+        field = nameToFields.get("reference");
         assertEquals("reference", field.getName());
         assertEquals("getReference", field.getGetter());
         assertEquals("setReference", field.getSetter());
@@ -278,7 +285,6 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals(CodeGenSpec.DataType.OBJECT, field.getType().nativeType);
         assertNull(field.getType().containerTypes);
         assertNotNull(field.getType().referenceType);
-
 
         // assert on ref class
         nameToFields = field.getType().referenceType.getFields().stream()
