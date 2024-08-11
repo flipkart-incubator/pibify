@@ -171,7 +171,6 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals(CodeGenSpec.DataType.SHORT, field.getType().nativeType);
     }
 
-
     @Test
     void createClassWithNativeArrays() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
@@ -210,7 +209,6 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNull(field.getType().containerTypes.get(0).containerTypes);
 
     }
-
 
     @Test
     void createClassWithNativeCollections() throws CodeGenException {
@@ -261,7 +259,6 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNotNull(field.getType().containerTypes);
         assertEquals(CodeGenSpec.DataType.UNKNOWN, field.getType().containerTypes.get(0).nativeType);
     }
-
 
     @Test
     void createClassWithReference() throws CodeGenException {

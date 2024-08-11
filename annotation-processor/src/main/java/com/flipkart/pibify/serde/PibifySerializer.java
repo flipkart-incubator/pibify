@@ -71,12 +71,4 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     public void writeString(int index, String value) throws IOException {
         codedOutputStream.writeString(index, value);
     }
-
-    public void writeBoolArray(int index, boolean[] value) throws IOException {
-        /**
-         * for (int i = 0; i < additionalItems_.size(); i++) {
-         *       output.writeMessage(1, additionalItems_.get(i));
-         *     }
-         */
-    }
 }

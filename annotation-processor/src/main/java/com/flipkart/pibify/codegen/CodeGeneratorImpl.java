@@ -58,7 +58,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
                 switch (fieldSpec.getType().nativeType) {
                     case ARRAY:
+                    case COLLECTION:
                         generateSerializerForArray(fieldSpec, builder);
+                        break;
+                    case MAP:
+                        generateSerializerForMap(fieldSpec, builder);
                         break;
                     default:
                         builder.addStatement("serializer.write" + fieldSpec.getType().nativeType.getReadWriteMethodName()
@@ -78,20 +82,24 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private void generateSerializerForArray(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
-        if (fieldSpec.getType().nativeType != CodeGenSpec.DataType.ARRAY) {
-            throw new IllegalArgumentException("generateSerializerForArray invoked for non-array types");
+        if (!(fieldSpec.getType().nativeType == CodeGenSpec.DataType.ARRAY ||
+                fieldSpec.getType().nativeType == CodeGenSpec.DataType.COLLECTION)) {
+            throw new IllegalArgumentException("generateSerializerForArray invoked for non-array types " + fieldSpec.getName());
         }
 
-        /*
-        serializer.writeShort(9, pojo.getaShort());
-        * * for (int i = 0; i < additionalItems_.size(); i++) {
-         *       output.writeMessage(1, additionalItems_.get(i));
-         *     }
-        * */
-        builder.beginControlFlow("for (int i = 0; i < object." + fieldSpec.getGetter() + "().length; i++)");
-        builder.addStatement("serializer.write" + fieldSpec.getType().containerTypes.get(0).nativeType.getReadWriteMethodName()
-                + "(" + fieldSpec.getIndex() + ", object." + fieldSpec.getGetter() + "()[i])");
-        builder.endControlFlow();
+        if (fieldSpec.getType().containerTypes.get(0).nativeType == CodeGenSpec.DataType.UNKNOWN) {
+            // TODO  unknowns to be handled as a byte[] via object mapper.
+            //
+        } else {
+            builder.beginControlFlow("for ($T val :  object." + fieldSpec.getGetter() + "())",
+                    fieldSpec.getType().containerTypes.get(0).nativeType.getClazz());
+            builder.addStatement("serializer.write" + fieldSpec.getType().containerTypes.get(0).nativeType.getReadWriteMethodName()
+                    + "(" + fieldSpec.getIndex() + ", val)");
+            builder.endControlFlow();
+        }
+    }
+
+    private void generateSerializerForMap(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
 
     }
 
@@ -131,28 +139,12 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private void addFieldDeserializerBlock(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
-        CodeGenSpec.DataType realizedType;
         switch (fieldSpec.getType().nativeType) {
             case ARRAY:
-                realizedType = fieldSpec.getType().containerTypes.get(0).nativeType;
-                int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec));
-                builder.addStatement("case " +
-                                tag + ": \n$>" +
-                                "$T[] newArray$L", realizedType.getClazz(), tag)
-                        .addStatement("$>$T[] oldArray$L = object." + fieldSpec.getGetter() + "()$<", realizedType.getClazz(), tag)
-                        .addStatement("$>$T val$L = deserializer.read" + realizedType.getReadWriteMethodName() + "()$<", realizedType.getClazz(), tag)
-                        .beginControlFlow("$>if (oldArray$L == null)$<", tag)
-                        .addStatement("$>newArray$L = new $T[]{val$L}$<", tag, realizedType.getClazz(), tag)
-                        .endControlFlow()
-                        .beginControlFlow("$>else$<")
-                        .addStatement("$>newArray$L = $T.copyOf(oldArray$L, oldArray$L.length + 1)$<", tag, Arrays.class, tag, tag)
-                        .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
-                        .endControlFlow()
-                        .addStatement("$>object." + fieldSpec.getSetter()
-                                + "(newArray$L)$<", tag)
-
-                ;
-
+            case COLLECTION:
+                addArrayDeserializer(fieldSpec, builder);
+                break;
+            case MAP:
                 break;
             default:
                 builder.addStatement("case " +
@@ -164,6 +156,30 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
 
 
+    }
+
+    private void addArrayDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
+        CodeGenSpec.DataType realizedType = fieldSpec.getType().containerTypes.get(0).nativeType;
+
+        if (realizedType == CodeGenSpec.DataType.UNKNOWN) return;
+
+        int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec));
+        builder.addStatement("case " +
+                        tag + ": \n$>" +
+                        "$T[] newArray$L", realizedType.getClazz(), tag)
+                .addStatement("$>$T[] oldArray$L = object." + fieldSpec.getGetter() + "()$<", realizedType.getClazz(), tag)
+                .addStatement("$>$T val$L = deserializer.read" + realizedType.getReadWriteMethodName() + "()$<", realizedType.getClazz(), tag)
+                .beginControlFlow("$>if (oldArray$L == null)$<", tag)
+                .addStatement("$>newArray$L = new $T[]{val$L}$<", tag, realizedType.getClazz(), tag)
+                .endControlFlow()
+                .beginControlFlow("$>else$<")
+                .addStatement("$>newArray$L = $T.copyOf(oldArray$L, oldArray$L.length + 1)$<", tag, Arrays.class, tag, tag)
+                .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
+                .endControlFlow()
+                .addStatement("$>object." + fieldSpec.getSetter()
+                        + "(newArray$L)$<", tag)
+
+        ;
     }
 
     private Class<?> getClassForTag(CodeGenSpec.FieldSpec fieldSpec) {

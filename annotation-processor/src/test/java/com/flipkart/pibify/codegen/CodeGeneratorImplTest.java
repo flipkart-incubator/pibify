@@ -2,6 +2,7 @@ package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
+import com.flipkart.pibify.test.data.ClassWithNativeCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
@@ -13,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+@SuppressWarnings("all")
 class CodeGeneratorImplTest {
 
     private <T> T invokeGeneratedCode(JavaFile javaFile, T data) throws Exception {
@@ -94,5 +96,25 @@ class CodeGeneratorImplTest {
         assertArrayEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertArrayEquals(testPayload.getaBoolean(), deserialized.getaBoolean());
         assertArrayEquals(testPayload.getaString(), deserialized.getaString());
+    }
+
+    //@Test
+    public void testClassWithNativeCollections() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollections.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        javaFile.writeTo(System.out);
+        /*ClassWithNativeCollections testPayload = new ClassWithNativeCollections();
+        testPayload.randomize();
+        ClassWithNativeCollections deserialized = invokeGeneratedCode(javaFile, testPayload);
+
+        assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
+        assertEquals(testPayload.getaString(), deserialized.getaString());
+        assertEquals(testPayload.getaMap(), deserialized.getaMap());
+        assertEquals(testPayload.getaCollection(), deserialized.getaCollection());*/
     }
 }
