@@ -1,7 +1,7 @@
 Support for
 
 1. Native Java Types [done]
-2. Arrays of Native Java Types
+2. Arrays of Native Java Types [done]
 3. @JsonIgnore
 4. @JsonProperty on arbitrary methods
 5. @JsonProperty with renaming fields (should be noOp)
@@ -18,4 +18,6 @@ Support for
 16. Collections of Collections
 17. @JsonCreator
 18. Iterable
-19. 
+19. Enums as fields
+20. Enums in Collections
+21. Enums in maps (key/value)
