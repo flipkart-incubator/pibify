@@ -229,5 +229,7 @@ class CodeGeneratorImplTest {
         for (Object obj : deserialized.getArrayOfOtherNativeFields()) {
             assertTrue(Arrays.asList(testPayload.getArrayOfOtherNativeFields()).contains(obj));
         }
+
+        assertEquals(testPayload.getMapOfObjects(), deserialized.getMapOfObjects());
     }
 }
