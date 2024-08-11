@@ -9,7 +9,7 @@ Support for
 7. Basic Pojo [done]
 8. Relational Pojo [done]
 9. Tertiary Relational pojo with missing annotations on tertiary refs
-10. Array of Objects
+10. Array of Objects [done]
 11. 1 level SubClass Hierarchy
 12. N level subclass hierarchy
 13. Explicit @JsonSubtype
