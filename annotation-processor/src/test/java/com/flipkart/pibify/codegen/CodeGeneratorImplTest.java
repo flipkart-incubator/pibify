@@ -33,12 +33,12 @@ class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeFields.class);
 
         CodeGeneratorImpl impl = new CodeGeneratorImpl();
-        JavaFile javaFile = impl.generate(codeGenSpec);
-        assertNotNull(javaFile);
+        JavaFileWrapper javaFile = impl.generate(codeGenSpec);
+        assertNotNull(javaFile.getJavaFile());
         //javaFile.writeTo(System.out);
         ClassWithNativeFields testPayload = new ClassWithNativeFields();
         testPayload.randomize();
-        ClassWithNativeFields deserialized = invokeGeneratedCode(javaFile, testPayload);
+        ClassWithNativeFields deserialized = invokeGeneratedCode(javaFile.getJavaFile(), testPayload);
 
         assertEquals(testPayload.getaByte(), deserialized.getaByte());
         assertEquals(testPayload.getaChar(), deserialized.getaChar());
@@ -58,12 +58,12 @@ class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeArrays.class);
 
         CodeGeneratorImpl impl = new CodeGeneratorImpl();
-        JavaFile javaFile = impl.generate(codeGenSpec);
-        assertNotNull(javaFile);
+        JavaFileWrapper javaFile = impl.generate(codeGenSpec);
+        assertNotNull(javaFile.getJavaFile());
         //javaFile.writeTo(System.out);
         ClassWithNativeArrays testPayload = new ClassWithNativeArrays();
         testPayload.randomize();
-        ClassWithNativeArrays deserialized = invokeGeneratedCode(javaFile, testPayload);
+        ClassWithNativeArrays deserialized = invokeGeneratedCode(javaFile.getJavaFile(), testPayload);
 
         assertArrayEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertArrayEquals(testPayload.getaBoolean(), deserialized.getaBoolean());

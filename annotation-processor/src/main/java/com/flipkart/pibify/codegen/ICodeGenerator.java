@@ -1,7 +1,5 @@
 package com.flipkart.pibify.codegen;
 
-import com.squareup.javapoet.JavaFile;
-
 import java.io.IOException;
 
 /**
@@ -10,5 +8,5 @@ import java.io.IOException;
  * Date 09/08/24
  */
 public interface ICodeGenerator {
-    JavaFile generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException;
+    JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException;
 }

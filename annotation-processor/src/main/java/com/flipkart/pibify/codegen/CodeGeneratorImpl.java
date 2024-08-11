@@ -24,7 +24,7 @@ import java.util.Arrays;
 public class CodeGeneratorImpl implements ICodeGenerator {
 
     @Override
-    public JavaFile generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
+    public JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
 
         ClassName thePojo = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
 
@@ -35,9 +35,12 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo))
                 .build();
 
-        return JavaFile.builder("com.flipkart.pibify.generated."
-                        + codeGenSpec.getPackageName(), pibifyGeneratedHandler)
-                .build();
+        String packageName = "com.flipkart.pibify.generated." + codeGenSpec.getPackageName();
+        JavaFileWrapper wrapper = new JavaFileWrapper();
+        wrapper.setPackageName(packageName);
+        wrapper.setJavaFile(JavaFile.builder(packageName, pibifyGeneratedHandler)
+                .build());
+        return wrapper;
     }
 
     private MethodSpec getSerializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
