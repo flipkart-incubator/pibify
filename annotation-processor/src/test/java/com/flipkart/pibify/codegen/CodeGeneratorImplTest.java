@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.util.SimpleCompiler;
@@ -32,7 +33,7 @@ class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeFields.class);
 
-        CodeGeneratorImpl impl = new CodeGeneratorImpl();
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
         //javaFile.writeTo(System.out);
@@ -52,12 +53,37 @@ class CodeGeneratorImplTest {
     }
 
     @Test
+    public void testClassWithAutoboxFields() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithAutoboxFields.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFileWrapper javaFile = impl.generate(codeGenSpec);
+        assertNotNull(javaFile.getJavaFile());
+        //javaFile.writeTo(System.out);
+        ClassWithAutoboxFields testPayload = new ClassWithAutoboxFields();
+        testPayload.randomize();
+        ClassWithAutoboxFields deserialized = invokeGeneratedCode(javaFile.getJavaFile(), testPayload);
+
+        assertEquals(testPayload.getaByte(), deserialized.getaByte());
+        assertEquals(testPayload.getaChar(), deserialized.getaChar());
+        assertEquals(testPayload.getaDouble(), deserialized.getaDouble());
+        assertEquals(testPayload.getaFloat(), deserialized.getaFloat());
+        assertEquals(testPayload.getaLong(), deserialized.getaLong());
+        assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
+        assertEquals(testPayload.getaShort(), deserialized.getaShort());
+        assertEquals(testPayload.getaBoolean(), deserialized.getaBoolean());
+    }
+
+
+    @Test
     public void testClassWithNativeArrays() throws Exception {
 
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeArrays.class);
 
-        CodeGeneratorImpl impl = new CodeGeneratorImpl();
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
         //javaFile.writeTo(System.out);

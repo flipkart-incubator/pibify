@@ -33,6 +33,18 @@ public class ClassWithAutoboxFields {
     @Pibify(9)
     private Short aShort = 9;
 
+    public void randomize() {
+
+        anInt = (int) (Math.random() * 1000);
+        aLong = (long) (Math.random() * 1000000);
+        aFloat = (float) Math.random();
+        aDouble = Math.random();
+        aBoolean = Math.random() > 0.5;
+        aChar = (char) (Math.random() * 100);
+        aByte = (byte) (Math.random() * 100);
+        aShort = (short) (Math.random() * 100);
+    }
+
     public Integer getAnInt() {
         return anInt;
     }
