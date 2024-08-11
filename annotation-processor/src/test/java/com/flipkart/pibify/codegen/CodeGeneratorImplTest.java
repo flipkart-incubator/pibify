@@ -4,7 +4,7 @@ import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
-import com.flipkart.pibify.test.data.ClassWithReferences;
+import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
@@ -105,16 +105,16 @@ class CodeGeneratorImplTest {
     }
 
     @Test
-    public void testClassWithReferences() throws Exception {
+    public void testClassWithReferencesToNativeFields() throws Exception {
 
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
-        CodeGenSpec codeGenSpec = creator.create(ClassWithReferences.class);
+        CodeGenSpec codeGenSpec = creator.create(ClassWithReferencesToNativeFields.class);
 
         ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
-        ClassWithReferences testPayload = new ClassWithReferences();
+        ClassWithReferencesToNativeFields testPayload = new ClassWithReferencesToNativeFields();
         testPayload.randomize();
 
         SimpleCompiler compiler = new SimpleCompiler();
@@ -125,7 +125,7 @@ class CodeGeneratorImplTest {
         Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." +
                 AnotherClassWithNativeFields.class.getCanonicalName() + "Handler");
 
-        ClassWithReferences deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        ClassWithReferencesToNativeFields deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
 
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.getReference().getaString(), deserialized.getReference().getaString());
@@ -139,7 +139,7 @@ class CodeGeneratorImplTest {
         assertEquals(testPayload.getReference().isaBoolean(), deserialized.getReference().isaBoolean());
     }
 
-    //@Test
+    @Test
     public void testClassWithNativeCollections() throws Exception {
 
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
@@ -149,13 +149,13 @@ class CodeGeneratorImplTest {
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         javaFile.writeTo(System.out);
-        /*ClassWithNativeCollections testPayload = new ClassWithNativeCollections();
+        ClassWithNativeCollections testPayload = new ClassWithNativeCollections();
         testPayload.randomize();
+
         ClassWithNativeCollections deserialized = invokeGeneratedCode(javaFile, testPayload);
 
         assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.getaMap(), deserialized.getaMap());
-        assertEquals(testPayload.getaCollection(), deserialized.getaCollection());*/
     }
 }

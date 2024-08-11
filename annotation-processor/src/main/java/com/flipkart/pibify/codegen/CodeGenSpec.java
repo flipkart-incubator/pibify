@@ -62,30 +62,32 @@ public class CodeGenSpec {
 
     public enum DataType {
 
-        STRING("String", String.class),
-        INT("Int", int.class),
-        FLOAT("Float", float.class),
-        DOUBLE("Double", double.class),
-        CHAR("Char", char.class),
-        BOOLEAN("Bool", boolean.class),
-        LONG("Long", long.class),
-        SHORT("Short", short.class),
-        BYTE("Byte", byte.class),
+        STRING("String", String.class, String.class),
+        INT("Int", int.class, Integer.class),
+        FLOAT("Float", float.class, Float.class),
+        DOUBLE("Double", double.class, Double.class),
+        CHAR("Char", char.class, Character.class),
+        BOOLEAN("Bool", boolean.class, Boolean.class),
+        LONG("Long", long.class, Long.class),
+        SHORT("Short", short.class, Short.class),
+        BYTE("Byte", byte.class, Byte.class),
 
         /* Containers */
-        ARRAY(null, null),
-        COLLECTION(null, null),
-        MAP(null, null),
-        OBJECT(null, null),
+        ARRAY(null, null, null),
+        COLLECTION(null, null, null),
+        MAP(null, null, null),
+        OBJECT(null, null, null),
 
-        UNKNOWN(null, null); /*These types will be serde'd using json */
+        UNKNOWN(null, null, null); /*These types will be serde'd using json */
 
         private final String readWriteMethodName;
         private final Class<?> clazz;
+        private final Class<?> autoboxedClass;
 
-        DataType(String readWriteMethodName, Class<?> clazz) {
+        DataType(String readWriteMethodName, Class<?> clazz, Class<?> autoboxedClass) {
             this.readWriteMethodName = readWriteMethodName;
             this.clazz = clazz;
+            this.autoboxedClass = autoboxedClass;
         }
 
         public String getReadWriteMethodName() {
@@ -95,6 +97,14 @@ public class CodeGenSpec {
         public Class<?> getClazz() {
             return clazz;
         }
+
+        public Class<?> getAutoboxedClass() {
+            return autoboxedClass;
+        }
+    }
+
+    public enum CollectionType {
+        LIST, SET, QUEUE, DEQUE
     }
 
     public static class FieldSpec {
@@ -149,5 +159,6 @@ public class CodeGenSpec {
         DataType nativeType;
         List<Type> containerTypes;
         CodeGenSpec referenceType;
+        CollectionType collectionType;
     }
 }

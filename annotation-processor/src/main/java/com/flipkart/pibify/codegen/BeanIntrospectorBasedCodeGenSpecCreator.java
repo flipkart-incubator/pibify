@@ -15,8 +15,12 @@ import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -85,6 +89,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             } else if (Collection.class.isAssignableFrom(type)) {
                 specType.nativeType = CodeGenSpec.DataType.COLLECTION;
                 specType.containerTypes.add(getContainerType(reflectedField, type));
+                specType.collectionType = getCollectionType(type);
             } else if (Map.class.isAssignableFrom(type)) {
                 specType.nativeType = CodeGenSpec.DataType.MAP;
                 specType.containerTypes.add(getContainerType(reflectedField, type, 0));
@@ -98,6 +103,21 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
 
         return specType;
+    }
+
+    private CodeGenSpec.CollectionType getCollectionType(Class<?> type) {
+        if (List.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.LIST;
+        } else if (Set.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.SET;
+        } else if (Queue.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.QUEUE;
+        } else if (Deque.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.DEQUE;
+        } else {
+            // Default collections to List!
+            return CodeGenSpec.CollectionType.LIST;
+        }
     }
 
     private CodeGenSpec.Type getContainerType(Field reflectedField, Class<?> type) throws CodeGenException {

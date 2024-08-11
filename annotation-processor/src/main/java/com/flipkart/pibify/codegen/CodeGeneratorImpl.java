@@ -15,6 +15,8 @@ import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class is used for generating the JavaFile given a CodeGenSpec
@@ -59,7 +61,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 switch (fieldSpec.getType().nativeType) {
                     case ARRAY:
                     case COLLECTION:
-                        generateSerializerForArray(fieldSpec, builder);
+                        generateSerializerForArrayOrCollection(fieldSpec, builder);
                         break;
                     case MAP:
                         generateSerializerForMap(fieldSpec, builder);
@@ -84,21 +86,51 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
     }
 
-    private void generateSerializerForArray(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
+    private void generateSerializerForArrayOrCollection(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
         if (!(fieldSpec.getType().nativeType == CodeGenSpec.DataType.ARRAY ||
                 fieldSpec.getType().nativeType == CodeGenSpec.DataType.COLLECTION)) {
-            throw new IllegalArgumentException("generateSerializerForArray invoked for non-array types " + fieldSpec.getName());
+            throw new IllegalArgumentException("generateSerializerForArrayOrCollection invoked for non-array types " + fieldSpec.getName());
         }
 
         if (fieldSpec.getType().containerTypes.get(0).nativeType == CodeGenSpec.DataType.UNKNOWN) {
             // TODO  unknowns to be handled as a byte[] via object mapper.
             //
+            throw new UnsupportedOperationException("Unknown arrays/collections not supported right now");
         } else {
             builder.beginControlFlow("for ($T val :  object." + fieldSpec.getGetter() + "())",
                     fieldSpec.getType().containerTypes.get(0).nativeType.getClazz());
             builder.addStatement("serializer.write" + fieldSpec.getType().containerTypes.get(0).nativeType.getReadWriteMethodName()
                     + "(" + fieldSpec.getIndex() + ", val)");
             builder.endControlFlow();
+        }
+    }
+
+    private void generateSerializerForMap(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
+
+        if (fieldSpec.getType().nativeType != CodeGenSpec.DataType.MAP) {
+            throw new IllegalArgumentException("generateSerializerForMap invoked for non-map types " + fieldSpec.getName());
+        }
+
+        if (fieldSpec.getType().containerTypes.get(0).nativeType == CodeGenSpec.DataType.UNKNOWN
+                || fieldSpec.getType().containerTypes.get(1).nativeType == CodeGenSpec.DataType.UNKNOWN) {
+            throw new UnsupportedOperationException("Unknown k/v in maps not supported right now");
+        } else {
+
+            builder.beginControlFlow("for ($T<$L, $L> entry : object.$L().entrySet())",
+                            Map.Entry.class,
+                            fieldSpec.getType().containerTypes.get(0).nativeType.getAutoboxedClass().getName(),
+                            fieldSpec.getType().containerTypes.get(1).nativeType.getAutoboxedClass().getName(),
+                            fieldSpec.getGetter())
+                    .addStatement("$T $LSerializer = new $T()", ISerializer.class, fieldSpec.getName(),
+                            PibifySerializer.class)
+                    .addStatement("$LSerializer.write$L(1, entry.getKey())", fieldSpec.getName(),
+                            fieldSpec.getType().containerTypes.get(0).nativeType.getReadWriteMethodName()
+                    )
+                    .addStatement("$LSerializer.write$L(2, entry.getValue())", fieldSpec.getName(),
+                            fieldSpec.getType().containerTypes.get(1).nativeType.getReadWriteMethodName())
+                    .addStatement("serializer.writeObjectAsBytes($L, $LSerializer.serialize())", fieldSpec.getIndex(),
+                            fieldSpec.getName())
+                    .endControlFlow();
         }
     }
 
@@ -118,10 +150,6 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         refSpec.getClassName() + "Handler"));
         builder.addStatement("serializer.writeObjectAsBytes($L, referenceHandler.serialize(object." + fieldSpec.getGetter() + "()))",
                 fieldSpec.getIndex());
-    }
-
-    private void generateSerializerForMap(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
-        // TODO generateSerializerForMap
     }
 
     private MethodSpec getDeserializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -162,11 +190,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     private void addFieldDeserializerBlock(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
         switch (fieldSpec.getType().nativeType) {
             case ARRAY:
-            case COLLECTION:
                 addArrayDeserializer(fieldSpec, builder);
                 break;
+            case COLLECTION:
+                addCollectionDeserializer(fieldSpec, builder);
+                break;
             case MAP:
-                // TODO handle map deserializer
+                addMapDeserializer(fieldSpec, builder);
                 break;
             case OBJECT:
                 addObjectDeserializer(fieldSpec, builder);
@@ -179,7 +209,59 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         + "deserializer.read" + fieldSpec.getType().nativeType.getReadWriteMethodName() + "())$<");
                 break;
         }
+    }
 
+    private void addMapDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
+        CodeGenSpec.DataType keyType = fieldSpec.getType().containerTypes.get(0).nativeType;
+        CodeGenSpec.DataType valueType = fieldSpec.getType().containerTypes.get(1).nativeType;
+
+        int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), byte[].class);
+
+        builder.addStatement("case " +
+                        tag + ": \n$>" +
+                        "byte[] bytes$L = deserializer.readBytes()", tag)
+                .beginControlFlow("if (object.$L() == null)", fieldSpec.getGetter())
+                .addStatement("object.$L(new $T())", fieldSpec.getSetter(), HashMap.class)
+                .endControlFlow()
+                .addStatement("$T deserializer$L = new $T(bytes$L)", IDeserializer.class, tag, PibifyDeserializer.class, tag)
+                .addStatement("int tag$L = deserializer$L.getNextTag()", tag, tag)
+                .addStatement("$T key = deserializer$L.read$L()", keyType.getAutoboxedClass(), tag, keyType.getReadWriteMethodName())
+                .addStatement("tag$L = deserializer$L.getNextTag()", tag, tag)
+                .addStatement("$T value = deserializer$L.read$L()", valueType.getAutoboxedClass(), tag, valueType.getReadWriteMethodName())
+                .addStatement("object.$L().put(key, value)", fieldSpec.getGetter());
+
+    }
+
+    private void addCollectionDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
+
+        CodeGenSpec.DataType realizedType = fieldSpec.getType().containerTypes.get(0).nativeType;
+
+        int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec));
+        builder.addStatement("case " +
+                                tag + ": \n$>" +
+                                "$T val$L = deserializer.read$L()", realizedType.getClazz(), tag,
+                        realizedType.getReadWriteMethodName())
+                .beginControlFlow("$>if (object.$L() == null)$<", fieldSpec.getGetter())
+                .addStatement("$>object.$L($L)$<", fieldSpec.getSetter(), getCollectionCreator(fieldSpec))
+                .endControlFlow()
+                .addStatement("$>object.$L().add(val$L)$<", fieldSpec.getGetter(), tag);
+
+    }
+
+    private String getCollectionCreator(CodeGenSpec.FieldSpec fieldSpec) {
+        switch (fieldSpec.getType().collectionType) {
+            case LIST:
+                return "new java.util.ArrayList()";
+            case SET:
+                return "new java.util.HashSet()";
+            case QUEUE:
+                return "new java.util.PriorityQueue()";
+            case DEQUE:
+                return "new java.util.Stack()";
+            default:
+                throw new UnsupportedOperationException("Collection type " +
+                        fieldSpec.getType().collectionType + " not supported");
+        }
 
     }
 
