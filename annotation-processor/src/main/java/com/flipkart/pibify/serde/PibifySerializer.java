@@ -6,7 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 /**
- * This class is used for
+ * This class serves as the base serializer that the generated code uses.
  * Author bageshwar.pn
  * Date 27/07/24
  */
@@ -70,5 +70,10 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     @Override
     public void writeString(int index, String value) throws IOException {
         codedOutputStream.writeString(index, value);
+    }
+
+    @Override
+    public void writeObjectAsBytes(int index, byte[] value) throws IOException {
+        codedOutputStream.writeByteArray(index, value);
     }
 }

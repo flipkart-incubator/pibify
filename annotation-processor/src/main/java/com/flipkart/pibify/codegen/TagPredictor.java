@@ -31,6 +31,8 @@ public class TagPredictor {
         map.put(char.class, WireFormat.WIRETYPE_VARINT);
         map.put(boolean.class, WireFormat.WIRETYPE_VARINT);
         map.put(String.class, WireFormat.WIRETYPE_LENGTH_DELIMITED);
+        map.put(Object.class, WireFormat.WIRETYPE_LENGTH_DELIMITED);
+        map.put(byte[].class, WireFormat.WIRETYPE_LENGTH_DELIMITED);
         return map;
     }
 

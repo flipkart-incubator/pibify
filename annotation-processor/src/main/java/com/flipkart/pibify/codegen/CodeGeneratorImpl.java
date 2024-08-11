@@ -64,6 +64,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     case MAP:
                         generateSerializerForMap(fieldSpec, builder);
                         break;
+                    case OBJECT:
+                        generateSerializerForObjectReference(codeGenSpec, fieldSpec, builder);
+                        break;
                     default:
                         builder.addStatement("serializer.write" + fieldSpec.getType().nativeType.getReadWriteMethodName()
                                 + "(" + fieldSpec.getIndex() + ", object." + fieldSpec.getGetter() + "())");
@@ -99,8 +102,26 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
     }
 
-    private void generateSerializerForMap(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
+    private void generateSerializerForObjectReference(CodeGenSpec codeGenSpec, CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
+        if (fieldSpec.getType().nativeType != CodeGenSpec.DataType.OBJECT) {
+            throw new IllegalArgumentException("generateSerializerForObjectReference invoked for non-reference types "
+                    + fieldSpec.getName());
+        }
 
+        CodeGenSpec refSpec = fieldSpec.getType().referenceType;
+
+        builder.addStatement("$T " + fieldSpec.getName() + "Handler = new $T()",
+                ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
+                        ClassName.get(refSpec.getPackageName(), refSpec.getClassName())
+                ),
+                ClassName.get("com.flipkart.pibify.generated." + refSpec.getPackageName(),
+                        refSpec.getClassName() + "Handler"));
+        builder.addStatement("serializer.writeObjectAsBytes($L, referenceHandler.serialize(object." + fieldSpec.getGetter() + "()))",
+                fieldSpec.getIndex());
+    }
+
+    private void generateSerializerForMap(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
+        // TODO generateSerializerForMap
     }
 
     private MethodSpec getDeserializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -145,6 +166,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 addArrayDeserializer(fieldSpec, builder);
                 break;
             case MAP:
+                // TODO handle map deserializer
+                break;
+            case OBJECT:
+                addObjectDeserializer(fieldSpec, builder);
                 break;
             default:
                 builder.addStatement("case " +
@@ -177,9 +202,26 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
                 .endControlFlow()
                 .addStatement("$>object." + fieldSpec.getSetter()
-                        + "(newArray$L)$<", tag)
+                        + "(newArray$L)$<", tag);
+    }
 
-        ;
+    private void addObjectDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
+        CodeGenSpec refSpec = fieldSpec.getType().referenceType;
+        int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), byte[].class);
+
+        builder.addStatement("case " +
+                        tag + ": \n$>" +
+                        "$T " + fieldSpec.getName() + "Handler$L = new $T()",
+                ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
+                        ClassName.get(refSpec.getPackageName(), refSpec.getClassName())
+                ),
+                tag,
+                ClassName.get("com.flipkart.pibify.generated." + refSpec.getPackageName(),
+                        refSpec.getClassName() + "Handler"));
+
+        builder.addStatement("$>object." + fieldSpec.getSetter() + "(" + fieldSpec.getName()
+                + "Handler$L.deserialize(deserializer.readBytes()))$<", tag);
+
     }
 
     private Class<?> getClassForTag(CodeGenSpec.FieldSpec fieldSpec) {

@@ -4,6 +4,8 @@ import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
+import com.flipkart.pibify.test.data.ClassWithReferences;
+import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.Test;
@@ -17,8 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 @SuppressWarnings("all")
 class CodeGeneratorImplTest {
 
-    private <T> T invokeGeneratedCode(JavaFile javaFile, T data) throws Exception {
-        SimpleCompiler simpleCompiler = new SimpleCompiler();
+    private <T> T invokeGeneratedCode(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
@@ -27,6 +28,11 @@ class CodeGeneratorImplTest {
 
         Method deserialize = handlerClazz.getDeclaredMethod("deserialize", byte[].class);
         return (T) deserialize.invoke(handlerInstance, result);
+    }
+
+    private <T> T invokeGeneratedCode(JavaFile javaFile, T data) throws Exception {
+        SimpleCompiler simpleCompiler = new SimpleCompiler();
+        return invokeGeneratedCode(simpleCompiler, javaFile, data);
     }
 
     @Test
@@ -96,6 +102,41 @@ class CodeGeneratorImplTest {
         assertArrayEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertArrayEquals(testPayload.getaBoolean(), deserialized.getaBoolean());
         assertArrayEquals(testPayload.getaString(), deserialized.getaString());
+    }
+
+    @Test
+    public void testClassWithReferences() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithReferences.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ClassWithReferences testPayload = new ClassWithReferences();
+        testPayload.randomize();
+
+        SimpleCompiler compiler = new SimpleCompiler();
+        // load dependent class upfront
+        compiler.compile(impl.generate(
+                        creator.create(AnotherClassWithNativeFields.class))
+                .getJavaFile().toJavaFileObject());
+        Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." +
+                AnotherClassWithNativeFields.class.getCanonicalName() + "Handler");
+
+        ClassWithReferences deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+
+        assertEquals(testPayload.getaString(), deserialized.getaString());
+        assertEquals(testPayload.getReference().getaString(), deserialized.getReference().getaString());
+        assertEquals(testPayload.getReference().getAnInt(), deserialized.getReference().getAnInt());
+        assertEquals(testPayload.getReference().getaByte(), deserialized.getReference().getaByte());
+        assertEquals(testPayload.getReference().getaChar(), deserialized.getReference().getaChar());
+        assertEquals(testPayload.getReference().getaDouble(), deserialized.getReference().getaDouble());
+        assertEquals(testPayload.getReference().getaFloat(), deserialized.getReference().getaFloat());
+        assertEquals(testPayload.getReference().getaLong(), deserialized.getReference().getaLong());
+        assertEquals(testPayload.getReference().getaShort(), deserialized.getReference().getaShort());
+        assertEquals(testPayload.getReference().isaBoolean(), deserialized.getReference().isaBoolean());
     }
 
     //@Test

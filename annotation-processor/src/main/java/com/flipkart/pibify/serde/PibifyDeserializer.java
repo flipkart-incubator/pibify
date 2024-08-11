@@ -5,7 +5,7 @@ import com.google.protobuf.CodedInputStream;
 import java.io.IOException;
 
 /**
- * This class is used for
+ * This class serves as the base deserializer that the generated code uses.
  * Author bageshwar.pn
  * Date 27/07/24
  */
@@ -70,5 +70,10 @@ public class PibifyDeserializer extends BaseSerde implements IDeserializer {
     @Override
     public String readString() throws IOException {
         return codedInputStream.readStringRequireUtf8();
+    }
+
+    @Override
+    public byte[] readBytes() throws IOException {
+        return codedInputStream.readByteArray();
     }
 }

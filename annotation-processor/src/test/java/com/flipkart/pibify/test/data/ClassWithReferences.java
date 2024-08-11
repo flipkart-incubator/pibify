@@ -1,6 +1,7 @@
 package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
+import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 
 /**
  * This class is used for testing Class Refs
@@ -10,16 +11,22 @@ import com.flipkart.pibify.core.Pibify;
 public class ClassWithReferences {
 
     @Pibify(1)
-    private ClassWithNativeCollections reference;
+    private AnotherClassWithNativeFields reference;
 
     @Pibify(2)
     private String aString;
 
-    public ClassWithNativeCollections getReference() {
+    public void randomize() {
+        aString = "str" + Math.random();
+        reference = new AnotherClassWithNativeFields();
+        reference.randomize();
+    }
+
+    public AnotherClassWithNativeFields getReference() {
         return reference;
     }
 
-    public void setReference(ClassWithNativeCollections reference) {
+    public void setReference(AnotherClassWithNativeFields reference) {
         this.reference = reference;
     }
 

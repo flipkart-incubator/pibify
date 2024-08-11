@@ -28,4 +28,5 @@ public interface ISerializer {
 
     void writeString(int index, String value) throws IOException;
 
+    void writeObjectAsBytes(int index, byte[] value) throws IOException;
 }

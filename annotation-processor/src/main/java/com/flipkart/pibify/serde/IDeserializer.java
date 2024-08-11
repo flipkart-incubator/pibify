@@ -29,4 +29,6 @@ public interface IDeserializer {
     double readDouble() throws IOException;
 
     String readString() throws IOException;
+
+    byte[] readBytes() throws IOException;
 }

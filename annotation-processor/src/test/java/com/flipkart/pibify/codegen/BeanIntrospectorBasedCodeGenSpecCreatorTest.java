@@ -285,6 +285,11 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals(CodeGenSpec.DataType.OBJECT, field.getType().nativeType);
         assertNull(field.getType().containerTypes);
         assertNotNull(field.getType().referenceType);
+        assertEquals("com.flipkart.pibify.test.data.another",
+                field.getType().referenceType.getPackageName());
+
+        assertEquals("AnotherClassWithNativeCollections",
+                field.getType().referenceType.getClassName());
 
         // assert on ref class
         nameToFields = field.getType().referenceType.getFields().stream()
