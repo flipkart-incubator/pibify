@@ -30,5 +30,5 @@ public interface IDeserializer {
 
     String readString() throws IOException;
 
-    byte[] readBytes() throws IOException;
+    byte[] readObjectAsBytes() throws IOException;
 }

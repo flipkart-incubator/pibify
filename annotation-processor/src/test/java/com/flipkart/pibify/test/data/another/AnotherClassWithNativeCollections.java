@@ -2,9 +2,7 @@ package com.flipkart.pibify.test.data.another;
 
 import com.flipkart.pibify.core.Pibify;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -27,16 +25,11 @@ public class AnotherClassWithNativeCollections {
     @Pibify(3)
     private Map<Float, Boolean> aMap;
 
-    @Pibify(4)
-    private Collection<?> aCollection;
-
     public void randomize() {
         aString = Arrays.asList("str" + Math.random(), "str" + Math.random(), "str" + Math.random());
         anInt = new HashSet<>(Arrays.asList(
                 (int) (Math.random() * 1000), (int) (Math.random() * 1000), (int) (Math.random() * 1000)));
 
-        // TODO fill object
-        aCollection = new ArrayList<>();
         aMap = new HashMap<>();
         aMap.put((float) Math.random(), Math.random() > 0.5);
         aMap.put((float) Math.random(), Math.random() > 0.5);
@@ -66,13 +59,5 @@ public class AnotherClassWithNativeCollections {
 
     public void setaMap(Map<Float, Boolean> aMap) {
         this.aMap = aMap;
-    }
-
-    public Collection<?> getaCollection() {
-        return aCollection;
-    }
-
-    public void setaCollection(Collection<?> aCollection) {
-        this.aCollection = aCollection;
     }
 }

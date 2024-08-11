@@ -36,7 +36,7 @@ public class ClassWithNativeFields {
     @Pibify(9)
     private short aShort = 9;
 
-    public void randomize() {
+    public ClassWithNativeFields randomize() {
         aString = "str" + Math.random();
         anInt = (int) (Math.random() * 1000);
         aLong = (long) (Math.random() * 1000000);
@@ -46,6 +46,7 @@ public class ClassWithNativeFields {
         aChar = (char) (Math.random() * 100);
         aByte = (byte) (Math.random() * 100);
         aShort = (short) (Math.random() * 100);
+        return this;
     }
 
     public String getaString() {

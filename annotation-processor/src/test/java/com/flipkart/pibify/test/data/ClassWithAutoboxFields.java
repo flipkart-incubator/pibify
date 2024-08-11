@@ -33,7 +33,7 @@ public class ClassWithAutoboxFields {
     @Pibify(9)
     private Short aShort = 9;
 
-    public void randomize() {
+    public ClassWithAutoboxFields randomize() {
 
         anInt = (int) (Math.random() * 1000);
         aLong = (long) (Math.random() * 1000000);
@@ -43,6 +43,7 @@ public class ClassWithAutoboxFields {
         aChar = (char) (Math.random() * 100);
         aByte = (byte) (Math.random() * 100);
         aShort = (short) (Math.random() * 100);
+        return this;
     }
 
     public Integer getAnInt() {
@@ -107,5 +108,35 @@ public class ClassWithAutoboxFields {
 
     public void setaShort(Short aShort) {
         this.aShort = aShort;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ClassWithAutoboxFields that = (ClassWithAutoboxFields) o;
+
+        if (!anInt.equals(that.anInt)) return false;
+        if (!aLong.equals(that.aLong)) return false;
+        if (!aFloat.equals(that.aFloat)) return false;
+        if (!aDouble.equals(that.aDouble)) return false;
+        if (!aBoolean.equals(that.aBoolean)) return false;
+        if (!aChar.equals(that.aChar)) return false;
+        if (!aByte.equals(that.aByte)) return false;
+        return aShort.equals(that.aShort);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = anInt.hashCode();
+        result = 31 * result + aLong.hashCode();
+        result = 31 * result + aFloat.hashCode();
+        result = 31 * result + aDouble.hashCode();
+        result = 31 * result + aBoolean.hashCode();
+        result = 31 * result + aChar.hashCode();
+        result = 31 * result + aByte.hashCode();
+        result = 31 * result + aShort.hashCode();
+        return result;
     }
 }

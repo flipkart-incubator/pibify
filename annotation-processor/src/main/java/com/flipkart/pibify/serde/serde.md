@@ -6,15 +6,15 @@ Support for
 4. @JsonProperty on arbitrary methods
 5. @JsonProperty with renaming fields (should be noOp)
 6. @JsonProperty in constructor
-7. Basic Pojo
-8. Relational Pojo
+7. Basic Pojo [done]
+8. Relational Pojo [done]
 9. Tertiary Relational pojo with missing annotations on tertiary refs
 10. Array of Objects
 11. 1 level SubClass Hierarchy
 12. N level subclass hierarchy
 13. Explicit @JsonSubtype
-14. Collections of java natives
-15. Collections of Java Objects
+14. Collections of java natives [done]
+15. Collections of Java Objects [done]
 16. Collections of Collections
 17. @JsonCreator
 18. Iterable

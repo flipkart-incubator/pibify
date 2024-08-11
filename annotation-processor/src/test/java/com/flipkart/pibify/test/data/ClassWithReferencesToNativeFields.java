@@ -16,10 +16,11 @@ public class ClassWithReferencesToNativeFields {
     @Pibify(2)
     private String aString;
 
-    public void randomize() {
+    public ClassWithReferencesToNativeFields randomize() {
         aString = "str" + Math.random();
         reference = new AnotherClassWithNativeFields();
         reference.randomize();
+        return this;
     }
 
     public AnotherClassWithNativeFields getReference() {

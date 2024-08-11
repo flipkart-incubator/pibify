@@ -18,10 +18,11 @@ public class ClassWithNativeArrays {
     @Pibify(3)
     private boolean[] aBoolean = null;
 
-    public void randomize() {
+    public ClassWithNativeArrays randomize() {
         aString = new String[]{"str" + Math.random(), "str" + Math.random(), "str" + Math.random()};
         anInt = new int[]{(int) (Math.random() * 1000), (int) (Math.random() * 1000), (int) (Math.random() * 1000)};
         aBoolean = new boolean[]{Math.random() > 0.5, Math.random() > 0.5, Math.random() > 0.5};
+        return this;
     }
 
     public String[] getaString() {

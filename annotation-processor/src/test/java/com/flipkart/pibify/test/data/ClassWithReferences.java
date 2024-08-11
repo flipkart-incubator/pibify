@@ -16,10 +16,11 @@ public class ClassWithReferences {
     @Pibify(2)
     private String aString;
 
-    public void randomize() {
+    public ClassWithReferences randomize() {
         aString = "str" + Math.random();
         reference = new AnotherClassWithNativeCollections();
         reference.randomize();
+        return this;
     }
 
     public AnotherClassWithNativeCollections getReference() {

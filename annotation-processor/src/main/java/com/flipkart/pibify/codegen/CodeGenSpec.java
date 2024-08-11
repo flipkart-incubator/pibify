@@ -76,7 +76,7 @@ public class CodeGenSpec {
         ARRAY(null, null, null),
         COLLECTION(null, null, null),
         MAP(null, null, null),
-        OBJECT(null, null, null),
+        OBJECT("ObjectAsBytes", null, null),
 
         UNKNOWN(null, null, null); /*These types will be serde'd using json */
 

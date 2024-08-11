@@ -73,7 +73,7 @@ public class PibifyDeserializer extends BaseSerde implements IDeserializer {
     }
 
     @Override
-    public byte[] readBytes() throws IOException {
+    public byte[] readObjectAsBytes() throws IOException {
         return codedInputStream.readByteArray();
     }
 }

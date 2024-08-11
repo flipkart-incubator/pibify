@@ -30,7 +30,7 @@ public class ClassWithNativeCollections {
     private Collection<?> aCollection;
      */
 
-    public void randomize() {
+    public ClassWithNativeCollections randomize() {
         aString = Arrays.asList("str" + Math.random(), "str" + Math.random(), "str" + Math.random());
         anInt = new HashSet<>(Arrays.asList(
                 (int) (Math.random() * 1000), (int) (Math.random() * 1000), (int) (Math.random() * 1000)));
@@ -39,6 +39,7 @@ public class ClassWithNativeCollections {
         aMap.put((float) Math.random(), Math.random() > 0.5);
         aMap.put((float) Math.random(), Math.random() > 0.5);
         aMap.put((float) Math.random(), Math.random() > 0.5);
+        return this;
     }
 
 

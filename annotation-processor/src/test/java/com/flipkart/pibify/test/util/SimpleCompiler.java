@@ -143,7 +143,8 @@ public class SimpleCompiler {
     private void check(boolean success, DiagnosticCollector<?> collector) {
         for (Diagnostic<?> diagnostic : collector.getDiagnostics()) {
             if (diagnostic.getKind() == Diagnostic.Kind.ERROR) {
-                throw new RuntimeException(diagnostic.getMessage(Locale.US));
+                throw new RuntimeException(diagnostic.getMessage(Locale.US) +
+                        " at " + diagnostic.getLineNumber() + ":" + diagnostic.getColumnNumber());
             }
         }
         if (!success) throw new RuntimeException("Unknown error");
