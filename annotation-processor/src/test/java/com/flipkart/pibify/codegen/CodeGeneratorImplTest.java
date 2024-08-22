@@ -3,6 +3,7 @@ package com.flipkart.pibify.codegen;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
+import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.data.ClassWithObjectCollections;
 import com.flipkart.pibify.test.data.ClassWithReferences;
@@ -231,5 +232,25 @@ class CodeGeneratorImplTest {
         }
 
         assertEquals(testPayload.getMapOfObjects(), deserialized.getMapOfObjects());
+    }
+
+    @Test
+    public void testClassWithNativeCollectionsOfCollections() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollectionsOfCollections.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        javaFile.writeTo(System.out);
+        ClassWithNativeCollectionsOfCollections testPayload = new ClassWithNativeCollectionsOfCollections();
+        testPayload.randomize();
+
+        ClassWithNativeCollectionsOfCollections deserialized = invokeGeneratedCode(javaFile, testPayload);
+
+        assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
+        assertEquals(testPayload.getaString(), deserialized.getaString());
+        assertEquals(testPayload.getaMap(), deserialized.getaMap());
     }
 }

@@ -3,6 +3,8 @@ package com.flipkart.pibify.codegen;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
+import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
+import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections2;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.data.ClassWithReferences;
 import org.junit.jupiter.api.Test;
@@ -300,7 +302,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         // assert on ref class
         nameToFields = field.getType().referenceType.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
-        assertEquals(4, field.getType().referenceType.getFields().size());
+        assertEquals(3, field.getType().referenceType.getFields().size());
 
         field = nameToFields.get("aString");
         assertEquals("aString", field.getName());
@@ -333,15 +335,136 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNotNull(field.getType().containerTypes.get(1));
         assertEquals(CodeGenSpec.DataType.FLOAT, field.getType().containerTypes.get(0).nativeType);
         assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().containerTypes.get(1).nativeType);
+    }
 
-        field = nameToFields.get("aCollection");
-        assertEquals("aCollection", field.getName());
-        assertEquals("getaCollection", field.getGetter());
-        assertEquals("setaCollection", field.getSetter());
-        assertEquals(4, field.getIndex());
+    @Test
+    void createClassWithNativeCollectionsOfCollections() throws CodeGenException {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollectionsOfCollections.class);
+        assertNotNull(codeGenSpec);
+        assertEquals(3, codeGenSpec.getFields().size());
+
+        Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
+                .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
+
+        CodeGenSpec.FieldSpec field = nameToFields.get("aString");
+        assertEquals("aString", field.getName());
+        assertEquals("getaString", field.getGetter());
+        assertEquals("setaString", field.getSetter());
+        assertEquals(1, field.getIndex());
         assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
         assertEquals(CodeGenSpec.CollectionType.LIST, field.getType().collectionType);
         assertNotNull(field.getType().containerTypes);
-        assertEquals(CodeGenSpec.DataType.UNKNOWN, field.getType().containerTypes.get(0).nativeType);
+        CodeGenSpec.Type listType = field.getType().containerTypes.get(0);
+        assertEquals(CodeGenSpec.DataType.COLLECTION, listType.nativeType);
+        assertNotNull(listType.containerTypes);
+        assertEquals(CodeGenSpec.CollectionType.LIST, listType.collectionType);
+        assertEquals(CodeGenSpec.DataType.STRING, listType.containerTypes.get(0).nativeType);
+
+        field = nameToFields.get("anInt");
+        assertEquals("anInt", field.getName());
+        assertEquals("getAnInt", field.getGetter());
+        assertEquals("setAnInt", field.getSetter());
+        assertEquals(2, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
+        assertEquals(CodeGenSpec.CollectionType.SET, field.getType().collectionType);
+        assertNotNull(field.getType().containerTypes);
+
+        listType = field.getType().containerTypes.get(0);
+        assertEquals(CodeGenSpec.DataType.COLLECTION, listType.nativeType);
+        assertEquals(CodeGenSpec.CollectionType.SET, listType.collectionType);
+        assertNotNull(listType.collectionType);
+        assertEquals(CodeGenSpec.DataType.INT, listType.containerTypes.get(0).nativeType);
+
+        field = nameToFields.get("aMap");
+        assertEquals("aMap", field.getName());
+        assertEquals("getaMap", field.getGetter());
+        assertEquals("setaMap", field.getSetter());
+        assertEquals(3, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.MAP, field.getType().nativeType);
+        assertEquals(2, field.getType().containerTypes.size());
+        assertNotNull(field.getType().containerTypes.get(0));
+        assertNotNull(field.getType().containerTypes.get(1));
+        assertEquals(CodeGenSpec.DataType.FLOAT, field.getType().containerTypes.get(0).nativeType);
+
+        CodeGenSpec.Type valueType = field.getType().containerTypes.get(1);
+        assertEquals(CodeGenSpec.DataType.MAP, valueType.nativeType);
+        assertEquals(2, valueType.containerTypes.size());
+        assertNotNull(valueType.containerTypes.get(0));
+        assertNotNull(valueType.containerTypes.get(1));
+        assertEquals(CodeGenSpec.DataType.STRING, valueType.containerTypes.get(0).nativeType);
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, valueType.containerTypes.get(1).nativeType);
+
+
+    }
+
+    @Test
+    void createClassWithNativeCollectionsOfCollections2() throws CodeGenException {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollectionsOfCollections2.class);
+        assertNotNull(codeGenSpec);
+        assertEquals(3, codeGenSpec.getFields().size());
+
+        Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
+                .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
+
+        CodeGenSpec.FieldSpec field = nameToFields.get("aString");
+        assertEquals("aString", field.getName());
+        assertEquals("getaString", field.getGetter());
+        assertEquals("setaString", field.getSetter());
+        assertEquals(1, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
+        assertEquals(CodeGenSpec.CollectionType.LIST, field.getType().collectionType);
+        assertNotNull(field.getType().containerTypes);
+        CodeGenSpec.Type listType = field.getType().containerTypes.get(0);
+        assertEquals(CodeGenSpec.DataType.COLLECTION, listType.nativeType);
+        assertNotNull(listType.containerTypes);
+        assertEquals(CodeGenSpec.CollectionType.SET, listType.collectionType);
+        assertEquals(CodeGenSpec.DataType.STRING, listType.containerTypes.get(0).nativeType);
+
+        field = nameToFields.get("anInt");
+        assertEquals("anInt", field.getName());
+        assertEquals("getAnInt", field.getGetter());
+        assertEquals("setAnInt", field.getSetter());
+        assertEquals(2, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.COLLECTION, field.getType().nativeType);
+        assertEquals(CodeGenSpec.CollectionType.SET, field.getType().collectionType);
+        assertNotNull(field.getType().containerTypes);
+
+        listType = field.getType().containerTypes.get(0);
+        assertEquals(CodeGenSpec.DataType.COLLECTION, listType.nativeType);
+        assertEquals(CodeGenSpec.CollectionType.LIST, listType.collectionType);
+        assertNotNull(listType.collectionType);
+        assertEquals(CodeGenSpec.DataType.INT, listType.containerTypes.get(0).nativeType);
+
+        field = nameToFields.get("aMap");
+        assertEquals("aMap", field.getName());
+        assertEquals("getaMap", field.getGetter());
+        assertEquals("setaMap", field.getSetter());
+        assertEquals(3, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.MAP, field.getType().nativeType);
+        assertEquals(2, field.getType().containerTypes.size());
+        assertNotNull(field.getType().containerTypes.get(0));
+        assertNotNull(field.getType().containerTypes.get(1));
+        assertEquals(CodeGenSpec.DataType.FLOAT, field.getType().containerTypes.get(0).nativeType);
+
+        CodeGenSpec.Type valueType = field.getType().containerTypes.get(1);
+        assertEquals(CodeGenSpec.DataType.COLLECTION, valueType.nativeType);
+        assertEquals(1, valueType.containerTypes.size());
+        assertEquals(CodeGenSpec.CollectionType.LIST, valueType.collectionType);
+
+        valueType = valueType.containerTypes.get(0);
+        assertEquals(CodeGenSpec.DataType.COLLECTION, valueType.nativeType);
+        assertEquals(1, valueType.containerTypes.size());
+        assertEquals(CodeGenSpec.CollectionType.SET, valueType.collectionType);
+
+        valueType = valueType.containerTypes.get(0);
+        assertEquals(CodeGenSpec.DataType.MAP, valueType.nativeType);
+        assertNotNull(valueType.containerTypes.get(0));
+        assertNotNull(valueType.containerTypes.get(1));
+        assertEquals(CodeGenSpec.DataType.STRING, valueType.containerTypes.get(0).nativeType);
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, valueType.containerTypes.get(1).nativeType);
+
+
     }
 }

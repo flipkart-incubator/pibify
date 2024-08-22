@@ -8,7 +8,6 @@ import java.beans.FeatureDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -61,7 +60,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     String name = reflectedField.getName();
                     fieldSpec.setIndex(annotation.value());
                     fieldSpec.setName(name);
-                    fieldSpec.setType(getTypeFromJavaType(reflectedField, reflectedField.getType()));
+                    fieldSpec.setType(getTypeFromJavaType(reflectedField.getName(), reflectedField.getGenericType(),
+                            reflectedField.getType()));
                     fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
                     fieldSpec.setSetter(namesToBeanInfo.get(name).getWriteMethod().getName());
                     spec.addField(fieldSpec);
@@ -74,7 +74,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
     }
 
-    private CodeGenSpec.Type getTypeFromJavaType(Field reflectedField, Class<?> type) throws CodeGenException {
+    private CodeGenSpec.Type getTypeFromJavaType(String fieldName, Type fieldGenericType, Class<?> type) throws CodeGenException {
         CodeGenSpec.Type specType = new CodeGenSpec.Type();
         CodeGenSpec.DataType nativeType = CodeSpecMeta.CLASS_TO_TYPE_MAP.get(type);
 
@@ -85,15 +85,15 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             if (type.isArray()) {
                 Class<?> arrayType = type.getComponentType();
                 specType.nativeType = CodeGenSpec.DataType.ARRAY;
-                specType.containerTypes.add(getTypeFromJavaType(reflectedField, arrayType));
+                specType.containerTypes.add(getTypeFromJavaType(fieldName, fieldGenericType, arrayType));
             } else if (Collection.class.isAssignableFrom(type)) {
                 specType.nativeType = CodeGenSpec.DataType.COLLECTION;
-                specType.containerTypes.add(getContainerType(reflectedField, type));
+                specType.containerTypes.add(getContainerType(fieldName, fieldGenericType, type));
                 specType.collectionType = getCollectionType(type);
             } else if (Map.class.isAssignableFrom(type)) {
                 specType.nativeType = CodeGenSpec.DataType.MAP;
-                specType.containerTypes.add(getContainerType(reflectedField, type, 0));
-                specType.containerTypes.add(getContainerType(reflectedField, type, 1));
+                specType.containerTypes.add(getContainerType(fieldName, fieldGenericType, type, 0));
+                specType.containerTypes.add(getContainerType(fieldName, fieldGenericType, type, 1));
             } else {
                 specType.nativeType = CodeGenSpec.DataType.OBJECT;
                 // release the object, since its not needed
@@ -120,21 +120,24 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
     }
 
-    private CodeGenSpec.Type getContainerType(Field reflectedField, Class<?> type) throws CodeGenException {
-        return getContainerType(reflectedField, type, 0);
+    private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type) throws CodeGenException {
+        return getContainerType(fieldName, fieldGenericType, type, 0);
     }
 
-    private CodeGenSpec.Type getContainerType(Field reflectedField, Class<?> type, int index) throws CodeGenException {
-        ParameterizedType genericType = (ParameterizedType) reflectedField.getGenericType();
+    private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type, int index) throws CodeGenException {
+        ParameterizedType genericType = (ParameterizedType) fieldGenericType;
         Type actualTypeArgument = genericType.getActualTypeArguments()[index];
         if (actualTypeArgument instanceof Class) {
             Class<?> typeParamClass = (Class<?>) actualTypeArgument;
-            return getTypeFromJavaType(reflectedField, typeParamClass);
+            return getTypeFromJavaType(fieldName, fieldGenericType, typeParamClass);
         } else if (actualTypeArgument instanceof WildcardType) {
             return getUnknownType();
+        } else if (actualTypeArgument instanceof ParameterizedType) {
+            ParameterizedType castedActualType = (ParameterizedType) actualTypeArgument;
+            return getTypeFromJavaType(fieldName, actualTypeArgument, (Class<?>) castedActualType.getRawType());
         } else {
             throw new UnsupportedOperationException(type.getSimpleName() +
-                    " not supported in field " + reflectedField.getName());
+                    " not supported in field " + fieldName);
         }
     }
 
