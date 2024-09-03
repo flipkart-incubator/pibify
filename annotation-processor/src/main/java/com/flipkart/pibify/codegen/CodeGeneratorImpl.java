@@ -15,8 +15,11 @@ import com.squareup.javapoet.TypeSpec;
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+
+import static com.flipkart.pibify.codegen.CodeGenUtil.isCollectionOrMap;
 
 /**
  * This class is used for generating the JavaFile given a CodeGenSpec
@@ -29,13 +32,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     public JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
 
         ClassName thePojo = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
-
-        TypeSpec pibifyGeneratedHandler = TypeSpec.classBuilder(codeGenSpec.getClassName() + "Handler")
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addMethod(getSerializer(thePojo, codeGenSpec))
-                .addMethod(getDeserializer(thePojo, codeGenSpec))
-                .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo))
-                .build();
+        TypeSpec.Builder typeSpecBuilder = getTypeSpecBuilder(codeGenSpec, thePojo);
+        typeSpecBuilder.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
+        addInnerClassesForCollectionHandlers(typeSpecBuilder, codeGenSpec);
+        TypeSpec pibifyGeneratedHandler = typeSpecBuilder.build();
 
         String packageName = "com.flipkart.pibify.generated." + codeGenSpec.getPackageName();
         JavaFileWrapper wrapper = new JavaFileWrapper();
@@ -43,6 +43,31 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         wrapper.setJavaFile(JavaFile.builder(packageName, pibifyGeneratedHandler)
                 .build());
         return wrapper;
+    }
+
+    private TypeSpec.Builder getTypeSpecBuilder(CodeGenSpec codeGenSpec, ClassName thePojo) throws CodeGenException {
+        return TypeSpec.classBuilder(codeGenSpec.getClassName() + "Handler")
+                .addMethod(getSerializer(thePojo, codeGenSpec))
+                .addMethod(getDeserializer(thePojo, codeGenSpec))
+                .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo));
+    }
+
+    private void addInnerClassesForCollectionHandlers(TypeSpec.Builder typeSpecBuilder, CodeGenSpec codeGenSpec) {
+        for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
+            if (isCollectionOrMap(fieldSpec.getType().nativeType)) {
+                addInnerClassesForCollectionHandlersImpl(typeSpecBuilder, fieldSpec.getType());
+            }
+        }
+    }
+
+    private void addInnerClassesForCollectionHandlersImpl(TypeSpec.Builder typeSpecBuilder, CodeGenSpec.Type fieldSpec) {
+        // pass the field name and use fieldName + Handler + (counter++) to have names of the handlers
+        /*typeSpecBuilder.addType(
+        TypeSpec.classBuilder(fieldSpec. + "Handler")
+                .addMethod(getSerializer(thePojo, codeGenSpec))
+                .addMethod(getDeserializer(thePojo, codeGenSpec))
+                .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo))
+        );*/
     }
 
     private MethodSpec getSerializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -125,14 +150,25 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     // Can return a ClassName of a Class (for java natives)
+    // @returns Either the javapoet class name, or java reflection class
+
     private Object getReferenceTypeForContainers(CodeGenSpec.Type realizedType, boolean preferAutoboxed) {
         if (realizedType.nativeType == CodeGenSpec.DataType.OBJECT) {
             return ClassName.get(realizedType.referenceType.getPackageName(), realizedType.referenceType.getClassName());
         } else {
-            if (preferAutoboxed) {
-                return ClassName.get(realizedType.nativeType.getAutoboxedClass());
+
+            // if native type is collection or map
+            // get deep name, else return native types clazz
+            if (realizedType.nativeType == CodeGenSpec.DataType.COLLECTION) {
+                return Collection.class;
+            } else if (realizedType.nativeType == CodeGenSpec.DataType.MAP) {
+                return Map.class;
             } else {
-                return realizedType.nativeType.getClazz();
+                if (preferAutoboxed) {
+                    return ClassName.get(realizedType.nativeType.getAutoboxedClass());
+                } else {
+                    return realizedType.nativeType.getClazz();
+                }
             }
         }
     }
@@ -439,8 +475,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         switch (fieldSpec.getType().nativeType) {
             case ARRAY:
             case COLLECTION:
-
-                if (fieldSpec.getType().containerTypes.get(0).nativeType == CodeGenSpec.DataType.OBJECT) {
+                CodeGenSpec.DataType containerNativeType = fieldSpec.getType().containerTypes.get(0).nativeType;
+                if (containerNativeType == CodeGenSpec.DataType.OBJECT
+                        || containerNativeType == CodeGenSpec.DataType.COLLECTION
+                        || containerNativeType == CodeGenSpec.DataType.MAP) {
                     return Object.class;
                 } else {
                     return fieldSpec.getType().containerTypes.get(0).nativeType.getClazz();
