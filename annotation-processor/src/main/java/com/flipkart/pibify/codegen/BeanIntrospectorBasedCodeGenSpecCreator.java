@@ -96,11 +96,12 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 1));
             } else {
                 specType.setNativeType(CodeGenSpec.DataType.OBJECT);
-                // release the object, since its not needed
+                // release the object, since it's not needed
                 specType.setContainerTypes(null);
                 specType.setReferenceType(create(type));
             }
         }
+        specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
 
         return specType;
     }

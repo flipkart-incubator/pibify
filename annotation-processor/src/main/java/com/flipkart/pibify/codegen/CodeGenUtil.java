@@ -45,7 +45,14 @@ public class CodeGenUtil {
                 result.append(getClassNameFromType(first));
             }
         } else {
-            result.append(type.getNativeType().getAutoboxedClass().getCanonicalName());
+            if (type.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+                result.append(type.getReferenceType().getPackageName())
+                        .append(".")
+                        .append(type.getReferenceType().getClassName());
+            } else {
+                result.append(type.getNativeType().getAutoboxedClass().getCanonicalName());
+            }
+
         }
 
         return result.toString();
@@ -78,7 +85,6 @@ public class CodeGenUtil {
             return result + ">";
         } else {
             return type.getNativeType().getAutoboxedClass().getCanonicalName();
-            //throw new UnsupportedOperationException();
         }
     }
 }

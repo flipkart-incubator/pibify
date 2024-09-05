@@ -160,6 +160,7 @@ public class CodeGenSpec {
         private List<Type> containerTypes;
         private CodeGenSpec referenceType;
         private CollectionType collectionType;
+        private String genericTypeSignature;
 
         public DataType getNativeType() {
             return nativeType;
@@ -191,6 +192,14 @@ public class CodeGenSpec {
 
         public void setCollectionType(CollectionType collectionType) {
             this.collectionType = collectionType;
+        }
+
+        public String getGenericTypeSignature() {
+            return genericTypeSignature;
+        }
+
+        public void setGenericTypeSignature(String genericTypeSignature) {
+            this.genericTypeSignature = genericTypeSignature;
         }
     }
 }
