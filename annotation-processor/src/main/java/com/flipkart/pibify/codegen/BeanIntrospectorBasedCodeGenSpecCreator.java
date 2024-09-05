@@ -79,26 +79,26 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         CodeGenSpec.DataType nativeType = CodeSpecMeta.CLASS_TO_TYPE_MAP.get(type);
 
         if (nativeType != null) {
-            specType.nativeType = nativeType;
+            specType.setNativeType(nativeType);
         } else {
-            specType.containerTypes = new ArrayList<>(2);
+            specType.setContainerTypes(new ArrayList<>(2));
             if (type.isArray()) {
                 Class<?> arrayType = type.getComponentType();
-                specType.nativeType = CodeGenSpec.DataType.ARRAY;
-                specType.containerTypes.add(getTypeFromJavaType(fieldName, fieldGenericType, arrayType));
+                specType.setNativeType(CodeGenSpec.DataType.ARRAY);
+                specType.getContainerTypes().add(getTypeFromJavaType(fieldName, fieldGenericType, arrayType));
             } else if (Collection.class.isAssignableFrom(type)) {
-                specType.nativeType = CodeGenSpec.DataType.COLLECTION;
-                specType.containerTypes.add(getContainerType(fieldName, fieldGenericType, type));
-                specType.collectionType = getCollectionType(type);
+                specType.setNativeType(CodeGenSpec.DataType.COLLECTION);
+                specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
+                specType.setCollectionType(getCollectionType(type));
             } else if (Map.class.isAssignableFrom(type)) {
-                specType.nativeType = CodeGenSpec.DataType.MAP;
-                specType.containerTypes.add(getContainerType(fieldName, fieldGenericType, type, 0));
-                specType.containerTypes.add(getContainerType(fieldName, fieldGenericType, type, 1));
+                specType.setNativeType(CodeGenSpec.DataType.MAP);
+                specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 0));
+                specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 1));
             } else {
-                specType.nativeType = CodeGenSpec.DataType.OBJECT;
+                specType.setNativeType(CodeGenSpec.DataType.OBJECT);
                 // release the object, since its not needed
-                specType.containerTypes = null;
-                specType.referenceType = create(type);
+                specType.setContainerTypes(null);
+                specType.setReferenceType(create(type));
             }
         }
 
@@ -143,7 +143,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
     private CodeGenSpec.Type getUnknownType() {
         CodeGenSpec.Type type = new CodeGenSpec.Type();
-        type.nativeType = CodeGenSpec.DataType.UNKNOWN;
+        type.setNativeType(CodeGenSpec.DataType.UNKNOWN);
         return type;
     }
 }

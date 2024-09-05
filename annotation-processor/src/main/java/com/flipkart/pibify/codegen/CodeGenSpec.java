@@ -156,9 +156,41 @@ public class CodeGenSpec {
     }
 
     public static class Type {
-        DataType nativeType;
-        List<Type> containerTypes;
-        CodeGenSpec referenceType;
-        CollectionType collectionType;
+        private DataType nativeType;
+        private List<Type> containerTypes;
+        private CodeGenSpec referenceType;
+        private CollectionType collectionType;
+
+        public DataType getNativeType() {
+            return nativeType;
+        }
+
+        public void setNativeType(DataType nativeType) {
+            this.nativeType = nativeType;
+        }
+
+        public List<Type> getContainerTypes() {
+            return containerTypes;
+        }
+
+        public void setContainerTypes(List<Type> containerTypes) {
+            this.containerTypes = containerTypes;
+        }
+
+        public CodeGenSpec getReferenceType() {
+            return referenceType;
+        }
+
+        public void setReferenceType(CodeGenSpec referenceType) {
+            this.referenceType = referenceType;
+        }
+
+        public CollectionType getCollectionType() {
+            return collectionType;
+        }
+
+        public void setCollectionType(CollectionType collectionType) {
+            this.collectionType = collectionType;
+        }
     }
 }

@@ -46,7 +46,7 @@ public class TagPredictor {
     }
 
     public static int getTagBasedOnField(CodeGenSpec.FieldSpec field) throws InvalidPibifyAnnotation {
-        return makeTag(field.getIndex(), fieldTypeToWireTypeMap.get(field.getType().nativeType.getClazz()));
+        return makeTag(field.getIndex(), fieldTypeToWireTypeMap.get(field.getType().getNativeType().getClazz()));
     }
 
     public static int getTagBasedOnField(int index, Class<?> clazz) throws InvalidPibifyAnnotation {
