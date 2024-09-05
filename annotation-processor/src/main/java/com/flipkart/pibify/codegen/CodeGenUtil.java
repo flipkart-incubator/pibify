@@ -14,6 +14,12 @@ public class CodeGenUtil {
         return (type == CodeGenSpec.DataType.COLLECTION || type == CodeGenSpec.DataType.MAP);
     }
 
+    /**
+     * Returns the entire generic declaration string for this field
+     *
+     * @param fieldSpec
+     * @return
+     */
     public static String getGenericTypeStringForField(CodeGenSpec.FieldSpec fieldSpec) {
 
         if (!isCollectionOrMap(fieldSpec.getType().nativeType)) {
@@ -22,15 +28,17 @@ public class CodeGenUtil {
         return getGenericTypeStringForField(fieldSpec.getType());
     }
 
+    /**
+     * Returns the entire generic declaration string for this type
+     * @param type
+     * @return
+     */
     public static String getGenericTypeStringForField(CodeGenSpec.Type type) {
         StringBuilder result = new StringBuilder();
 
         if (isCollectionOrMap(type.nativeType)) {
             Deque<CodeGenSpec.Type> deque = new ArrayDeque<>();
             deque.add(type);
-            if (type.containerTypes != null) {
-                //deque.addAll(type.containerTypes);
-            }
 
             while (!deque.isEmpty()) {
                 CodeGenSpec.Type first = deque.removeFirst();
@@ -43,7 +51,7 @@ public class CodeGenUtil {
         return result.toString();
     }
 
-    public static String getClassNameFromType(CodeGenSpec.Type type) {
+    private static String getClassNameFromType(CodeGenSpec.Type type) {
         String result;
         if (type.nativeType == CodeGenSpec.DataType.COLLECTION) {
             switch (type.collectionType) {
