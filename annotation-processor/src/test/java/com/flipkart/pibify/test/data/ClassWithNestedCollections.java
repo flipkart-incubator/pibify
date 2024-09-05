@@ -34,6 +34,22 @@ public class ClassWithNestedCollections {
     @Pibify(6)
     private Map<Float, Map<String, Boolean>> aMap;
 
+    @Pibify(7)
+    private Map<Float, Map<String, Map<Integer, Boolean>>> map2;
+
+    @Pibify(7)
+    private Map<Map<Boolean, String>, Map<Integer, Boolean>> map3;
+
+    @Pibify(8)
+    private List<Map<String, Float>> listOfMaps;
+
+    @Pibify(9)
+    private Set<Map<String, Float>> setOfMaps;
+
+    @Pibify(10)
+    private Map<List<String>, Set<Boolean>> mapOfCollections;
+
+
     public ClassWithNestedCollections randomize() {
         aString = new ArrayList<>();
         aString.add(Arrays.asList("str" + Math.random(), "str" + Math.random(), "str" + Math.random()));
@@ -100,5 +116,45 @@ public class ClassWithNestedCollections {
 
     public void setRef1(ClassWithReferences ref1) {
         this.ref1 = ref1;
+    }
+
+    public Map<Float, Map<String, Map<Integer, Boolean>>> getMap2() {
+        return map2;
+    }
+
+    public void setMap2(Map<Float, Map<String, Map<Integer, Boolean>>> map2) {
+        this.map2 = map2;
+    }
+
+    public Map<Map<Boolean, String>, Map<Integer, Boolean>> getMap3() {
+        return map3;
+    }
+
+    public void setMap3(Map<Map<Boolean, String>, Map<Integer, Boolean>> map3) {
+        this.map3 = map3;
+    }
+
+    public List<Map<String, Float>> getListOfMaps() {
+        return listOfMaps;
+    }
+
+    public void setListOfMaps(List<Map<String, Float>> listOfMaps) {
+        this.listOfMaps = listOfMaps;
+    }
+
+    public Set<Map<String, Float>> getSetOfMaps() {
+        return setOfMaps;
+    }
+
+    public void setSetOfMaps(Set<Map<String, Float>> setOfMaps) {
+        this.setOfMaps = setOfMaps;
+    }
+
+    public Map<List<String>, Set<Boolean>> getMapOfCollections() {
+        return mapOfCollections;
+    }
+
+    public void setMapOfCollections(Map<List<String>, Set<Boolean>> mapOfCollections) {
+        this.mapOfCollections = mapOfCollections;
     }
 }

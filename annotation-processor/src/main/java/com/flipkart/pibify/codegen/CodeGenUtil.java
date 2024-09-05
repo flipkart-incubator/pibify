@@ -1,5 +1,8 @@
 package com.flipkart.pibify.codegen;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 /**
  * This class is used for holding common util methods
  * Author bageshwar.pn
@@ -21,48 +24,53 @@ public class CodeGenUtil {
 
     public static String getGenericTypeStringForField(CodeGenSpec.Type type) {
         StringBuilder result = new StringBuilder();
-        int closing = 0;
+
         if (isCollectionOrMap(type.nativeType)) {
-            while (type.containerTypes != null) {
-                result.append(getClassNameFromType(type)).append("<");
-                closing++;
-                // the below line is failing for maps
-                type = type.containerTypes.get(0);
+            Deque<CodeGenSpec.Type> deque = new ArrayDeque<>();
+            deque.add(type);
+            if (type.containerTypes != null) {
+                //deque.addAll(type.containerTypes);
             }
-            result.append(type.nativeType.getAutoboxedClass().getCanonicalName());
+
+            while (!deque.isEmpty()) {
+                CodeGenSpec.Type first = deque.removeFirst();
+                result.append(getClassNameFromType(first));
+            }
         } else {
             result.append(type.nativeType.getAutoboxedClass().getCanonicalName());
-        }
-
-        while (closing > 0) {
-            result.append(">");
-            closing--;
         }
 
         return result.toString();
     }
 
     public static String getClassNameFromType(CodeGenSpec.Type type) {
+        String result;
         if (type.nativeType == CodeGenSpec.DataType.COLLECTION) {
             switch (type.collectionType) {
                 case SET:
-                    return "java.util.Set";
+                    result = "java.util.Set<";
+                    break;
                 case DEQUE:
-                    return "java.util.Dequeue";
+                    result = "java.util.Dequeue<";
+                    break;
                 case QUEUE:
-                    return "java.util.Stack";
+                    result = "java.util.Stack<";
+                    break;
                 case LIST:
                 default:
-                    return "java.util.List";
+                    result = "java.util.List<";
             }
+            result += getGenericTypeStringForField(type.containerTypes.get(0));
+            return result + ">";
         } else if (type.nativeType == CodeGenSpec.DataType.MAP) {
-            String result = "java.util.Map<";
+            result = "java.util.Map<";
             result += getGenericTypeStringForField(type.containerTypes.get(0));
             result += ",";
             result += getGenericTypeStringForField(type.containerTypes.get(1));
             return result + ">";
         } else {
-            throw new UnsupportedOperationException();
+            return type.nativeType.getAutoboxedClass().getCanonicalName();
+            //throw new UnsupportedOperationException();
         }
     }
 }
