@@ -4,7 +4,6 @@ import com.flipkart.pibify.test.data.ClassWithNestedCollections;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class CodeGenUtilTest {
 
@@ -42,7 +41,8 @@ class CodeGenUtilTest {
         assertEquals("java.lang.Integer",
                 codeGenSpec.getFields().get(3).getType().getContainerTypes().get(0).getContainerTypes().get(0).getGenericTypeSignature());
 
-        assertThrows(UnsupportedOperationException.class, () -> CodeGenUtil.getGenericTypeStringForField(codeGenSpec.getFields().get(4)));
+        assertEquals("com.flipkart.pibify.test.data.ClassWithReferences",
+                codeGenSpec.getFields().get(4).getType().getGenericTypeSignature());
 
         assertEquals("java.util.Map<java.lang.Float,java.util.Map<java.lang.String,java.lang.Boolean>>",
                 codeGenSpec.getFields().get(5).getType().getGenericTypeSignature());

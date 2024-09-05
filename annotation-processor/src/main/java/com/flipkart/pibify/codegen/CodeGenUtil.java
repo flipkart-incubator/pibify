@@ -17,21 +17,17 @@ public class CodeGenUtil {
     /**
      * Returns the entire generic declaration string for this field
      *
-     * @param fieldSpec
-     * @return
+     * @param fieldSpec fieldspec
+     * @return string signature
      */
     public static String getGenericTypeStringForField(CodeGenSpec.FieldSpec fieldSpec) {
-
-        if (!isCollectionOrMap(fieldSpec.getType().getNativeType())) {
-            throw new UnsupportedOperationException("Generic type string requested for non-containers");
-        }
         return getGenericTypeStringForField(fieldSpec.getType());
     }
 
     /**
      * Returns the entire generic declaration string for this type
-     * @param type
-     * @return
+     * @param type type
+     * @return string signature
      */
     public static String getGenericTypeStringForField(CodeGenSpec.Type type) {
         StringBuilder result = new StringBuilder();
@@ -84,7 +80,7 @@ public class CodeGenUtil {
             result += getGenericTypeStringForField(type.getContainerTypes().get(1));
             return result + ">";
         } else {
-            return type.getNativeType().getAutoboxedClass().getCanonicalName();
+            throw new UnsupportedOperationException();
         }
     }
 }
