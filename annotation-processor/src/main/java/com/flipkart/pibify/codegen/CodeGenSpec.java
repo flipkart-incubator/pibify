@@ -1,7 +1,12 @@
 package com.flipkart.pibify.codegen;
 
+import com.squareup.javapoet.TypeName;
+
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.List;
+import java.util.Queue;
+import java.util.Set;
 
 /**
  * This class represents the input that will go to the code gen.
@@ -104,7 +109,18 @@ public class CodeGenSpec {
     }
 
     public enum CollectionType {
-        LIST, SET, QUEUE, DEQUE
+        // TODO have interface and impl classes within this ENUM, helps with one less switchcase!
+        LIST(List.class), SET(Set.class), QUEUE(Queue.class), DEQUE(Deque.class);
+
+        private final Class<?> clazz;
+
+        CollectionType(Class<?> clazz) {
+            this.clazz = clazz;
+        }
+
+        public Class<?> getClazz() {
+            return clazz;
+        }
     }
 
     public static class FieldSpec {
@@ -162,6 +178,9 @@ public class CodeGenSpec {
         private CollectionType collectionType;
         private String genericTypeSignature;
 
+        // javapoet pre-computes
+        private TypeName jPTypeName;
+
         public DataType getNativeType() {
             return nativeType;
         }
@@ -200,6 +219,14 @@ public class CodeGenSpec {
 
         public void setGenericTypeSignature(String genericTypeSignature) {
             this.genericTypeSignature = genericTypeSignature;
+        }
+
+        public TypeName getjPTypeName() {
+            return jPTypeName;
+        }
+
+        public void setjPTypeName(TypeName jPTypeName) {
+            this.jPTypeName = jPTypeName;
         }
     }
 }

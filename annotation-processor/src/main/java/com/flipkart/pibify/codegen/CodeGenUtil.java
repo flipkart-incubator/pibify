@@ -14,6 +14,12 @@ public class CodeGenUtil {
         return (type == CodeGenSpec.DataType.COLLECTION || type == CodeGenSpec.DataType.MAP);
     }
 
+    public static boolean isNotNative(CodeGenSpec.DataType dataType) {
+        return dataType == CodeGenSpec.DataType.OBJECT
+                || dataType == CodeGenSpec.DataType.COLLECTION
+                || dataType == CodeGenSpec.DataType.MAP;
+    }
+
     /**
      * Returns the entire generic declaration string for this field
      *

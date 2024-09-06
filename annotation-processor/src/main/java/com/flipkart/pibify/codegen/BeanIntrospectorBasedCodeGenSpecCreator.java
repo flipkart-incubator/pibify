@@ -2,6 +2,8 @@ package com.flipkart.pibify.codegen;
 
 
 import com.flipkart.pibify.core.Pibify;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.ParameterizedTypeName;
 
 import java.beans.BeanInfo;
 import java.beans.FeatureDescriptor;
@@ -80,6 +82,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
         if (nativeType != null) {
             specType.setNativeType(nativeType);
+            specType.setjPTypeName(getNativeClassName(specType));
         } else {
             specType.setContainerTypes(new ArrayList<>(2));
             if (type.isArray()) {
@@ -90,15 +93,21 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.setNativeType(CodeGenSpec.DataType.COLLECTION);
                 specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
                 specType.setCollectionType(getCollectionType(type));
+                specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getClazz()),
+                        specType.getContainerTypes().get(0).getjPTypeName()));
             } else if (Map.class.isAssignableFrom(type)) {
                 specType.setNativeType(CodeGenSpec.DataType.MAP);
                 specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 0));
                 specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 1));
+                specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(Map.class),
+                        specType.getContainerTypes().get(0).getjPTypeName(),
+                        specType.getContainerTypes().get(1).getjPTypeName()));
             } else {
                 specType.setNativeType(CodeGenSpec.DataType.OBJECT);
                 // release the object, since it's not needed
                 specType.setContainerTypes(null);
                 specType.setReferenceType(create(type));
+                specType.setjPTypeName(getNativeClassName(specType));
             }
         }
         specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
@@ -146,5 +155,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         CodeGenSpec.Type type = new CodeGenSpec.Type();
         type.setNativeType(CodeGenSpec.DataType.UNKNOWN);
         return type;
+    }
+
+    private ClassName getNativeClassName(CodeGenSpec.Type specType) {
+        // if specType is native, get the autoboxed class, else get the class from reference
+        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+            return ClassName.get(specType.getReferenceType().getPackageName(), specType.getReferenceType().getClassName());
+        } else {
+            return ClassName.get(specType.getNativeType().getAutoboxedClass());
+        }
     }
 }

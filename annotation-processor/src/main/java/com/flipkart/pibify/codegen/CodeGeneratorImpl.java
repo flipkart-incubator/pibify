@@ -7,6 +7,7 @@ import com.flipkart.pibify.serde.PibifyDeserializer;
 import com.flipkart.pibify.serde.PibifySerializer;
 import com.flipkart.pibify.validation.InvalidPibifyAnnotation;
 import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -18,8 +19,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollectionOrMap;
+import static com.flipkart.pibify.codegen.CodeGenUtil.isNotNative;
 
 /**
  * This class is used for generating the JavaFile given a CodeGenSpec
@@ -52,22 +55,217 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo));
     }
 
-    private void addInnerClassesForCollectionHandlers(TypeSpec.Builder typeSpecBuilder, CodeGenSpec codeGenSpec) {
+    private static void addHandlerBasedOnDatatype(CodeGenSpec.Type fieldSpec, MethodSpec.Builder builder) {
+        if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
+            if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                builder.addStatement("$T<$L> valueHandler = HANDLER_MAP.get($S)", PibifyGenerated.class,
+                        fieldSpec.getContainerTypes().get(0).getGenericTypeSignature(),
+                        fieldSpec.getContainerTypes().get(0).getGenericTypeSignature()
+                );
+            } else {
+                // directly use natives
+            }
+        } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
+            if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                builder.addStatement("$T<$L> keyHandler = HANDLER_MAP.get($S)", PibifyGenerated.class,
+                        fieldSpec.getContainerTypes().get(0).getGenericTypeSignature(),
+                        fieldSpec.getContainerTypes().get(0).getGenericTypeSignature()
+                );
+            } else {
+                // directly use natives
+            }
+
+            if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
+                builder.addStatement("$T<$L> valueHandler = HANDLER_MAP.get($S)", PibifyGenerated.class,
+                        fieldSpec.getContainerTypes().get(1).getGenericTypeSignature(),
+                        fieldSpec.getContainerTypes().get(1).getGenericTypeSignature()
+                );
+            } else {
+                // directly use natives
+            }
+        } else {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    private void addInnerClassesForCollectionHandlers(TypeSpec.Builder typeSpecBuilder, CodeGenSpec codeGenSpec) throws CodeGenException {
+        AtomicInteger counter = new AtomicInteger(1);
+        Map<String, String> mapOfGenericSignatureToHandlerName = new HashMap<>();
         for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
             if (isCollectionOrMap(fieldSpec.getType().getNativeType())) {
-                addInnerClassesForCollectionHandlersImpl(typeSpecBuilder, fieldSpec.getType());
+                addInnerClassesForCollectionHandlersImpl(typeSpecBuilder, fieldSpec.getType(), counter, mapOfGenericSignatureToHandlerName);
+            }
+        }
+
+        CodeBlock.Builder staticBlockBuilder = CodeBlock.builder();
+        staticBlockBuilder.addStatement("HANDLER_MAP = new $T<>()", HashMap.class);
+        for (Map.Entry<String, String> entry : mapOfGenericSignatureToHandlerName.entrySet()) {
+            staticBlockBuilder.addStatement("HANDLER_MAP.put($S, new $T())", entry.getKey(),
+                    ClassName.bestGuess(entry.getValue()));
+        }
+
+        typeSpecBuilder.addField(ParameterizedTypeName.get(Map.class, String.class, PibifyGenerated.class),
+                        "HANDLER_MAP", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .addStaticBlock(staticBlockBuilder.build());
+
+    }
+
+    private void addInnerClassesForCollectionHandlersImpl(TypeSpec.Builder typeSpecBuilder, CodeGenSpec.Type fieldSpec,
+                                                          AtomicInteger counter, Map<String, String> mapOfGenericSignatureToHandlerName) throws CodeGenException {
+        // pass the field name and use fieldName + Handler + (counter++) to have names of the handlers
+        typeSpecBuilder.addType(
+                TypeSpec.classBuilder("InternalHandler" + counter.incrementAndGet())
+                        .addModifiers(Modifier.STATIC)
+                        .addMethod(getSerializerForCollectionHandler(fieldSpec))
+                        .addMethod(getDeserializerForCollectionHandler(fieldSpec))
+                        .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), fieldSpec.getjPTypeName()))
+                        .build()
+        );
+
+        mapOfGenericSignatureToHandlerName.put(fieldSpec.getGenericTypeSignature(), "InternalHandler" + counter.get());
+
+        if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION
+                && isCollectionOrMap(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+            addInnerClassesForCollectionHandlersImpl(typeSpecBuilder, fieldSpec.getContainerTypes().get(0),
+                    counter, mapOfGenericSignatureToHandlerName);
+        } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
+            if (isCollectionOrMap(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                addInnerClassesForCollectionHandlersImpl(typeSpecBuilder,
+                        fieldSpec.getContainerTypes().get(0), counter, mapOfGenericSignatureToHandlerName);
+            }
+
+            if (isCollectionOrMap(fieldSpec.getContainerTypes().get(1).getNativeType())) {
+                addInnerClassesForCollectionHandlersImpl(typeSpecBuilder,
+                        fieldSpec.getContainerTypes().get(1), counter, mapOfGenericSignatureToHandlerName);
             }
         }
     }
 
-    private void addInnerClassesForCollectionHandlersImpl(TypeSpec.Builder typeSpecBuilder, CodeGenSpec.Type fieldSpec) {
-        // pass the field name and use fieldName + Handler + (counter++) to have names of the handlers
-        /*typeSpecBuilder.addType(
-        TypeSpec.classBuilder(fieldSpec. + "Handler")
-                .addMethod(getSerializer(thePojo, codeGenSpec))
-                .addMethod(getDeserializer(thePojo, codeGenSpec))
-                .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo))
-        );*/
+    private MethodSpec getDeserializerForCollectionHandler(CodeGenSpec.Type fieldSpec) throws CodeGenException {
+        try {
+            MethodSpec.Builder builder = MethodSpec.methodBuilder("deserialize")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(fieldSpec.getjPTypeName())
+                    .addException(PibifyCodeExecException.class)
+                    .addParameter(byte[].class, "bytes")
+                    .beginControlFlow("try")
+
+                    .addStatement("$T deserializer = new $T(bytes)", IDeserializer.class, PibifyDeserializer.class)
+                    .addStatement("int tag = deserializer.getNextTag()");
+
+            if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
+                builder.addStatement("$T object = $L", fieldSpec.getjPTypeName(), getCollectionCreator(fieldSpec.getCollectionType()));
+            } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
+                builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), HashMap.class);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+
+            addHandlerBasedOnDatatype(fieldSpec, builder);
+
+            if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
+                builder.addStatement("$T value", fieldSpec.getContainerTypes().get(0).getjPTypeName());
+                builder.beginControlFlow("while (tag != 0) ");
+
+                if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                    //value = refHandler.deserialize(deserializer.readObjectAsBytes());
+                    builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
+                } else {
+                    //value = (T) deserializer.readString();
+                    builder.addStatement("value = deserializer.read$L()", fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                }
+
+                //collection.add(value);
+                builder.addStatement("object.add(value)");
+            } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
+                builder.addStatement("$T key", fieldSpec.getContainerTypes().get(0).getjPTypeName());
+                builder.addStatement("$T value", fieldSpec.getContainerTypes().get(1).getjPTypeName());
+                builder.beginControlFlow("while (tag != 0) ");
+
+                if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                    builder.addStatement("key = keyHandler.deserialize(deserializer.readObjectAsBytes())");
+                } else {
+                    builder.addStatement("key = deserializer.read$L()", fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                }
+
+                if (isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
+                    builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
+                } else {
+                    builder.addStatement("value = deserializer.read$L()", fieldSpec.getContainerTypes().get(1).getNativeType().getReadWriteMethodName());
+                }
+                //object.put(key, value);
+                builder.addStatement("object.put(key, value)");
+            } else {
+                throw new UnsupportedOperationException();
+            }
+
+
+            builder.addStatement("tag = deserializer.getNextTag()")
+                    .endControlFlow()
+                    .addStatement("return object")
+                    .nextControlFlow("catch ($T e)", Exception.class)
+                    .addStatement("throw new $T(e)", PibifyCodeExecException.class)
+                    .endControlFlow();
+
+            return builder.build();
+        } catch (Exception e) {
+            throw new CodeGenException(e.getMessage(), e);
+        }
+    }
+
+    private MethodSpec getSerializerForCollectionHandler(CodeGenSpec.Type fieldSpec) throws CodeGenException {
+        try {
+            MethodSpec.Builder builder = MethodSpec.methodBuilder("serialize")
+                    .addModifiers(Modifier.PUBLIC)
+                    .addAnnotation(Override.class)
+                    .returns(byte[].class)
+                    .addException(PibifyCodeExecException.class)
+                    .addParameter(fieldSpec.getjPTypeName(), "object")
+                    .addStatement("$T serializer = new $T()", ISerializer.class, PibifySerializer.class);
+
+            addHandlerBasedOnDatatype(fieldSpec, builder);
+
+            builder.beginControlFlow("try");
+            if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
+                builder.beginControlFlow("for ($L val : object)",
+                        fieldSpec.getContainerTypes().get(0).getGenericTypeSignature());
+                if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                    builder.addStatement("serializer.writeObjectAsBytes(1, valueHandler.serialize(val))");
+                } else {
+                    builder.addStatement("serializer.write$L(1, val)",
+                            fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                }
+            } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
+                builder.beginControlFlow("for (java.util.Map.Entry<$L, $L> entry : object.entrySet())",
+                        fieldSpec.getContainerTypes().get(0).getGenericTypeSignature(),
+                        fieldSpec.getContainerTypes().get(1).getGenericTypeSignature());
+                if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                    builder.addStatement("serializer.writeObjectAsBytes(1, keyHandler.serialize(entry.getKey()))");
+                } else {
+                    builder.addStatement("serializer.write$L(1, entry.getKey())", fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                }
+
+                if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
+                    builder.addStatement("serializer.writeObjectAsBytes(2, valueHandler.serialize(entry.getValue()))");
+                } else {
+                    builder.addStatement("serializer.write$L(2, entry.getValue())", fieldSpec.getContainerTypes().get(1).getNativeType().getReadWriteMethodName());
+                }
+            } else {
+                throw new UnsupportedOperationException();
+            }
+
+            builder.endControlFlow();
+
+            builder.addStatement("return serializer.serialize()")
+                    .nextControlFlow("catch ($T e)", Exception.class)
+                    .addStatement("throw new $T(e)", PibifyCodeExecException.class)
+                    .endControlFlow();
+
+            return builder.build();
+        } catch (Exception e) {
+            throw new CodeGenException(e.getMessage(), e);
+        }
     }
 
     private MethodSpec getSerializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -133,6 +331,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         ClassName.get("com.flipkart.pibify.generated." + refSpec.getPackageName(),
                                 refSpec.getClassName() + "Handler"));
             }
+            // todo add handling for nested collections here
 
             builder.beginControlFlow("for ($T val : object.$L())",
                     getReferenceTypeForContainers(realizedType, false), fieldSpec.getGetter());
@@ -399,7 +598,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private String getCollectionCreator(CodeGenSpec.FieldSpec fieldSpec) {
-        switch (fieldSpec.getType().getCollectionType()) {
+        return getCollectionCreator(fieldSpec.getType().getCollectionType());
+    }
+
+    private String getCollectionCreator(CodeGenSpec.CollectionType collectionType) {
+        switch (collectionType) {
             case LIST:
                 return "new java.util.ArrayList()";
             case SET:
@@ -407,10 +610,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             case QUEUE:
                 return "new java.util.PriorityQueue()";
             case DEQUE:
-                return "new java.util.Stack()";
+                return "new java.util.ArrayDeque()";
             default:
-                throw new UnsupportedOperationException("Collection type " +
-                        fieldSpec.getType().getCollectionType() + " not supported");
+                throw new UnsupportedOperationException("Collection type " + collectionType + " not supported");
         }
 
     }
