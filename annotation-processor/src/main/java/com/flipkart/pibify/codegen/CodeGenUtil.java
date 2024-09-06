@@ -14,6 +14,22 @@ public class CodeGenUtil {
         return (type == CodeGenSpec.DataType.COLLECTION || type == CodeGenSpec.DataType.MAP);
     }
 
+    public static boolean isArray(CodeGenSpec.FieldSpec fieldSpec) {
+        return isArray(fieldSpec.getType().getNativeType());
+    }
+
+    public static boolean isArray(CodeGenSpec.DataType type) {
+        return type == CodeGenSpec.DataType.ARRAY;
+    }
+
+    public static boolean isCollection(CodeGenSpec.FieldSpec fieldSpec) {
+        return isCollection(fieldSpec.getType().getNativeType());
+    }
+
+    public static boolean isCollection(CodeGenSpec.DataType type) {
+        return type == CodeGenSpec.DataType.COLLECTION;
+    }
+
     public static boolean isNotNative(CodeGenSpec.DataType dataType) {
         return dataType == CodeGenSpec.DataType.OBJECT
                 || dataType == CodeGenSpec.DataType.COLLECTION

@@ -110,7 +110,10 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.setjPTypeName(getNativeClassName(specType));
             }
         }
-        specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
+
+        if (CodeGenUtil.isCollectionOrMap(specType.getNativeType())) {
+            specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
+        }
 
         return specType;
     }
