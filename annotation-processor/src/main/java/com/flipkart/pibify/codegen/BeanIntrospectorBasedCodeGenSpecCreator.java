@@ -111,7 +111,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             }
         }
 
-        if (CodeGenUtil.isCollectionOrMap(specType.getNativeType())) {
+        if (!CodeGenUtil.isArray(specType.getNativeType())) {
             specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
         }
 

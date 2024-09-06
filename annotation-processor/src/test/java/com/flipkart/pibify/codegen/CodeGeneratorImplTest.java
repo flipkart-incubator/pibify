@@ -179,9 +179,9 @@ class CodeGeneratorImplTest {
 
         SimpleCompiler compiler = new SimpleCompiler();
         // load dependent class upfront
-        compiler.compile(impl.generate(
-                        creator.create(AnotherClassWithNativeCollections.class))
-                .getJavaFile().toJavaFileObject());
+        JavaFile javaFile1 = impl.generate(creator.create(AnotherClassWithNativeCollections.class)).getJavaFile();
+        //javaFile1.writeTo(System.out);
+        compiler.compile(javaFile1.toJavaFileObject());
         Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." +
                 AnotherClassWithNativeCollections.class.getCanonicalName() + "Handler");
 
