@@ -59,45 +59,26 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
     private static void addHandlerBasedOnDatatype(CodeGenSpec.Type fieldSpec, MethodSpec.Builder builder) {
         if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
-            if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
-                if (CodeGenUtil.isObject(fieldSpec.getContainerTypes().get(0).getNativeType())) {
-                    addHandlerForObjectReference("value", builder, fieldSpec.getContainerTypes().get(0).getReferenceType());
-                } else {
-                    builder.addStatement("$T<$L> valueHandler = HANDLER_MAP.get($S)", PibifyGenerated.class,
-                            fieldSpec.getContainerTypes().get(0).getGenericTypeSignature(),
-                            fieldSpec.getContainerTypes().get(0).getGenericTypeSignature());
-                }
-            } else {
-                // directly use natives
-            }
+            addHandlerBasedOnDatatypeImpl(fieldSpec, 0, "value", builder);
         } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
-            if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
-                if (CodeGenUtil.isObject(fieldSpec.getContainerTypes().get(0).getNativeType())) {
-                    addHandlerForObjectReference("key", builder, fieldSpec.getContainerTypes().get(0).getReferenceType());
-                } else {
-                    builder.addStatement("$T<$L> keyHandler = HANDLER_MAP.get($S)", PibifyGenerated.class,
-                            fieldSpec.getContainerTypes().get(0).getGenericTypeSignature(),
-                            fieldSpec.getContainerTypes().get(0).getGenericTypeSignature());
-                }
-            } else {
-                // directly use natives
-            }
-
-            if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
-                if (CodeGenUtil.isObject(fieldSpec.getContainerTypes().get(1).getNativeType())) {
-                    addHandlerForObjectReference("value", builder, fieldSpec.getContainerTypes().get(1).getReferenceType());
-                } else {
-                    builder.addStatement("$T<$L> valueHandler = HANDLER_MAP.get($S)", PibifyGenerated.class,
-                            fieldSpec.getContainerTypes().get(1).getGenericTypeSignature(),
-                            fieldSpec.getContainerTypes().get(1).getGenericTypeSignature()
-                    );
-                }
-
-            } else {
-                // directly use natives
-            }
+            addHandlerBasedOnDatatypeImpl(fieldSpec, 0, "key", builder);
+            addHandlerBasedOnDatatypeImpl(fieldSpec, 1, "value", builder);
         } else {
             throw new UnsupportedOperationException();
+        }
+    }
+
+    private static void addHandlerBasedOnDatatypeImpl(CodeGenSpec.Type fieldSpec, int index, String value, MethodSpec.Builder builder) {
+        if (CodeGenUtil.isNotNative(fieldSpec.getContainerTypes().get(index).getNativeType())) {
+            if (CodeGenUtil.isObject(fieldSpec.getContainerTypes().get(index).getNativeType())) {
+                addHandlerForObjectReference(value, builder, fieldSpec.getContainerTypes().get(index).getReferenceType());
+            } else {
+                builder.addStatement("$T<$L> $LHandler = HANDLER_MAP.get($S)", PibifyGenerated.class,
+                        fieldSpec.getContainerTypes().get(index).getGenericTypeSignature(), value,
+                        fieldSpec.getContainerTypes().get(index).getGenericTypeSignature());
+            }
+        } else {
+            // directly use natives
         }
     }
 
