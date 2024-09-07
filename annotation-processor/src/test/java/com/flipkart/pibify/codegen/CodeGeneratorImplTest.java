@@ -243,7 +243,7 @@ class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        javaFile.writeTo(System.out);
+        //javaFile.writeTo(System.out);
         ClassWithNativeCollectionsOfCollections testPayload = new ClassWithNativeCollectionsOfCollections();
         testPayload.randomize();
 
