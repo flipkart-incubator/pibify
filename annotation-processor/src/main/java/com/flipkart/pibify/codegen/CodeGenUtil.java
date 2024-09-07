@@ -30,6 +30,15 @@ public class CodeGenUtil {
         return type == CodeGenSpec.DataType.COLLECTION;
     }
 
+    public static boolean isObject(CodeGenSpec.FieldSpec fieldSpec) {
+        return isObject(fieldSpec.getType().getNativeType());
+    }
+
+    public static boolean isObject(CodeGenSpec.DataType type) {
+        return type == CodeGenSpec.DataType.OBJECT;
+    }
+
+
     public static boolean isNotNative(CodeGenSpec.DataType dataType) {
         return dataType == CodeGenSpec.DataType.OBJECT
                 || dataType == CodeGenSpec.DataType.COLLECTION

@@ -15,9 +15,13 @@ Support for
 13. Explicit @JsonSubtype
 14. Collections of java natives [done]
 15. Collections of Java Objects [done]
-16. Collections of Collections
+16. Collections of Collections [done]
 17. @JsonCreator
 18. Iterable
 19. Enums as fields
 20. Enums in Collections
 21. Enums in maps (key/value)
+22. null reference members
+23. null containers (collection,map, array) members
+24. empty containers
+25. 
