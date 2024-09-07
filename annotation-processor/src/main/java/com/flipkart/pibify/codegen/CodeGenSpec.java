@@ -2,9 +2,12 @@ package com.flipkart.pibify.codegen;
 
 import com.squareup.javapoet.TypeName;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
 
@@ -109,17 +112,22 @@ public class CodeGenSpec {
     }
 
     public enum CollectionType {
-        // TODO have interface and impl classes within this ENUM, helps with one less switchcase!
-        LIST(List.class), SET(Set.class), QUEUE(Queue.class), DEQUE(Deque.class);
+        LIST(List.class, ArrayList.class), SET(Set.class, HashSet.class), QUEUE(Queue.class, PriorityQueue.class), DEQUE(Deque.class, ArrayDeque.class);
 
-        private final Class<?> clazz;
+        private final Class<?> intefaceClass;
+        private final Class<?> implementationClass;
 
-        CollectionType(Class<?> clazz) {
-            this.clazz = clazz;
+        CollectionType(Class<?> intefaceClass, Class<?> implementationClass) {
+            this.intefaceClass = intefaceClass;
+            this.implementationClass = implementationClass;
         }
 
-        public Class<?> getClazz() {
-            return clazz;
+        public Class<?> getInterfaceClass() {
+            return intefaceClass;
+        }
+
+        public Class<?> getImplementationClass() {
+            return implementationClass;
         }
     }
 

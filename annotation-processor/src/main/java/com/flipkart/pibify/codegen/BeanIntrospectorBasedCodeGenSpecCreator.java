@@ -93,7 +93,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.setNativeType(CodeGenSpec.DataType.COLLECTION);
                 specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
                 specType.setCollectionType(getCollectionType(type));
-                specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getClazz()),
+                specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getInterfaceClass()),
                         specType.getContainerTypes().get(0).getjPTypeName()));
             } else if (Map.class.isAssignableFrom(type)) {
                 specType.setNativeType(CodeGenSpec.DataType.MAP);
