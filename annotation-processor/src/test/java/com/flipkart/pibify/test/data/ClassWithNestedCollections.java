@@ -37,16 +37,16 @@ public class ClassWithNestedCollections {
     @Pibify(7)
     private Map<Float, Map<String, Map<Integer, Boolean>>> map2;
 
-    @Pibify(7)
+    @Pibify(8)
     private Map<Map<Boolean, String>, Map<Integer, Boolean>> map3;
 
-    @Pibify(8)
+    @Pibify(9)
     private List<Map<String, Float>> listOfMaps;
 
-    @Pibify(9)
+    @Pibify(10)
     private Set<Map<String, Float>> setOfMaps;
 
-    @Pibify(10)
+    @Pibify(11)
     private Map<List<String>, Set<Boolean>> mapOfCollections;
 
 

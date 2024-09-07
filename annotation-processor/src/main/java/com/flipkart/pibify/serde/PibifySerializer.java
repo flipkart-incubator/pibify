@@ -33,8 +33,22 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     }
 
     @Override
+    public void writeBool(int index, Boolean value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeBool(index, value);
+        }
+    }
+
+    @Override
     public void writeShort(int index, short value) throws IOException {
         codedOutputStream.writeInt32(index, value);
+    }
+
+    @Override
+    public void writeShort(int index, Short value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeInt32(index, value);
+        }
     }
 
     @Override
@@ -43,8 +57,22 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     }
 
     @Override
+    public void writeByte(int index, Byte value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeInt32(index, value);
+        }
+    }
+
+    @Override
     public void writeChar(int index, char value) throws IOException {
         codedOutputStream.writeInt32(index, value);
+    }
+
+    @Override
+    public void writeChar(int index, Character value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeInt32(index, value);
+        }
     }
 
     @Override
@@ -53,8 +81,22 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     }
 
     @Override
+    public void writeInt(int index, Integer value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeInt32(index, value);
+        }
+    }
+
+    @Override
     public void writeLong(int index, long value) throws IOException {
         codedOutputStream.writeInt64(index, value);
+    }
+
+    @Override
+    public void writeLong(int index, Long value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeInt64(index, value);
+        }
     }
 
     @Override
@@ -63,17 +105,35 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     }
 
     @Override
+    public void writeFloat(int index, Float value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeFloat(index, value);
+        }
+    }
+
+    @Override
     public void writeDouble(int index, double value) throws IOException {
         codedOutputStream.writeDouble(index, value);
     }
 
     @Override
+    public void writeDouble(int index, Double value) throws IOException {
+        if (value != null) {
+            codedOutputStream.writeDouble(index, value);
+        }
+    }
+
+    @Override
     public void writeString(int index, String value) throws IOException {
-        codedOutputStream.writeString(index, value);
+        if (value != null) {
+            codedOutputStream.writeString(index, value);
+        }
     }
 
     @Override
     public void writeObjectAsBytes(int index, byte[] value) throws IOException {
-        codedOutputStream.writeByteArray(index, value);
+        if (value != null) {
+            codedOutputStream.writeByteArray(index, value);
+        }
     }
 }

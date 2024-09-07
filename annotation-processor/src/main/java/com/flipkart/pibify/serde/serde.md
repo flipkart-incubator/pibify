@@ -1,27 +1,56 @@
 Support for
 
-1. Native Java Types [done]
-2. Arrays of Native Java Types [done]
-3. @JsonIgnore
-4. @JsonProperty on arbitrary methods
-5. @JsonProperty with renaming fields (should be noOp)
-6. @JsonProperty in constructor
-7. Basic Pojo [done]
-8. Relational Pojo [done]
-9. Tertiary Relational pojo with missing annotations on tertiary refs
-10. Array of Objects [done]
-11. 1 level SubClass Hierarchy
-12. N level subclass hierarchy
-13. Explicit @JsonSubtype
-14. Collections of java natives [done]
-15. Collections of Java Objects [done]
-16. Collections of Collections [done]
-17. @JsonCreator
-18. Iterable
-19. Enums as fields
-20. Enums in Collections
-21. Enums in maps (key/value)
-22. null reference members
-23. null containers (collection,map, array) members
-24. empty containers
-25. 
+1.
+    - [x] Native Java Types
+2.
+    - [x] Arrays of Native Java Types
+3.
+    - [x] Basic Pojo
+4.
+    - [x] Relational Pojo
+5.
+    - [ ] Tertiary Relational pojo with missing annotations on tertiary refs
+6.
+    - [x] Array of Objects
+7.
+    - [ ] 1 level SubClass Hierarchy
+8.
+    - [ ] N level subclass hierarchy
+9.
+    - [x] Collections of java natives
+10.
+    - [x] Collections of Java Objects
+11.
+    - [x] Collections of Collections
+12.
+    - [ ] Iterable
+13.
+    - [ ] Enums as fields
+14.
+    - [ ] Enums in Collections
+15.
+    - [ ] Enums in maps (key/value)
+16.
+    - [x] null reference members
+17.
+    - [x] null containers (collection,map, array) members
+18.
+    - [x] empty containers
+19.
+    - [ ] duplicate index in pibify annotation
+
+Jackson
+
+1.
+    - [ ] @JsonIgnore
+2.
+    - [ ] @JsonProperty on arbitrary methods
+3.
+    - [ ] @JsonProperty with renaming fields (should be noOp)
+4.
+    - [ ] @JsonProperty in constructor
+5.
+    - [ ] Explicit @JsonSubtype
+6.
+    - [ ] @JsonCreator
+

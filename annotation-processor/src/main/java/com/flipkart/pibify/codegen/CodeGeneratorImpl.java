@@ -36,6 +36,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     @Override
     public JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
 
+        if (codeGenSpec.getFields().isEmpty()) {
+            throw new CodeGenException(codeGenSpec.getPackageName() + "." + codeGenSpec.getClassName() + " does not contain any pibify fields");
+        }
+
         ClassName thePojo = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
         TypeSpec.Builder typeSpecBuilder = getTypeSpecBuilder(codeGenSpec, thePojo);
         typeSpecBuilder.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
@@ -158,6 +162,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .returns(byte[].class)
                     .addException(PibifyCodeExecException.class)
                     .addParameter(fieldSpec.getjPTypeName(), "object")
+                    .beginControlFlow("if (object == null)")
+                    .addStatement("return null")
+                    .endControlFlow()
                     .addStatement("$T serializer = new $T()", ISerializer.class, PibifySerializer.class);
 
             addHandlerBasedOnDatatype(fieldSpec, builder);
@@ -200,6 +207,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .returns(byte[].class)
                     .addException(PibifyCodeExecException.class)
                     .addParameter(thePojo, "object")
+                    .beginControlFlow("if (object == null)")
+                    .addStatement("return null")
+                    .endControlFlow()
                     .addStatement("$T serializer = new $T()", ISerializer.class, PibifySerializer.class)
                     .beginControlFlow("try");
 
@@ -459,7 +469,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
 
         addHandlerForObjectReference(fieldSpec, builder, fieldSpec.getType().getReferenceType());
-        builder.addStatement("serializer.writeObjectAsBytes($L, referenceHandler.serialize(object.$L()))", fieldSpec.getIndex(), fieldSpec.getGetter());
+        builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))", fieldSpec.getIndex(),
+                fieldSpec.getName(), fieldSpec.getGetter());
     }
 
     private MethodSpec getDeserializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {

@@ -1,10 +1,12 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.test.data.ClassForTestingNullValues;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
+import com.flipkart.pibify.test.data.ClassWithNoFields;
 import com.flipkart.pibify.test.data.ClassWithObjectCollections;
 import com.flipkart.pibify.test.data.ClassWithReferences;
 import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
@@ -15,11 +17,16 @@ import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("all")
@@ -252,5 +259,94 @@ class CodeGeneratorImplTest {
         assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.getaMap(), deserialized.getaMap());
+    }
+
+    @Test
+    public void testClassWithNoFields() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithNoFields.class);
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        assertThrows(CodeGenException.class, () -> impl.generate(codeGenSpec), "com.flipkart.pibify.test.data.ClassWithNoFields does not contain any pibify fields");
+    }
+
+    @Test
+    public void testAllNullValueInPayload() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassForTestingNullValues.class);
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+
+        SimpleCompiler compiler = new SimpleCompiler();
+        // load dependent class upfront
+        Class[] dependent = new Class[]{AnotherClassWithNativeCollections.class, ClassWithReferences.class};
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(System.out);
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+        }
+
+        ClassForTestingNullValues testPayload = new ClassForTestingNullValues();
+        ClassForTestingNullValues deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        for (CodeGenSpec.FieldSpec field : codeGenSpec.getFields()) {
+            if (CodeGenUtil.isNotNative(field.getType().getNativeType())) {
+                assertNull(ClassForTestingNullValues.class.getMethod(field.getGetter()).invoke(deserialized));
+            }
+        }
+    }
+
+    @Test
+    public void testSomeNullValueInPayload() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassForTestingNullValues.class);
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+
+        SimpleCompiler compiler = new SimpleCompiler();
+        // load dependent class upfront
+        Class[] dependent = new Class[]{AnotherClassWithNativeCollections.class, ClassWithReferences.class};
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(System.out);
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+        }
+
+        ClassForTestingNullValues testPayload = new ClassForTestingNullValues();
+        testPayload.setaString("hello");
+        testPayload.setaStringList(Arrays.asList(null, "hello", null, "world", null, ""));
+        testPayload.setaString1(Arrays.asList(
+                null,
+                Arrays.asList(null, "hello", "world"),
+                null,
+                Arrays.asList("hello", null, "world"),
+                null,
+                Arrays.asList("hello", "world", null),
+                null,
+                new ArrayList<>()
+        ));
+
+        Set<String> nonNullFields = new HashSet<>(Arrays.asList("aString", "aStringList", "aString1"));
+        ClassForTestingNullValues deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+
+        assertEquals(testPayload.getaString(), deserialized.getaString());
+        assertEquals(Arrays.asList("hello", "world", ""), deserialized.getaStringList());
+        assertEquals(Arrays.asList(
+                Arrays.asList("hello", "world"),
+                Arrays.asList("hello", "world"),
+                Arrays.asList("hello", "world"),
+                new ArrayList<>()), deserialized.getaString1());
+
+        for (CodeGenSpec.FieldSpec field : codeGenSpec.getFields()) {
+            if (CodeGenUtil.isNotNative(field.getType().getNativeType()) && !nonNullFields.contains(field.getName())) {
+                assertNull(ClassForTestingNullValues.class.getMethod(field.getGetter()).invoke(deserialized));
+            }
+        }
     }
 }
