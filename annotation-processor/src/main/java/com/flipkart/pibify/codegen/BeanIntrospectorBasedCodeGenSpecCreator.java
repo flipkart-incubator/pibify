@@ -31,6 +31,8 @@ import java.util.stream.Collectors;
  */
 public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCreator {
 
+    public static final int MAX_FIELD_COUNT = 128;
+
     // to memoize results
     private final Map<Class<?>, CodeGenSpec> cache = new HashMap<>();
 
@@ -41,9 +43,24 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
         if (!cache.containsKey(type)) {
             CodeGenSpec codeGenSpec = createImpl(type);
+            handleSuperTypes(codeGenSpec, type);
             cache.put(type, codeGenSpec);
         }
         return cache.get(type);
+    }
+
+    private void handleSuperTypes(CodeGenSpec rootCodeGenSpec, Class<?> type) throws CodeGenException {
+        Class<?> sType = type.getSuperclass();
+        int shiftBy = MAX_FIELD_COUNT;
+        while (!sType.equals(Object.class)) {
+            CodeGenSpec codeGenSpec = createImpl(sType);
+            for (CodeGenSpec.FieldSpec field : codeGenSpec.getFields()) {
+                field.setIndex(field.getIndex() + shiftBy);
+                rootCodeGenSpec.getFields().add(field);
+            }
+            sType = sType.getSuperclass();
+            shiftBy = shiftBy + MAX_FIELD_COUNT;
+        }
     }
 
     private CodeGenSpec createImpl(Class<?> type) throws CodeGenException {
@@ -67,6 +84,10 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
                     fieldSpec.setSetter(namesToBeanInfo.get(name).getWriteMethod().getName());
                     spec.addField(fieldSpec);
+
+                    if (spec.getFields().size() >= MAX_FIELD_COUNT) {
+                        throw new CodeGenException("Only " + MAX_FIELD_COUNT + " fields are supported per class");
+                    }
                 }
             }
 
