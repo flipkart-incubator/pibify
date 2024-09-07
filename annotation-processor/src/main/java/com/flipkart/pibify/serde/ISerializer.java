@@ -44,5 +44,7 @@ public interface ISerializer {
 
     void writeString(int index, String value) throws IOException;
 
+    void writeEnum(int index, Enum value) throws IOException;
+
     void writeObjectAsBytes(int index, byte[] value) throws IOException;
 }

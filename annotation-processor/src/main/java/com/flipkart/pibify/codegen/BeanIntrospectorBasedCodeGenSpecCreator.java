@@ -70,7 +70,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             Map<String, PropertyDescriptor> namesToBeanInfo = Arrays.stream(beanInfo.getPropertyDescriptors())
                     .collect(Collectors.toMap(FeatureDescriptor::getName, f -> f));
 
-            CodeGenSpec spec = new CodeGenSpec(type.getPackage().getName(), type.getSimpleName());
+            String packageName = type.getEnclosingClass() == null ? type.getPackage().getName() : type.getEnclosingClass().getName();
+            CodeGenSpec spec = new CodeGenSpec(packageName, type.getSimpleName());
 
             for (java.lang.reflect.Field reflectedField : type.getDeclaredFields()) {
                 Pibify annotation = reflectedField.getAnnotation(Pibify.class);
@@ -123,6 +124,11 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(Map.class),
                         specType.getContainerTypes().get(0).getjPTypeName(),
                         specType.getContainerTypes().get(1).getjPTypeName()));
+            } else if (Enum.class.isAssignableFrom(type)) {
+                specType.setNativeType(CodeGenSpec.DataType.ENUM);
+                specType.setContainerTypes(null);
+                specType.setReferenceType(create(type));
+                specType.setjPTypeName(getNativeClassName(specType));
             } else {
                 specType.setNativeType(CodeGenSpec.DataType.OBJECT);
                 // release the object, since it's not needed

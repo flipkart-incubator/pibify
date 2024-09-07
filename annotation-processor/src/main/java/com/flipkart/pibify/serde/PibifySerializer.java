@@ -131,6 +131,13 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     }
 
     @Override
+    public void writeEnum(int index, Enum value) throws IOException {
+        if (value != null) {
+            writeInt(index, value.ordinal());
+        }
+    }
+
+    @Override
     public void writeObjectAsBytes(int index, byte[] value) throws IOException {
         if (value != null) {
             codedOutputStream.writeByteArray(index, value);

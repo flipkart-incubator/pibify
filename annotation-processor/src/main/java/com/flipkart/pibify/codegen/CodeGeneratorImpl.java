@@ -225,6 +225,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     case OBJECT:
                         generateSerializerForObjectReference(fieldSpec, builder);
                         break;
+                    case ENUM:
+                        builder.addStatement("serializer.writeEnum($L, object.$L())", fieldSpec.getIndex(), fieldSpec.getGetter());
+                        break;
                     default:
                         builder.addStatement("serializer.write$L($L, object.$L())",
                                 fieldSpec.getType().getNativeType().getReadWriteMethodName(), fieldSpec.getIndex(), fieldSpec.getGetter());
@@ -523,12 +526,21 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 addObjectDeserializer(fieldSpec, builder);
                 break;
             default:
+                String enumBlock = "", enumEndBlock = "";
+                if (fieldSpec.getType().getNativeType() == CodeGenSpec.DataType.ENUM) {
+                    enumBlock = fieldSpec.getType().getReferenceType().getPackageName() + "."
+                            + fieldSpec.getType().getReferenceType().getClassName() + ".values()[";
+                    enumEndBlock = "]";
+                }
+
                 builder.addStatement("case $L: \n $>" +
-                                "object.$L($L deserializer.read$L())$<",
+                                "object.$L($L$L deserializer.read$L()$L)$<",
                         TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)),
                         fieldSpec.getSetter(),
+                        enumBlock,
                         getCastIfRequired(fieldSpec.getType().getNativeType()),
-                        fieldSpec.getType().getNativeType().getReadWriteMethodName()
+                        fieldSpec.getType().getNativeType().getReadWriteMethodName(),
+                        enumEndBlock
                 );
                 break;
         }

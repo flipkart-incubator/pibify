@@ -13,9 +13,9 @@ Support for
 6.
     - [x] Array of Objects
 7.
-    - [ ] 1 level SubClass Hierarchy
+    - [x] 1 level SubClass Hierarchy
 8.
-    - [ ] N level subclass hierarchy
+    - [x] N level subclass hierarchy
 9.
     - [x] Collections of java natives
 10.
@@ -38,6 +38,8 @@ Support for
     - [x] empty containers
 19.
     - [ ] duplicate index in pibify annotation
+20.
+    - [ ] inner classes
 
 Jackson
 

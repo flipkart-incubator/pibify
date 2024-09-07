@@ -25,6 +25,7 @@ public final class CodeSpecMeta {
         map.put(Boolean.class, CodeGenSpec.DataType.BOOLEAN);
         map.put(Character.class, CodeGenSpec.DataType.CHAR);
         map.put(String.class, CodeGenSpec.DataType.STRING);
+        map.put(Enum.class, CodeGenSpec.DataType.INT);
 
         map.put(int.class, CodeGenSpec.DataType.INT);
         map.put(long.class, CodeGenSpec.DataType.LONG);

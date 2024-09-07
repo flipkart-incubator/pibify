@@ -79,6 +79,7 @@ public class CodeGenSpec {
         LONG("Long", long.class, Long.class),
         SHORT("Short", short.class, Short.class),
         BYTE("Byte", byte.class, Byte.class),
+        ENUM("Int", int.class, Integer.class),
 
         /* Containers */
         ARRAY(null, null, null),
