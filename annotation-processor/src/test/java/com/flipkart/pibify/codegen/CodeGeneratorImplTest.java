@@ -5,6 +5,7 @@ import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
 import com.flipkart.pibify.test.data.ClassHierarchy3A;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
+import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
 import com.flipkart.pibify.test.data.ClassWithEnums;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
@@ -427,5 +428,25 @@ class CodeGeneratorImplTest {
         assertEquals(testPayload.getEnumA(), deserialized.getEnumA());
         assertEquals(testPayload.getEnumB(), deserialized.getEnumB());
         assertEquals(testPayload.getNullEnum(), deserialized.getNullEnum());
+    }
+
+    @Test
+    public void testClassWithCollectionsOfEnums() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithCollectionsOfEnums.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ClassWithCollectionsOfEnums testPayload = new ClassWithCollectionsOfEnums();
+        testPayload.randomize();
+
+        ClassWithCollectionsOfEnums deserialized = invokeGeneratedCode(javaFile, testPayload);
+
+        assertEquals(testPayload.getListOfEnums(), deserialized.getListOfEnums());
+        assertEquals(testPayload.getEnumMap(), deserialized.getEnumMap());
+        assertEquals(testPayload.getMapOfEnums(), deserialized.getMapOfEnums());
     }
 }

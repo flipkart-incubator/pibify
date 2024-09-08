@@ -31,4 +31,6 @@ public interface IDeserializer {
     String readString() throws IOException;
 
     byte[] readObjectAsBytes() throws IOException;
+
+    int readEnum() throws IOException;
 }

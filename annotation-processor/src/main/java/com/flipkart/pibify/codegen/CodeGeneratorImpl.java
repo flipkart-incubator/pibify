@@ -285,8 +285,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     //value = refHandler.deserialize(deserializer.readObjectAsBytes());
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
                 } else {
-                    //value = (T) deserializer.readString();
-                    builder.addStatement("value = deserializer.read$L()", fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                    //value = deserializer.readString();
+                    if (fieldSpec.getContainerTypes().get(0).getNativeType() == CodeGenSpec.DataType.ENUM) {
+                        builder.addStatement("value = $T.values()[deserializer.readEnum()]",
+                                fieldSpec.getContainerTypes().get(0).getjPTypeName());
+                    } else {
+                        builder.addStatement("value = deserializer.read$L()", fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                    }
                 }
 
                 //collection.add(value);
@@ -299,15 +304,26 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
                     builder.addStatement("key = keyHandler.deserialize(deserializer.readObjectAsBytes())");
                 } else {
-                    builder.addStatement("key = deserializer.read$L()",
-                            fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                    if (fieldSpec.getContainerTypes().get(0).getNativeType() == CodeGenSpec.DataType.ENUM) {
+                        builder.addStatement("key = $T.values()[deserializer.readEnum()]",
+                                fieldSpec.getContainerTypes().get(0).getjPTypeName());
+                    } else {
+                        builder.addStatement("key = deserializer.read$L()",
+                                fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                    }
                 }
                 builder.addStatement("tag = deserializer.getNextTag()");
 
                 if (isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
                 } else {
-                    builder.addStatement("value = deserializer.read$L()", fieldSpec.getContainerTypes().get(1).getNativeType().getReadWriteMethodName());
+                    if (fieldSpec.getContainerTypes().get(1).getNativeType() == CodeGenSpec.DataType.ENUM) {
+                        builder.addStatement("value = $T.values()[deserializer.readEnum()]",
+                                fieldSpec.getContainerTypes().get(1).getjPTypeName());
+                    } else {
+                        builder.addStatement("value = deserializer.read$L()",
+                                fieldSpec.getContainerTypes().get(1).getNativeType().getReadWriteMethodName());
+                    }
                 }
                 //object.put(key, value);
                 builder.addStatement("object.put(key, value)");

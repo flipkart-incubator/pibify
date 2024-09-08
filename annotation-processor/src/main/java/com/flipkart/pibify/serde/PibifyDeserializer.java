@@ -76,4 +76,9 @@ public class PibifyDeserializer extends BaseSerde implements IDeserializer {
     public byte[] readObjectAsBytes() throws IOException {
         return codedInputStream.readByteArray();
     }
+
+    @Override
+    public int readEnum() throws IOException {
+        return codedInputStream.readInt32();
+    }
 }

@@ -25,11 +25,11 @@ Support for
 12.
     - [ ] Iterable
 13.
-    - [ ] Enums as fields
+    - [x] Enums as fields
 14.
-    - [ ] Enums in Collections
+    - [x] Enums in Collections
 15.
-    - [ ] Enums in maps (key/value)
+    - [x] Enums in maps (key/value)
 16.
     - [x] null reference members
 17.

@@ -189,7 +189,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
     private ClassName getNativeClassName(CodeGenSpec.Type specType) {
         // if specType is native, get the autoboxed class, else get the class from reference
-        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT
+                || specType.getNativeType() == CodeGenSpec.DataType.ENUM) {
             return ClassName.get(specType.getReferenceType().getPackageName(), specType.getReferenceType().getClassName());
         } else {
             return ClassName.get(specType.getNativeType().getAutoboxedClass());

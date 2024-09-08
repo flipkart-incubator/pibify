@@ -72,7 +72,8 @@ public class CodeGenUtil {
                 result.append(getClassNameFromType(first));
             }
         } else {
-            if (type.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+            if (type.getNativeType() == CodeGenSpec.DataType.OBJECT
+                    || type.getNativeType() == CodeGenSpec.DataType.ENUM) {
                 result.append(type.getReferenceType().getPackageName())
                         .append(".")
                         .append(type.getReferenceType().getClassName());

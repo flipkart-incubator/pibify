@@ -23,6 +23,7 @@ public class TagPredictor {
     private static Map<Class<?>, Integer> getFieldTypeToWireTypeMap() {
         Map<Class<?>, Integer> map = new HashMap<>();
         map.put(int.class, WireFormat.WIRETYPE_VARINT);
+        map.put(Enum.class, WireFormat.WIRETYPE_VARINT);
         map.put(long.class, WireFormat.WIRETYPE_VARINT);
         map.put(float.class, WireFormat.WIRETYPE_FIXED32);
         map.put(double.class, WireFormat.WIRETYPE_FIXED64);
