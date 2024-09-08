@@ -27,7 +27,7 @@ Support for
 13.
     - [x] Enums as fields
 14.
-    - [x] Enums in Collections
+    - [x] Enums in Collections and arrays
 15.
     - [x] Enums in maps (key/value)
 16.

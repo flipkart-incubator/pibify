@@ -24,6 +24,9 @@ public class ClassWithCollectionsOfEnums {
     @Pibify(3)
     private Map<EnumB, Map<String, ClassWithEnums.EnumA>> enumMap;
 
+    @Pibify(4)
+    private EnumB[] arrayOfEnums;
+
     public void randomize() {
         listOfEnums = Arrays.asList(
                 EnumB.values()[((int) (Math.random() * 10)) % 3],
@@ -57,6 +60,12 @@ public class ClassWithCollectionsOfEnums {
         tmp.put("str" + Math.random(), ClassWithEnums.EnumA.values()[((int) (Math.random() * 10)) % 3]);
         enumMap.put(EnumB.values()[((int) (Math.random() * 10)) % 3], tmp);
 
+        arrayOfEnums = new EnumB[]{
+                EnumB.values()[((int) (Math.random() * 10)) % 3],
+                EnumB.values()[((int) (Math.random() * 10)) % 3],
+                EnumB.values()[((int) (Math.random() * 10)) % 3]
+        };
+
     }
 
     public List<EnumB> getListOfEnums() {
@@ -81,5 +90,13 @@ public class ClassWithCollectionsOfEnums {
 
     public void setEnumMap(Map<EnumB, Map<String, ClassWithEnums.EnumA>> enumMap) {
         this.enumMap = enumMap;
+    }
+
+    public EnumB[] getArrayOfEnums() {
+        return arrayOfEnums;
+    }
+
+    public void setArrayOfEnums(EnumB[] arrayOfEnums) {
+        this.arrayOfEnums = arrayOfEnums;
     }
 }

@@ -448,5 +448,6 @@ class CodeGeneratorImplTest {
         assertEquals(testPayload.getListOfEnums(), deserialized.getListOfEnums());
         assertEquals(testPayload.getEnumMap(), deserialized.getEnumMap());
         assertEquals(testPayload.getMapOfEnums(), deserialized.getMapOfEnums());
+        assertArrayEquals(testPayload.getArrayOfEnums(), deserialized.getArrayOfEnums());
     }
 }

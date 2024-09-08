@@ -392,7 +392,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     // @returns Either the javapoet class name, or java reflection class
 
     private Object getReferenceTypeForContainers(CodeGenSpec.Type realizedType, boolean preferAutoboxed) {
-        if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+        if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT
+                || realizedType.getNativeType() == CodeGenSpec.DataType.ENUM) {
             return ClassName.get(realizedType.getReferenceType().getPackageName(), realizedType.getReferenceType().getClassName());
         } else {
 
@@ -686,7 +687,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     getReferenceTypeForContainers(fieldSpec.getType().getContainerTypes().get(0), false), tag,
                     fieldSpec.getName(), realizedType.getNativeType().getReadWriteMethodName());
         } else {
-            builder.addStatement("$>$T val$L = deserializer.read$L()$<", typeForContainers, tag, realizedType.getNativeType().getReadWriteMethodName());
+            if (realizedType.getNativeType() == CodeGenSpec.DataType.ENUM) {
+                builder.addStatement("$>$T val$L = $T.values()[deserializer.readEnum()]$<",
+                        typeForContainers, tag, typeForContainers);
+            } else {
+                builder.addStatement("$>$T val$L = deserializer.read$L()$<",
+                        typeForContainers, tag, realizedType.getNativeType().getReadWriteMethodName());
+            }
         }
 
         builder.beginControlFlow("$>if (oldArray$L == null)$<", tag)
