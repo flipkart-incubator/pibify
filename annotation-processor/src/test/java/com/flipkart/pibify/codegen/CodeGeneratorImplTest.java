@@ -7,6 +7,7 @@ import com.flipkart.pibify.test.data.ClassHierarchy3A;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
 import com.flipkart.pibify.test.data.ClassWithEnums;
+import com.flipkart.pibify.test.data.ClassWithInnerClasses;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
@@ -449,5 +450,26 @@ class CodeGeneratorImplTest {
         assertEquals(testPayload.getEnumMap(), deserialized.getEnumMap());
         assertEquals(testPayload.getMapOfEnums(), deserialized.getMapOfEnums());
         assertArrayEquals(testPayload.getArrayOfEnums(), deserialized.getArrayOfEnums());
+    }
+
+
+    @Test
+    public void testClassWithInnerClasses() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithInnerClasses.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ClassWithInnerClasses testPayload = new ClassWithInnerClasses();
+        testPayload.randomize();
+
+        ClassWithInnerClasses deserialized = invokeGeneratedCode(javaFile, testPayload);
+
+        assertEquals(testPayload.getStr1(), deserialized.getStr1());
+        assertEquals(testPayload.getStaticInnerClass().getStr3(), deserialized.getStaticInnerClass().getStr3());
+        assertEquals(testPayload.getStaticInnerClass().getStaticInnerInnerClass().getStr33(), deserialized.getStaticInnerClass().getStaticInnerInnerClass().getStr33());
     }
 }

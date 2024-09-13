@@ -30,10 +30,14 @@ public class CodeGenSpec {
     private final String packageName;
     private final String className;
     private final List<FieldSpec> fieldSpecs;
+    private final boolean isInnerClass;
 
-    public CodeGenSpec(String packageName, String className) {
-        this.packageName = packageName;
+    public CodeGenSpec(String packageName, String className, boolean isInnerClass) {
+        // to ensure the package name in imports does not have $.
+        // in case of inner classes, the enclosing class's package becomes a problem
+        this.packageName = packageName.replaceAll("\\$", ".");
         this.className = className;
+        this.isInnerClass = isInnerClass;
         fieldSpecs = new ArrayList<>();
     }
 
@@ -51,6 +55,10 @@ public class CodeGenSpec {
 
     public String getClassName() {
         return className;
+    }
+
+    public boolean isInnerClass() {
+        return isInnerClass;
     }
 
     @Override

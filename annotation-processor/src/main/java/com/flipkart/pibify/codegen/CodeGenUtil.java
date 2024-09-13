@@ -14,6 +14,11 @@ public class CodeGenUtil {
         return (type == CodeGenSpec.DataType.COLLECTION || type == CodeGenSpec.DataType.MAP);
     }
 
+    public static boolean isReferenceOfInnerClass(CodeGenSpec.FieldSpec fieldSpec) {
+        return fieldSpec.getType().getNativeType() == CodeGenSpec.DataType.OBJECT
+                && fieldSpec.getType().getReferenceType().isInnerClass();
+    }
+
     public static boolean isArray(CodeGenSpec.FieldSpec fieldSpec) {
         return isArray(fieldSpec.getType().getNativeType());
     }

@@ -15,9 +15,11 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -40,10 +42,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             throw new CodeGenException(codeGenSpec.getPackageName() + "." + codeGenSpec.getClassName() + " does not contain any pibify fields");
         }
 
-        ClassName thePojo = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
-        TypeSpec.Builder typeSpecBuilder = getTypeSpecBuilder(codeGenSpec, thePojo);
+        TypeSpec.Builder typeSpecBuilder = getTypeSpecBuilder(codeGenSpec);
         typeSpecBuilder.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
-        addInnerClassesForCollectionHandlers(typeSpecBuilder, codeGenSpec);
+        addInnerClasses(typeSpecBuilder, codeGenSpec);
+
         TypeSpec pibifyGeneratedHandler = typeSpecBuilder.build();
 
         String packageName = "com.flipkart.pibify.generated." + codeGenSpec.getPackageName();
@@ -54,7 +56,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         return wrapper;
     }
 
-    private TypeSpec.Builder getTypeSpecBuilder(CodeGenSpec codeGenSpec, ClassName thePojo) throws CodeGenException {
+    private TypeSpec.Builder getTypeSpecBuilder(CodeGenSpec codeGenSpec) throws CodeGenException {
+        ClassName thePojo = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
         return TypeSpec.classBuilder(codeGenSpec.getClassName() + "Handler")
                 .addMethod(getSerializer(thePojo, codeGenSpec))
                 .addMethod(getDeserializer(thePojo, codeGenSpec))
@@ -86,12 +89,17 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
     }
 
-    private void addInnerClassesForCollectionHandlers(TypeSpec.Builder typeSpecBuilder, CodeGenSpec codeGenSpec) throws CodeGenException {
+    private void addInnerClasses(TypeSpec.Builder typeSpecBuilder, CodeGenSpec codeGenSpec) throws CodeGenException {
         AtomicInteger counter = new AtomicInteger(1);
         Map<String, String> mapOfGenericSignatureToHandlerName = new HashMap<>();
+
+        List<CodeGenSpec> innerClassReferences = new ArrayList<>();
+
         for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
             if (isCollectionOrMap(fieldSpec.getType().getNativeType())) {
                 addInnerClassesForCollectionHandlersImpl(typeSpecBuilder, fieldSpec.getType(), counter, mapOfGenericSignatureToHandlerName);
+            } else if (CodeGenUtil.isReferenceOfInnerClass(fieldSpec)) {
+                innerClassReferences.add(fieldSpec.getType().getReferenceType());
             }
         }
 
@@ -107,6 +115,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         "HANDLER_MAP", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                 .addStaticBlock(staticBlockBuilder.build());
 
+        for (CodeGenSpec reference : innerClassReferences) {
+            TypeSpec.Builder specBuilderForInnerClass = getTypeSpecBuilder(reference);
+            // Need inner classes to be static to enable static bock for the reference map
+            specBuilderForInnerClass.addModifiers(Modifier.STATIC);
+            addInnerClasses(specBuilderForInnerClass, reference);
+            typeSpecBuilder.addType(specBuilderForInnerClass.build());
+        }
     }
 
     private void addInnerClassesForCollectionHandlersImpl(TypeSpec.Builder typeSpecBuilder, CodeGenSpec.Type fieldSpec,
@@ -246,12 +261,19 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private void addHandlerForObjectReference(String name, MethodSpec.Builder builder, CodeGenSpec codeGenSpec) {
+        ClassName reference;
+
+        if (codeGenSpec.isInnerClass()) {
+            reference = ClassName.get("", codeGenSpec.getClassName() + "Handler");
+        } else {
+            reference = ClassName.get("com.flipkart.pibify.generated." + codeGenSpec.getPackageName(),
+                    codeGenSpec.getClassName() + "Handler");
+        }
+
         builder.addStatement("$T $LHandler = new $T()",
                 ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
                         ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName())
-                ), name,
-                ClassName.get("com.flipkart.pibify.generated." + codeGenSpec.getPackageName(),
-                        codeGenSpec.getClassName() + "Handler"));
+                ), name, reference);
     }
 
     private MethodSpec getDeserializerForCollectionHandler(CodeGenSpec.Type fieldSpec) throws CodeGenException {
@@ -709,16 +731,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     private void addObjectDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
         CodeGenSpec refSpec = fieldSpec.getType().getReferenceType();
         int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), byte[].class);
-
-        builder.addStatement("case $L: \n$>$T $LHandler$L = new $T()", tag,
-                ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
-                        ClassName.get(refSpec.getPackageName(), refSpec.getClassName())
-                ), fieldSpec.getName(), tag,
-                ClassName.get("com.flipkart.pibify.generated." + refSpec.getPackageName(),
-                        refSpec.getClassName() + "Handler"));
-
-        builder.addStatement("$>object.$L($LHandler$L.deserialize(deserializer.readObjectAsBytes()))$<", fieldSpec.getSetter(), fieldSpec.getName(), tag);
-
+        builder.addStatement("case $L: \n$>", tag);
+        addHandlerForObjectReference(fieldSpec.getName(), builder, refSpec);
+        builder.addStatement("$>object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<", fieldSpec.getSetter(), fieldSpec.getName());
     }
 
     private Class<?> getClassForTag(CodeGenSpec.FieldSpec fieldSpec) {

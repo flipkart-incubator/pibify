@@ -39,7 +39,7 @@ Support for
 19.
     - [ ] duplicate index in pibify annotation
 20.
-    - [ ] inner classes
+    - [x] inner classes
 
 Jackson
 

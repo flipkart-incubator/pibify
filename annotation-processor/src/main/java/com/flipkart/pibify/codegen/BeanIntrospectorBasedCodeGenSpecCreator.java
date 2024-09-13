@@ -10,6 +10,7 @@ import java.beans.FeatureDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -63,6 +64,20 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
     }
 
+    private static CodeGenSpec getCodeGenSpec(Class<?> type) throws CodeGenException {
+        String packageName;
+        if (type.getEnclosingClass() == null) {
+            packageName = type.getPackage().getName();
+        } else {
+            if (!Modifier.isStatic(type.getModifiers())) {
+                throw new CodeGenException("Non-Static Inner classes are not supported: " + type.getCanonicalName());
+            }
+            packageName = type.getEnclosingClass().getName();
+        }
+
+        return new CodeGenSpec(packageName, type.getSimpleName(), (type.getEnclosingClass() != null));
+    }
+
     private CodeGenSpec createImpl(Class<?> type) throws CodeGenException {
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(type);
@@ -70,8 +85,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             Map<String, PropertyDescriptor> namesToBeanInfo = Arrays.stream(beanInfo.getPropertyDescriptors())
                     .collect(Collectors.toMap(FeatureDescriptor::getName, f -> f));
 
-            String packageName = type.getEnclosingClass() == null ? type.getPackage().getName() : type.getEnclosingClass().getName();
-            CodeGenSpec spec = new CodeGenSpec(packageName, type.getSimpleName());
+            CodeGenSpec spec = getCodeGenSpec(type);
 
             for (java.lang.reflect.Field reflectedField : type.getDeclaredFields()) {
                 Pibify annotation = reflectedField.getAnnotation(Pibify.class);
