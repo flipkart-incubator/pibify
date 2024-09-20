@@ -17,4 +17,9 @@ public interface ICodeGenSpecCreator {
     Only 1 for testing right now
      */
     CodeGenSpec create(Class<?> type) throws CodeGenException;
+
+    /**
+     * To clear any internal state of the implementation. Can be called when reusing a creator instance
+     */
+    void resetState();
 }

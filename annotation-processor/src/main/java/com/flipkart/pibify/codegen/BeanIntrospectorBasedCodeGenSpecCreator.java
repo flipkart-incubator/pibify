@@ -1,7 +1,13 @@
 package com.flipkart.pibify.codegen;
 
 
+import com.flipkart.pibify.codegen.log.CodeSpecGenLog;
+import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
+import com.flipkart.pibify.codegen.log.SpecGenLog;
+import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.core.Pibify;
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 
@@ -10,6 +16,7 @@ import java.beans.FeatureDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -21,8 +28,10 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 /**
@@ -37,17 +46,57 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     // to memoize results
     private final Map<Class<?>, CodeGenSpec> cache = new HashMap<>();
 
+    private final Multimap<EntityUnderProcessing, SpecGenLog> logs = ArrayListMultimap.create();
+    private final Stack<EntityUnderProcessing> stackOfUnderProcessing = new Stack<>();
+    private EntityUnderProcessing underProcessing;
+
     @Override
     public CodeGenSpec create(Class<?> type) throws CodeGenException {
 
-        // cannot use computeIfAbsent because of checked exception being thrown
+        if (underProcessing != null) {
+            stackOfUnderProcessing.push(underProcessing);
+        }
+        underProcessing = new EntityUnderProcessing(type.getCanonicalName());
 
+        // cannot use computeIfAbsent because of checked exception being thrown
         if (!cache.containsKey(type)) {
             CodeGenSpec codeGenSpec = createImpl(type);
             handleSuperTypes(codeGenSpec, type);
             cache.put(type, codeGenSpec);
         }
+
+        if (!stackOfUnderProcessing.empty()) {
+            underProcessing = stackOfUnderProcessing.pop();
+        }
+
         return cache.get(type);
+    }
+
+    @Override
+    public void resetState() {
+        cache.clear();
+        underProcessing = null;
+        logs.clear();
+    }
+
+    public Multimap<EntityUnderProcessing, SpecGenLog> getLogs() {
+        return logs;
+    }
+
+    public SpecGenLogLevel status() {
+        SpecGenLogLevel level = SpecGenLogLevel.INFO;
+
+        for (SpecGenLog value : logs.values()) {
+            if (value.getLogLevel().ordinal() > level.ordinal()) {
+                level = value.getLogLevel();
+            }
+        }
+
+        return level;
+    }
+
+    private void log(SpecGenLog spec) {
+        logs.put(underProcessing, spec);
     }
 
     private void handleSuperTypes(CodeGenSpec rootCodeGenSpec, Class<?> type) throws CodeGenException {
@@ -64,13 +113,13 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
     }
 
-    private static CodeGenSpec getCodeGenSpec(Class<?> type) throws CodeGenException {
+    private CodeGenSpec getCodeGenSpec(Class<?> type) throws CodeGenException {
         String packageName;
         if (type.getEnclosingClass() == null) {
             packageName = type.getPackage().getName();
         } else {
             if (!Modifier.isStatic(type.getModifiers())) {
-                throw new CodeGenException("Non-Static Inner classes are not supported: " + type.getCanonicalName());
+                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Non-Static Inner classes are not supported: " + type.getCanonicalName()));
             }
             packageName = type.getEnclosingClass().getName();
         }
@@ -87,21 +136,39 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
             CodeGenSpec spec = getCodeGenSpec(type);
 
+            Map<Integer, CodeGenSpec.FieldSpec> mapOfFields = new HashMap<>();
+
             for (java.lang.reflect.Field reflectedField : type.getDeclaredFields()) {
                 Pibify annotation = reflectedField.getAnnotation(Pibify.class);
                 if (annotation != null) {
+                    validatePibifyAnnotation(reflectedField, annotation);
                     CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
+
+                    // Validating duplicate fields
+                    if (mapOfFields.containsKey(annotation.value())) {
+                        log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Field with duplicate index: " +
+                                mapOfFields.get(annotation.value()).getName()));
+                    } else {
+                        mapOfFields.put(annotation.value(), fieldSpec);
+                    }
+
                     String name = reflectedField.getName();
                     fieldSpec.setIndex(annotation.value());
                     fieldSpec.setName(name);
                     fieldSpec.setType(getTypeFromJavaType(reflectedField.getName(), reflectedField.getGenericType(),
                             reflectedField.getType()));
+
+                    if (!namesToBeanInfo.containsKey(name)) {
+                        log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
+                        continue;
+                    }
+
                     fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
                     fieldSpec.setSetter(namesToBeanInfo.get(name).getWriteMethod().getName());
                     spec.addField(fieldSpec);
 
                     if (spec.getFields().size() >= MAX_FIELD_COUNT) {
-                        throw new CodeGenException("Only " + MAX_FIELD_COUNT + " fields are supported per class");
+                        log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Only " + MAX_FIELD_COUNT + " fields are supported per class"));
                     }
                 }
             }
@@ -109,6 +176,17 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             return spec;
         } catch (IntrospectionException e) {
             throw new CodeGenException(e.getMessage(), e);
+        }
+    }
+
+    private void validatePibifyAnnotation(Field field, Pibify annotation) {
+
+        if (annotation.value() >= BeanIntrospectorBasedCodeGenSpecCreator.MAX_FIELD_COUNT) {
+            log(new FieldSpecGenLog(field, SpecGenLogLevel.ERROR, "Index cannot be more than " + MAX_FIELD_COUNT));
+        }
+
+        if (annotation.value() <= 0) {
+            log(new FieldSpecGenLog(field, SpecGenLogLevel.ERROR, "Index cannot be less than or equal to 0"));
         }
     }
 
@@ -190,8 +268,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             ParameterizedType castedActualType = (ParameterizedType) actualTypeArgument;
             return getTypeFromJavaType(fieldName, actualTypeArgument, (Class<?>) castedActualType.getRawType());
         } else {
-            throw new UnsupportedOperationException(type.getSimpleName() +
-                    " not supported in field " + fieldName);
+            log(new FieldSpecGenLog(fieldName, SpecGenLogLevel.ERROR, type.getSimpleName() + " not supported in field " + fieldName));
+            return null;
         }
     }
 
@@ -202,12 +280,44 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private ClassName getNativeClassName(CodeGenSpec.Type specType) {
-        // if specType is native, get the autoboxed class, else get the class from reference
+        // if specType is native, get the auto-boxed class, else get the class from reference
         if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT
                 || specType.getNativeType() == CodeGenSpec.DataType.ENUM) {
             return ClassName.get(specType.getReferenceType().getPackageName(), specType.getReferenceType().getClassName());
         } else {
             return ClassName.get(specType.getNativeType().getAutoboxedClass());
+        }
+    }
+
+    static class EntityUnderProcessing {
+        private final String fqdn;
+
+        public EntityUnderProcessing(String fqdn) {
+            this.fqdn = fqdn;
+        }
+
+        public String getFqdn() {
+            return fqdn;
+        }
+
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            EntityUnderProcessing that = (EntityUnderProcessing) o;
+            return Objects.equals(fqdn, that.fqdn);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hashCode(fqdn);
+        }
+
+        @Override
+        public String toString() {
+            return fqdn;
         }
     }
 }

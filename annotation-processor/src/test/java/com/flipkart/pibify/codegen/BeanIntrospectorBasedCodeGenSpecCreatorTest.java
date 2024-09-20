@@ -1,6 +1,10 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
+import com.flipkart.pibify.codegen.log.SpecGenLog;
+import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
+import com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
@@ -9,6 +13,7 @@ import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.data.ClassWithReferences;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -464,7 +469,65 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNotNull(valueType.getContainerTypes().get(1));
         assertEquals(CodeGenSpec.DataType.STRING, valueType.getContainerTypes().get(0).getNativeType());
         assertEquals(CodeGenSpec.DataType.BOOLEAN, valueType.getContainerTypes().get(1).getNativeType());
+    }
 
+    @Test
+    public void testClassWithInvalidPibifyIndex() throws CodeGenException {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithInvalidPibifyIndex.class);
+        assertNotNull(codeGenSpec);
+        assertNotNull(creator.getLogs());
+        assertEquals(SpecGenLogLevel.ERROR, creator.status());
+        assertEquals(0, codeGenSpec.getFields().size());
+        assertEquals(9, creator.getLogs().values().size());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex", creator.getLogs().keySet().stream().findFirst().get().getFqdn());
+
+        ArrayList<SpecGenLog> specGenLogs = new ArrayList<>(creator.getLogs().values());
+
+        int index = 0;
+        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("a", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("Field with duplicate index: a", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("b", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("b", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("Index cannot be less than or equal to 0", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("c", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("c", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("Index cannot be more than 128", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("d", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("d", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("Index cannot be less than or equal to 0", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("e", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
+
+        index++;
+        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
+        assertEquals("e", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
     }
 }

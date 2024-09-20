@@ -13,7 +13,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Pibify {
-    int value() default 0;
+    int value();
 
     boolean nullable() default true;
 }

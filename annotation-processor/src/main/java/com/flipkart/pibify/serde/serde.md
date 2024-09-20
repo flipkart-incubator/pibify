@@ -40,7 +40,8 @@ Support for
     - [ ] duplicate index in pibify annotation
 20.
     - [x] inner classes
-
+21.
+    - [] Non container classes with generic type parameter
 Jackson
 
 1.
@@ -55,4 +56,9 @@ Jackson
     - [ ] Explicit @JsonSubtype
 6.
     - [ ] @JsonCreator
+
+Additional Test cases
+
+1.
+    - [ ] Changes in order of enum will cause mis-serde due to implicit change in ordinal
 
