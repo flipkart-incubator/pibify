@@ -37,11 +37,12 @@ Support for
 18.
     - [x] empty containers
 19.
-    - [ ] duplicate index in pibify annotation
+    - [x] duplicate index in pibify annotation
 20.
     - [x] inner classes
 21.
-    - [] Non container classes with generic type parameter
+    - [x] Non container classes with generic type parameter
+
 Jackson
 
 1.
@@ -61,4 +62,6 @@ Additional Test cases
 
 1.
     - [ ] Changes in order of enum will cause mis-serde due to implicit change in ordinal
+   - [ ] Parsing unknown fields
+   - [ ] Parsing unknown enums
 

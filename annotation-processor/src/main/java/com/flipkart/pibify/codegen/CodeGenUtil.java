@@ -1,5 +1,9 @@
 package com.flipkart.pibify.codegen;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -9,6 +13,8 @@ import java.util.Deque;
  * Date 24/08/24
  */
 public class CodeGenUtil {
+
+    public static final String PIBIFY_GENERATED_PACKAGE_NAME = "com.flipkart.pibify.generated.";
 
     public static boolean isCollectionOrMap(CodeGenSpec.DataType type) {
         return (type == CodeGenSpec.DataType.COLLECTION || type == CodeGenSpec.DataType.MAP);
@@ -43,6 +49,9 @@ public class CodeGenUtil {
         return type == CodeGenSpec.DataType.OBJECT;
     }
 
+    public static boolean isJavaLangObject(CodeGenSpec spec) {
+        return (spec.getClassName().equals("Object") && spec.getPackageName().equals("java.lang"));
+    }
 
     public static boolean isNotNative(CodeGenSpec.DataType dataType) {
         return dataType == CodeGenSpec.DataType.OBJECT
@@ -119,5 +128,70 @@ public class CodeGenUtil {
         } else {
             throw new UnsupportedOperationException();
         }
+    }
+
+    // Credits to https://stackoverflow.com/a/19363555
+    public static Class<?> determineType(Field field, Class<?> type) {
+        return (Class<?>) getType(type, field).type;
+    }
+
+    private static TypeInfo getType(Class<?> clazz, Field field) {
+        TypeInfo type = new TypeInfo(null, null);
+        if (field.getGenericType() instanceof TypeVariable<?>) {
+            TypeVariable<?> genericTyp = (TypeVariable<?>) field.getGenericType();
+            Class<?> superClazz = clazz.getSuperclass();
+
+            if (clazz.getGenericSuperclass() instanceof ParameterizedType) {
+                ParameterizedType paramType = (ParameterizedType) clazz.getGenericSuperclass();
+                TypeVariable<?>[] superTypeParameters = superClazz.getTypeParameters();
+                if (!Object.class.equals(paramType)) {
+                    if (field.getDeclaringClass().equals(superClazz)) {
+                        // this is the root class an starting point for this search
+                        type.name = genericTyp;
+                        type.type = null;
+                    } else {
+                        type = getType(superClazz, field);
+                    }
+                }
+                if (type.type == null || type.type instanceof TypeVariable<?>) {
+                    // lookup if type is not found or type needs a lookup in current concrete class
+                    for (int j = 0; j < superClazz.getTypeParameters().length; ++j) {
+                        TypeVariable<?> superTypeParam = superTypeParameters[j];
+                        if (type.name.equals(superTypeParam)) {
+                            type.type = paramType.getActualTypeArguments()[j];
+                            Type[] typeParameters = clazz.getTypeParameters();
+                            if (typeParameters.length > 0) {
+                                for (Type typeParam : typeParameters) {
+                                    TypeVariable<?> objectOfComparison = superTypeParam;
+                                    if (type.type instanceof TypeVariable<?>) {
+                                        objectOfComparison = (TypeVariable<?>) type.type;
+                                    }
+                                    if (objectOfComparison.getName().equals(((TypeVariable<?>) typeParam).getName())) {
+                                        type.name = typeParam;
+                                        break;
+                                    }
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        } else {
+            type.type = field.getGenericType();
+        }
+
+        return type;
+    }
+
+    protected static class TypeInfo {
+        Type type;
+        Type name;
+
+        public TypeInfo(Type type, Type name) {
+            this.type = type;
+            this.name = name;
+        }
+
     }
 }

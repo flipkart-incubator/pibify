@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -59,5 +60,22 @@ public class AnotherClassWithNativeCollections {
 
     public void setaMap(Map<Float, Boolean> aMap) {
         this.aMap = aMap;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        AnotherClassWithNativeCollections that = (AnotherClassWithNativeCollections) o;
+        return Objects.equals(aString, that.aString) && Objects.equals(anInt, that.anInt) && Objects.equals(aMap, that.aMap);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(aString);
+        result = 31 * result + Objects.hashCode(anInt);
+        result = 31 * result + Objects.hashCode(aMap);
+        return result;
     }
 }

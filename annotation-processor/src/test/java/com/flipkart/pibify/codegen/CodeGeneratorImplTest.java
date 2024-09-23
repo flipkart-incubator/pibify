@@ -16,6 +16,7 @@ import com.flipkart.pibify.test.data.ClassWithNoFields;
 import com.flipkart.pibify.test.data.ClassWithObjectCollections;
 import com.flipkart.pibify.test.data.ClassWithReferences;
 import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
+import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.util.SimpleCompiler;
@@ -37,6 +38,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("all")
 class CodeGeneratorImplTest {
+
+    // TODO: Cleaup tests to handle dependent classes better
+    // TODO: Use equals of test class instead of manual comparision of members
 
     private <T> T invokeGeneratedCode(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
         simpleCompiler.compile(javaFile.toJavaFileObject());
@@ -471,5 +475,34 @@ class CodeGeneratorImplTest {
         assertEquals(testPayload.getStr1(), deserialized.getStr1());
         assertEquals(testPayload.getStaticInnerClass().getStr3(), deserialized.getStaticInnerClass().getStr3());
         assertEquals(testPayload.getStaticInnerClass().getStaticInnerInnerClass().getStr33(), deserialized.getStaticInnerClass().getStaticInnerInnerClass().getStr33());
+    }
+
+
+    @Test
+    public void testSubClassOfClassWithTypeParameterReference() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(SubClassOfClassWithTypeParameterReference.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        SubClassOfClassWithTypeParameterReference testPayload = new SubClassOfClassWithTypeParameterReference();
+        testPayload.randomize();
+
+        SimpleCompiler compiler = new SimpleCompiler();
+        // load dependent class upfront
+        Class[] dependent = new Class[]{AnotherClassWithNativeCollections.class, ClassWithReferences.class};
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(System.out);
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+        }
+
+        SubClassOfClassWithTypeParameterReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
     }
 }

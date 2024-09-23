@@ -20,6 +20,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,7 +57,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         if (underProcessing != null) {
             stackOfUnderProcessing.push(underProcessing);
         }
-        underProcessing = new EntityUnderProcessing(type.getCanonicalName());
+        underProcessing = new EntityUnderProcessing(type, type.getCanonicalName());
 
         // cannot use computeIfAbsent because of checked exception being thrown
         if (!cache.containsKey(type)) {
@@ -100,6 +101,11 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private void handleSuperTypes(CodeGenSpec rootCodeGenSpec, Class<?> type) throws CodeGenException {
+        // This short-circuit is needed to handle reference types which have been type-erased.
+        if (type.equals(Object.class)) {
+            return;
+        }
+
         Class<?> sType = type.getSuperclass();
         int shiftBy = MAX_FIELD_COUNT;
         while (!sType.equals(Object.class)) {
@@ -155,6 +161,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     String name = reflectedField.getName();
                     fieldSpec.setIndex(annotation.value());
                     fieldSpec.setName(name);
+                    this.underProcessing.setReflectedField(reflectedField);
                     fieldSpec.setType(getTypeFromJavaType(reflectedField.getName(), reflectedField.getGenericType(),
                             reflectedField.getType()));
 
@@ -225,7 +232,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.setNativeType(CodeGenSpec.DataType.OBJECT);
                 // release the object, since it's not needed
                 specType.setContainerTypes(null);
-                specType.setReferenceType(create(type));
+                if (fieldGenericType instanceof TypeVariable) {
+                    // if this is generic type reference, try and extract its actual type
+                    Class<?> determinedType = CodeGenUtil.determineType(underProcessing.getReflectedField(), underProcessing.getType());
+                    specType.setReferenceType(create(determinedType));
+                } else {
+                    specType.setReferenceType(create(type));
+                }
+
                 specType.setjPTypeName(getNativeClassName(specType));
             }
         }
@@ -290,16 +304,30 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     static class EntityUnderProcessing {
+        private final Class<?> type;
         private final String fqdn;
+        private Field reflectedField;
 
-        public EntityUnderProcessing(String fqdn) {
+        public EntityUnderProcessing(Class<?> type, String fqdn) {
+            this.type = type;
             this.fqdn = fqdn;
+        }
+
+        public Field getReflectedField() {
+            return reflectedField;
+        }
+
+        public void setReflectedField(Field reflectedField) {
+            this.reflectedField = reflectedField;
         }
 
         public String getFqdn() {
             return fqdn;
         }
 
+        public Class<?> getType() {
+            return type;
+        }
 
         @Override
         public boolean equals(Object o) {

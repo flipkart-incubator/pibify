@@ -1,6 +1,7 @@
 package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.serde.PibifyDeserializer;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.flipkart.pibify.codegen.CodeGenUtil.PIBIFY_GENERATED_PACKAGE_NAME;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isArray;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollection;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollectionOrMap;
@@ -48,7 +50,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
         TypeSpec pibifyGeneratedHandler = typeSpecBuilder.build();
 
-        String packageName = "com.flipkart.pibify.generated." + codeGenSpec.getPackageName();
+        String packageName = PIBIFY_GENERATED_PACKAGE_NAME + codeGenSpec.getPackageName();
         JavaFileWrapper wrapper = new JavaFileWrapper();
         wrapper.setPackageName(packageName);
         wrapper.setJavaFile(JavaFile.builder(packageName, pibifyGeneratedHandler)
@@ -128,6 +130,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                                                           AtomicInteger counter, Map<String, String> mapOfGenericSignatureToHandlerName) throws CodeGenException {
         // pass the field name and use fieldName + Handler + (counter++) to have names of the handlers
         String className = "InternalHandler" + counter.incrementAndGet();
+        //TODO: In inner handlers, pass byte start/end instead of new byte array with the intention of re-using the same byte buffer.
         typeSpecBuilder.addType(
                 TypeSpec.classBuilder(className)
                         .addModifiers(Modifier.STATIC)
@@ -263,13 +266,19 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     private void addHandlerForObjectReference(String name, MethodSpec.Builder builder, CodeGenSpec codeGenSpec) {
         ClassName reference;
 
-        if (codeGenSpec.isInnerClass()) {
-            reference = ClassName.get("", codeGenSpec.getClassName() + "Handler");
+        if (CodeGenUtil.isJavaLangObject(codeGenSpec)) {
+            // Special handling for object references
+            reference = ClassName.get(PibifyObjectHandler.class);
         } else {
-            reference = ClassName.get("com.flipkart.pibify.generated." + codeGenSpec.getPackageName(),
-                    codeGenSpec.getClassName() + "Handler");
+            String handlerClassName = codeGenSpec.getClassName() + "Handler";
+            String packageName = "";
+            if (!codeGenSpec.isInnerClass()) {
+                packageName = PIBIFY_GENERATED_PACKAGE_NAME + codeGenSpec.getPackageName();
+            }
+            reference = ClassName.get(packageName, handlerClassName);
         }
 
+        // TODO Re-use instances of handlers and serde classes
         builder.addStatement("$T $LHandler = new $T()",
                 ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
                         ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName())
@@ -615,7 +624,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
                             ClassName.get(refSpec.getPackageName(), refSpec.getClassName())
                     ), fieldSpec.getName(),
-                    ClassName.get("com.flipkart.pibify.generated." + refSpec.getPackageName(),
+                    ClassName.get(PIBIFY_GENERATED_PACKAGE_NAME + refSpec.getPackageName(),
                             refSpec.getClassName() + "Handler"));
 
             builder.addStatement("$T key = key$LHandler.deserialize(deserializer$L.read$L())",
@@ -634,7 +643,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
                             ClassName.get(refSpec.getPackageName(), refSpec.getClassName())
                     ), fieldSpec.getName(),
-                    ClassName.get("com.flipkart.pibify.generated." + refSpec.getPackageName(),
+                    ClassName.get(PIBIFY_GENERATED_PACKAGE_NAME + refSpec.getPackageName(),
                             refSpec.getClassName() + "Handler"));
 
             builder.addStatement("$T value = value$LHandler.deserialize(deserializer$L.read$L())",
@@ -671,7 +680,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
                             ClassName.get(refSpec.getPackageName(), refSpec.getClassName())
                     ), fieldSpec.getName(),
-                    ClassName.get("com.flipkart.pibify.generated." + refSpec.getPackageName(),
+                    ClassName.get(PIBIFY_GENERATED_PACKAGE_NAME + refSpec.getPackageName(),
                             refSpec.getClassName() + "Handler"));
 
             builder.addStatement("$>$T val$L = $LHandler.deserialize(deserializer.read$L())",
@@ -733,7 +742,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), byte[].class);
         builder.addStatement("case $L: \n$>", tag);
         addHandlerForObjectReference(fieldSpec.getName(), builder, refSpec);
-        builder.addStatement("$>object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<", fieldSpec.getSetter(), fieldSpec.getName());
+        if (CodeGenUtil.isJavaLangObject(refSpec)) {
+            builder.addStatement("$>$T<$T,$T> entry = (Map.Entry<String,Object>)($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
+                    Map.Entry.class, String.class, Object.class, fieldSpec.getName());
+            builder.addStatement("$>object.$L(Class.forName(entry.getKey()).cast(entry.getValue())))$<", fieldSpec.getSetter());
+        } else {
+            builder.addStatement("$>object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
+                    fieldSpec.getSetter(), fieldSpec.getName());
+        }
     }
 
     private Class<?> getClassForTag(CodeGenSpec.FieldSpec fieldSpec) {

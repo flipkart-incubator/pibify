@@ -3,6 +3,8 @@ package com.flipkart.pibify.test.data;
 import com.flipkart.pibify.core.Pibify;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 
+import java.util.Objects;
+
 /**
  * This class is used for testing Class Refs
  * Author bageshwar.pn
@@ -37,5 +39,21 @@ public class ClassWithReferences {
 
     public void setaString(String aString) {
         this.aString = aString;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ClassWithReferences that = (ClassWithReferences) o;
+        return Objects.equals(reference, that.reference) && Objects.equals(aString, that.aString);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(reference);
+        result = 31 * result + Objects.hashCode(aString);
+        return result;
     }
 }
