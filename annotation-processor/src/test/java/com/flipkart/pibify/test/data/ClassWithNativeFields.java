@@ -2,6 +2,8 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.Objects;
+
 /**
  * This class is used for testing native fields handling by pibify
  * Author bageshwar.pn
@@ -139,32 +141,20 @@ public class ClassWithNativeFields {
         if (o == null || getClass() != o.getClass()) return false;
 
         ClassWithNativeFields that = (ClassWithNativeFields) o;
-
-        if (anInt != that.anInt) return false;
-        if (aLong != that.aLong) return false;
-        if (Float.compare(that.aFloat, aFloat) != 0) return false;
-        if (Double.compare(that.aDouble, aDouble) != 0) return false;
-        if (aBoolean != that.aBoolean) return false;
-        if (aChar != that.aChar) return false;
-        if (aByte != that.aByte) return false;
-        if (aShort != that.aShort) return false;
-        return aString.equals(that.aString);
+        return anInt == that.anInt && aLong == that.aLong && Float.compare(aFloat, that.aFloat) == 0 && Double.compare(aDouble, that.aDouble) == 0 && aBoolean == that.aBoolean && aChar == that.aChar && aByte == that.aByte && aShort == that.aShort && Objects.equals(aString, that.aString);
     }
 
     @Override
     public int hashCode() {
-        int result;
-        long temp;
-        result = aString.hashCode();
+        int result = Objects.hashCode(aString);
         result = 31 * result + anInt;
-        result = 31 * result + (int) (aLong ^ (aLong >>> 32));
-        result = 31 * result + (aFloat != +0.0f ? Float.floatToIntBits(aFloat) : 0);
-        temp = Double.doubleToLongBits(aDouble);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (aBoolean ? 1 : 0);
-        result = 31 * result + (int) aChar;
-        result = 31 * result + (int) aByte;
-        result = 31 * result + (int) aShort;
+        result = 31 * result + Long.hashCode(aLong);
+        result = 31 * result + Float.hashCode(aFloat);
+        result = 31 * result + Double.hashCode(aDouble);
+        result = 31 * result + Boolean.hashCode(aBoolean);
+        result = 31 * result + aChar;
+        result = 31 * result + aByte;
+        result = 31 * result + aShort;
         return result;
     }
 }

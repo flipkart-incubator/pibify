@@ -544,7 +544,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.addStatement("$>$> break$<$<");
             }
 
-            builder.addStatement("default: throw new UnsupportedOperationException($S)", "Unable to find tag in gen code")
+            builder.addStatement("default: throw new UnsupportedOperationException($S + tag)", "Unable to find tag in gen code: ")
                     .endControlFlow()
                     .addStatement("tag = deserializer.getNextTag()")
                     .endControlFlow()
@@ -743,9 +743,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         builder.addStatement("case $L: \n$>", tag);
         addHandlerForObjectReference(fieldSpec.getName(), builder, refSpec);
         if (CodeGenUtil.isJavaLangObject(refSpec)) {
-            builder.addStatement("$>$T<$T,$T> entry = (Map.Entry<String,Object>)($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
-                    Map.Entry.class, String.class, Object.class, fieldSpec.getName());
-            builder.addStatement("$>object.$L(Class.forName(entry.getKey()).cast(entry.getValue())))$<", fieldSpec.getSetter());
+            builder.addStatement("$>$T<$T,$T> $LEntry = (Map.Entry<String,Object>)($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
+                    Map.Entry.class, String.class, Object.class, fieldSpec.getName(), fieldSpec.getName());
+            builder.addStatement("$>object.$L($LEntry.getValue())$<", fieldSpec.getSetter(), fieldSpec.getName());
         } else {
             builder.addStatement("$>object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
                     fieldSpec.getSetter(), fieldSpec.getName());

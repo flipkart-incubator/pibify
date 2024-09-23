@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.test.data.ClassForTestingNullValues;
 import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
@@ -14,6 +15,7 @@ import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.data.ClassWithNoFields;
 import com.flipkart.pibify.test.data.ClassWithObjectCollections;
+import com.flipkart.pibify.test.data.ClassWithObjectReference;
 import com.flipkart.pibify.test.data.ClassWithReferences;
 import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
@@ -504,5 +506,33 @@ class CodeGeneratorImplTest {
 
         SubClassOfClassWithTypeParameterReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
         assertEquals(testPayload, deserialized);
+    }
+
+
+    @Test
+    public void testClassWithObjectReference() throws Exception {
+        PibifyObjectHandler.forTest = true;
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithObjectReference.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ClassWithObjectReference testPayload = new ClassWithObjectReference();
+        testPayload.randomize();
+
+        Class[] dependent = new Class[]{ClassWithNativeFields.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(System.out);
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+        }
+
+        ClassWithObjectReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+        PibifyObjectHandler.forTest = false;
     }
 }

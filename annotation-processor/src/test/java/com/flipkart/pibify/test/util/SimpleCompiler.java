@@ -39,6 +39,9 @@ class NamedJavaFileObject extends SimpleJavaFileObject {
 
 public class SimpleCompiler {
 
+    // Opened this for testing
+    public static final SimpleCompiler INSTANCE = new SimpleCompiler();
+
     private final Map<String, byte[]> classes = new HashMap<>();
     private final Map<String, List<JavaFileObject>> packages = new HashMap<>();
     private final ClassLoader loader = new ClassLoader() {
