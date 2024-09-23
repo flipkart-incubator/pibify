@@ -6,9 +6,11 @@ import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
 import com.flipkart.pibify.test.data.ClassHierarchy3A;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
+import com.flipkart.pibify.test.data.ClassWithCollectionReference;
 import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
 import com.flipkart.pibify.test.data.ClassWithEnums;
 import com.flipkart.pibify.test.data.ClassWithInnerClasses;
+import com.flipkart.pibify.test.data.ClassWithMapReference;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
@@ -37,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("all")
 class CodeGeneratorImplTest {
@@ -534,5 +537,49 @@ class CodeGeneratorImplTest {
         ClassWithObjectReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
         assertEquals(testPayload, deserialized);
         PibifyObjectHandler.forTest = false;
+    }
+
+    @Test
+    public void testClassWithCollectionReference() throws Exception {
+        PibifyObjectHandler.forTest = true;
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithCollectionReference.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ClassWithCollectionReference testPayload = new ClassWithCollectionReference();
+        testPayload.randomize();
+
+        try {
+            invokeGeneratedCode(javaFile, testPayload);
+            fail();
+        } catch (Exception e) {
+            assertEquals("com.flipkart.pibify.codegen.PibifyCodeExecException: java.lang.UnsupportedOperationException: Arrays, maps and collections not supported on object references",
+                    e.getCause().getMessage());
+        }
+    }
+
+    @Test
+    public void testClassWithMapReference() throws Exception {
+        PibifyObjectHandler.forTest = true;
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithMapReference.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ClassWithMapReference testPayload = new ClassWithMapReference();
+        testPayload.randomize();
+
+        try {
+            invokeGeneratedCode(javaFile, testPayload);
+            fail();
+        } catch (Exception e) {
+            assertEquals("com.flipkart.pibify.codegen.PibifyCodeExecException: java.lang.UnsupportedOperationException: Arrays, maps and collections not supported on object references",
+                    e.getCause().getMessage());
+        }
     }
 }
