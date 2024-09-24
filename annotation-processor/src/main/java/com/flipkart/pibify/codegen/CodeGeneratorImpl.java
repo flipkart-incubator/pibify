@@ -2,6 +2,7 @@ package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
+import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.serde.PibifyDeserializer;
@@ -544,8 +545,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.addStatement("$>$> break$<$<");
             }
 
-            builder.addStatement("default: throw new UnsupportedOperationException($S + tag)", "Unable to find tag in gen code: ")
-                    .endControlFlow()
+            if (PibifyConfiguration.instance().isIgnoreUnknownFields()) {
+                // TODO Add logger here
+                builder.addStatement("default: break");
+            } else {
+                builder.addStatement("default: throw new UnsupportedOperationException($S + tag)", "Unable to find tag in gen code: ");
+            }
+
+            builder.endControlFlow()
                     .addStatement("tag = deserializer.getNextTag()")
                     .endControlFlow()
                     .addStatement("return object")

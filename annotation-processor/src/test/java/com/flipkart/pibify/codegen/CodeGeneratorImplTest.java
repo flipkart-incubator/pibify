@@ -1,6 +1,7 @@
 package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
+import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.test.data.ClassForTestingNullValues;
 import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
@@ -20,11 +21,14 @@ import com.flipkart.pibify.test.data.ClassWithObjectCollections;
 import com.flipkart.pibify.test.data.ClassWithObjectReference;
 import com.flipkart.pibify.test.data.ClassWithReferences;
 import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
+import com.flipkart.pibify.test.data.ClassWithSchemaChange1;
+import com.flipkart.pibify.test.data.ClassWithSchemaChange2;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
@@ -35,6 +39,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -47,7 +52,13 @@ class CodeGeneratorImplTest {
     // TODO: Cleaup tests to handle dependent classes better
     // TODO: Use equals of test class instead of manual comparision of members
 
+    @BeforeAll
+    public static void setup() {
+        PibifyConfiguration.builder().build();
+    }
+
     private <T> T invokeGeneratedCode(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
+        // Not reusing `serialize` and `deserialize` to save on test run time
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
@@ -58,9 +69,26 @@ class CodeGeneratorImplTest {
         return (T) deserialize.invoke(handlerInstance, result);
     }
 
+    public <T> T deserialize(SimpleCompiler simpleCompiler, JavaFile javaFile, T data, byte[] result) throws Exception {
+        simpleCompiler.compile(javaFile.toJavaFileObject());
+        Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
+        Object handlerInstance = handlerClazz.newInstance();
+        Method deserialize = handlerClazz.getDeclaredMethod("deserialize", byte[].class);
+        return (T) deserialize.invoke(handlerInstance, result);
+    }
+
     private <T> T invokeGeneratedCode(JavaFile javaFile, T data) throws Exception {
         SimpleCompiler simpleCompiler = new SimpleCompiler();
         return invokeGeneratedCode(simpleCompiler, javaFile, data);
+    }
+
+    public <T> byte[] serialize(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
+        simpleCompiler.compile(javaFile.toJavaFileObject());
+        Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
+        Object handlerInstance = handlerClazz.newInstance();
+        Method serialize = handlerClazz.getDeclaredMethod("serialize", data.getClass());
+        byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
+        return result;
     }
 
     @Test
@@ -581,5 +609,30 @@ class CodeGeneratorImplTest {
             assertEquals("com.flipkart.pibify.codegen.PibifyCodeExecException: java.lang.UnsupportedOperationException: Arrays, maps and collections not supported on object references",
                     e.getCause().getMessage());
         }
+    }
+
+    @Test
+    public void testClassWithSchemaChange2() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithSchemaChange1.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ClassWithSchemaChange1 testPayload = new ClassWithSchemaChange1();
+        testPayload.randomize();
+
+        byte[] bytes = serialize(SimpleCompiler.INSTANCE, javaFile, testPayload);
+
+        codeGenSpec = creator.create(ClassWithSchemaChange2.class);
+        javaFile = impl.generate(codeGenSpec).getJavaFile();
+        //javaFile.writeTo(System.out);
+        assertNotNull(javaFile);
+
+        ClassWithSchemaChange2 deserialized = deserialize(SimpleCompiler.INSTANCE, javaFile, new ClassWithSchemaChange2(), bytes);
+        assertEquals(testPayload.getStr1(), deserialized.getStr1());
+        // although names are same, the index has changed
+        assertNotEquals(testPayload.getStr2(), deserialized.getStr2());
     }
 }
