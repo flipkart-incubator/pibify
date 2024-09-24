@@ -57,7 +57,7 @@ class CodeGeneratorImplTest {
         PibifyConfiguration.builder().build();
     }
 
-    private <T> T invokeGeneratedCode(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
+    private static <T> T invokeGeneratedCode(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
         // Not reusing `serialize` and `deserialize` to save on test run time
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
@@ -69,7 +69,7 @@ class CodeGeneratorImplTest {
         return (T) deserialize.invoke(handlerInstance, result);
     }
 
-    public <T> T deserialize(SimpleCompiler simpleCompiler, JavaFile javaFile, T data, byte[] result) throws Exception {
+    public static <T> T deserialize(SimpleCompiler simpleCompiler, JavaFile javaFile, T data, byte[] result) throws Exception {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
@@ -77,12 +77,12 @@ class CodeGeneratorImplTest {
         return (T) deserialize.invoke(handlerInstance, result);
     }
 
-    private <T> T invokeGeneratedCode(JavaFile javaFile, T data) throws Exception {
+    private static <T> T invokeGeneratedCode(JavaFile javaFile, T data) throws Exception {
         SimpleCompiler simpleCompiler = new SimpleCompiler();
         return invokeGeneratedCode(simpleCompiler, javaFile, data);
     }
 
-    public <T> byte[] serialize(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
+    public static <T> byte[] serialize(SimpleCompiler simpleCompiler, JavaFile javaFile, T data) throws Exception {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();

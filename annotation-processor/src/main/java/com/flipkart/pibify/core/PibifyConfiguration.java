@@ -43,8 +43,9 @@ public class PibifyConfiguration {
             PibifyConfiguration.INSTANCE = config;
         }
 
-        public void ignoreUnknownFields(boolean flag) {
+        public Builder ignoreUnknownFields(boolean flag) {
             config.ignoreUnknownFields = flag;
+            return this;
         }
     }
 
