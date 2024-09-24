@@ -21,10 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class BeanIntrospectorBasedCodeGenSpecCreatorTest {
+public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
 
     @Test
-    void createClassWithNativeFields() throws CodeGenException {
+    public void createClassWithNativeFields() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeFields.class);
         assertNotNull(codeGenSpec);
@@ -105,7 +105,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
     }
 
     @Test
-    void createClassWithAutoboxFields() throws CodeGenException {
+    public void createClassWithAutoboxFields() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithAutoboxFields.class);
         assertNotNull(codeGenSpec);
@@ -179,7 +179,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
     }
 
     @Test
-    void createClassWithNativeArrays() throws CodeGenException {
+    public void createClassWithNativeArrays() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeArrays.class);
         assertNotNull(codeGenSpec);
@@ -218,7 +218,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
     }
 
     @Test
-    void createClassWithNativeCollections() throws CodeGenException {
+    public void createClassWithNativeCollections() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollections.class);
         assertNotNull(codeGenSpec);
@@ -274,7 +274,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
     }
 
     @Test
-    void createClassWithReference() throws CodeGenException {
+    public void createClassWithReference() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithReferences.class);
         assertNotNull(codeGenSpec);
@@ -343,7 +343,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
     }
 
     @Test
-    void createClassWithNativeCollectionsOfCollections() throws CodeGenException {
+    public void createClassWithNativeCollectionsOfCollections() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollectionsOfCollections.class);
         assertNotNull(codeGenSpec);
@@ -404,7 +404,7 @@ class BeanIntrospectorBasedCodeGenSpecCreatorTest {
     }
 
     @Test
-    void createClassWithNativeCollectionsOfCollections2() throws CodeGenException {
+    public void createClassWithNativeCollectionsOfCollections2() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollectionsOfCollections2.class);
         assertNotNull(codeGenSpec);

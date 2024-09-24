@@ -152,5 +152,9 @@ public class SimpleCompiler {
         }
         if (!success) throw new RuntimeException("Unknown error");
     }
+
+    public void refresh() {
+        classes.clear();
+    }
 }
 

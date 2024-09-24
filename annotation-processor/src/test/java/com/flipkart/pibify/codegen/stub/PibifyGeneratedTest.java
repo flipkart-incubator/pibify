@@ -1,17 +1,23 @@
 package com.flipkart.pibify.codegen.stub;
 
+import com.flipkart.pibify.TestUtils;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.test.data.EnumB;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-class PibifyGeneratedTest {
+public class PibifyGeneratedTest {
 
+    @BeforeEach
+    public void resetConfig() {
+        TestUtils.resetConfig();
+    }
     @Test
-    void getEnumValue() throws PibifyCodeExecException {
+    public void getEnumValue() throws PibifyCodeExecException {
         PibifyConfiguration.builder()
                 .build();
         PibifyGenerated<?> underTest = new PibifyGenerated<Object>() {
@@ -35,7 +41,7 @@ class PibifyGeneratedTest {
     }
 
     @Test
-    void getEnumValueWithException() throws PibifyCodeExecException {
+    public void getEnumValueWithException() throws PibifyCodeExecException {
         PibifyConfiguration.builder()
                 .ignoreUnknownEnums(false)
                 .build();

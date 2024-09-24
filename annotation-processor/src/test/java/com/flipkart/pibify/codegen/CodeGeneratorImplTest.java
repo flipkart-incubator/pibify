@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("all")
-class CodeGeneratorImplTest {
+public class CodeGeneratorImplTest {
 
     // TODO: Cleaup tests to handle dependent classes better
     // TODO: Use equals of test class instead of manual comparision of members
