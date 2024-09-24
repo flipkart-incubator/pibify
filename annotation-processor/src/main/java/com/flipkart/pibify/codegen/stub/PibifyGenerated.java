@@ -1,6 +1,7 @@
 package com.flipkart.pibify.codegen.stub;
 
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
+import com.flipkart.pibify.core.PibifyConfiguration;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -48,5 +49,17 @@ public abstract class PibifyGenerated<T> {
         }
 
         objectGetter.get().add(deserializerGetter.get());
+    }
+
+    protected <E> E getEnumValue(E[] enums, int index) throws PibifyCodeExecException {
+        if (index < 0 || index >= enums.length) {
+            if (PibifyConfiguration.instance().ignoreUnknownEnums()) {
+                return null;
+            } else {
+                throw new PibifyCodeExecException("Unknown Enum Cardinal " + index + " for " + enums[0].getClass().getCanonicalName());
+            }
+        } else {
+            return enums[index];
+        }
     }
 }

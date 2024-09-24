@@ -9,6 +9,7 @@ public class PibifyConfiguration {
 
     private static PibifyConfiguration INSTANCE;
     private boolean ignoreUnknownFields = true;
+    private boolean ignoreUnknownEnums = true;
 
     private PibifyConfiguration() {
     }
@@ -24,8 +25,12 @@ public class PibifyConfiguration {
         return new Builder();
     }
 
-    public boolean isIgnoreUnknownFields() {
+    public boolean ignoreUnknownFields() {
         return ignoreUnknownFields;
+    }
+
+    public boolean ignoreUnknownEnums() {
+        return ignoreUnknownEnums;
     }
 
     public static class Builder {
@@ -45,6 +50,11 @@ public class PibifyConfiguration {
 
         public Builder ignoreUnknownFields(boolean flag) {
             config.ignoreUnknownFields = flag;
+            return this;
+        }
+
+        public Builder ignoreUnknownEnums(boolean flag) {
+            config.ignoreUnknownEnums = flag;
             return this;
         }
     }

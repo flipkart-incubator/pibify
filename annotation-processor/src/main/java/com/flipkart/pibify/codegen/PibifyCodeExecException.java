@@ -9,4 +9,8 @@ public class PibifyCodeExecException extends Exception {
     public PibifyCodeExecException(Throwable cause) {
         super(cause);
     }
+
+    public PibifyCodeExecException(String message) {
+        super(message);
+    }
 }

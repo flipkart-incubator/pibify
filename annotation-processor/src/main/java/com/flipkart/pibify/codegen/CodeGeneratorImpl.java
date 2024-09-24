@@ -545,7 +545,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.addStatement("$>$> break$<$<");
             }
 
-            if (PibifyConfiguration.instance().isIgnoreUnknownFields()) {
+            if (PibifyConfiguration.instance().ignoreUnknownFields()) {
                 // TODO Add logger here
                 builder.addStatement("default: break");
             } else {
@@ -583,9 +583,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             default:
                 String enumBlock = "", enumEndBlock = "";
                 if (fieldSpec.getType().getNativeType() == CodeGenSpec.DataType.ENUM) {
-                    enumBlock = fieldSpec.getType().getReferenceType().getPackageName() + "."
-                            + fieldSpec.getType().getReferenceType().getClassName() + ".values()[";
-                    enumEndBlock = "]";
+                    enumBlock = "getEnumValue(" + fieldSpec.getType().getReferenceType().getPackageName() + "."
+                            + fieldSpec.getType().getReferenceType().getClassName() + ".values(),";
+                    enumEndBlock = ")";
                 }
 
                 builder.addStatement("case $L: \n $>" +

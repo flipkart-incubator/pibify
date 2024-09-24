@@ -131,7 +131,7 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     }
 
     @Override
-    public void writeEnum(int index, Enum value) throws IOException {
+    public void writeEnum(int index, Enum<?> value) throws IOException {
         if (value != null) {
             writeInt(index, value.ordinal());
         }

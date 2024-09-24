@@ -62,6 +62,6 @@ Additional Test cases
 
 1.
     - [ ] Changes in order of enum will cause mis-serde due to implicit change in ordinal
-   - [ ] Parsing unknown fields
-   - [ ] Parsing unknown enums
+    - [x] Parsing unknown fields
+    - [x] Parsing unknown enums
 
