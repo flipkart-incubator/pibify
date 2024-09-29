@@ -10,7 +10,7 @@ import com.flipkart.pibify.core.Pibify;
 public class ClassWithNativeFields {
 
     @Pibify(1)
-    private String aString = "1";
+    private String aString = "2";
 
     @Pibify(2)
     private int anInt = 2;
