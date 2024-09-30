@@ -29,7 +29,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
@@ -80,10 +79,13 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         logs.clear();
     }
 
-    public Multimap<EntityUnderProcessing, SpecGenLog> getLogs() {
-        return logs;
+
+    @Override
+    public Collection<SpecGenLog> getLogsForCurrentEntity() {
+        return logs.get(underProcessing);
     }
 
+    @Override
     public SpecGenLogLevel status() {
         SpecGenLogLevel level = SpecGenLogLevel.INFO;
 
@@ -97,6 +99,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private void log(SpecGenLog spec) {
+        spec.prependMessage(underProcessing.getFqdn());
         logs.put(underProcessing, spec);
     }
 
@@ -148,6 +151,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 Pibify annotation = reflectedField.getAnnotation(Pibify.class);
                 if (annotation != null) {
                     validatePibifyAnnotation(reflectedField, annotation);
+                    String name = reflectedField.getName();
+
                     CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
 
                     // Validating duplicate fields
@@ -158,7 +163,6 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                         mapOfFields.put(annotation.value(), fieldSpec);
                     }
 
-                    String name = reflectedField.getName();
                     fieldSpec.setIndex(annotation.value());
                     fieldSpec.setName(name);
                     this.underProcessing.setReflectedField(reflectedField);
@@ -166,8 +170,20 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                             reflectedField.getType()));
 
                     if (!namesToBeanInfo.containsKey(name)) {
-                        log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
-                        continue;
+                        // hack for bean nomenclature for lombok classes
+                        // Lombok generates UpperCamelCase instead of camelCase
+                        // for fields where the size of the first word (lower-cased) is 1.
+                        // e.g for anApple, getter is AnApple and fieldName tagged is anApple
+                        // but for aMango, getter is AMango and fieldName is AMango instead of aMango
+                        if (Character.isLowerCase(name.charAt(0)) && Character.isUpperCase(name.charAt(1))) {
+                            name.toCharArray()[0] = Character.toUpperCase(name.charAt(0));
+                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.INFO, "Renamed field to " + name));
+                        }
+
+                        if (!namesToBeanInfo.containsKey(name)) {
+                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
+                            continue;
+                        }
                     }
 
                     fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
@@ -300,52 +316,6 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             return ClassName.get(specType.getReferenceType().getPackageName(), specType.getReferenceType().getClassName());
         } else {
             return ClassName.get(specType.getNativeType().getAutoboxedClass());
-        }
-    }
-
-    static class EntityUnderProcessing {
-        private final Class<?> type;
-        private final String fqdn;
-        private Field reflectedField;
-
-        public EntityUnderProcessing(Class<?> type, String fqdn) {
-            this.type = type;
-            this.fqdn = fqdn;
-        }
-
-        public Field getReflectedField() {
-            return reflectedField;
-        }
-
-        public void setReflectedField(Field reflectedField) {
-            this.reflectedField = reflectedField;
-        }
-
-        public String getFqdn() {
-            return fqdn;
-        }
-
-        public Class<?> getType() {
-            return type;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            EntityUnderProcessing that = (EntityUnderProcessing) o;
-            return Objects.equals(fqdn, that.fqdn);
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hashCode(fqdn);
-        }
-
-        @Override
-        public String toString() {
-            return fqdn;
         }
     }
 }

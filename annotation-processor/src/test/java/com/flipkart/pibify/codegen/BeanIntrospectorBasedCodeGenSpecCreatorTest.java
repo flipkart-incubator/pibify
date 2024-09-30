@@ -476,56 +476,55 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithInvalidPibifyIndex.class);
         assertNotNull(codeGenSpec);
-        assertNotNull(creator.getLogs());
+        assertNotNull(creator.getLogsForCurrentEntity());
         assertEquals(SpecGenLogLevel.ERROR, creator.status());
         assertEquals(0, codeGenSpec.getFields().size());
-        assertEquals(9, creator.getLogs().values().size());
-        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex", creator.getLogs().keySet().stream().findFirst().get().getFqdn());
+        assertEquals(9, creator.getLogsForCurrentEntity().size());
 
-        ArrayList<SpecGenLog> specGenLogs = new ArrayList<>(creator.getLogs().values());
+        ArrayList<SpecGenLog> specGenLogs = new ArrayList<>(creator.getLogsForCurrentEntity());
 
         int index = 0;
-        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex BeanInfo missing for a", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("a", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("Field with duplicate index: a", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex Field with duplicate index: a for b", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("b", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex BeanInfo missing for b", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("b", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("Index cannot be less than or equal to 0", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex Index cannot be less than or equal to 0 for c", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("c", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex BeanInfo missing for c", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("c", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("Index cannot be more than 128", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex Index cannot be more than 128 for d", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("d", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex BeanInfo missing for d", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("d", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("Index cannot be less than or equal to 0", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex Index cannot be less than or equal to 0 for e", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("e", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
         index++;
-        assertEquals("BeanInfo missing", specGenLogs.get(index).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex BeanInfo missing for e", specGenLogs.get(index).getLogMessage());
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("e", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 

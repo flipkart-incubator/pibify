@@ -6,7 +6,7 @@ package com.flipkart.pibify.codegen.log;
  * Date 13/09/24
  */
 abstract public class SpecGenLog {
-    protected final String logMessage;
+    protected String logMessage;
     private final SpecGenLogLevel logLevel;
 
     public SpecGenLog(SpecGenLogLevel logLevel, String logMessage) {
@@ -20,5 +20,9 @@ abstract public class SpecGenLog {
 
     public String getLogMessage() {
         return logMessage;
+    }
+
+    public void prependMessage(String msg) {
+        logMessage = msg + " " + logMessage;
     }
 }

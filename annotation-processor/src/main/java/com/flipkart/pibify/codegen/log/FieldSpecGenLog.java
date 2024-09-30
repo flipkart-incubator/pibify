@@ -22,4 +22,9 @@ public class FieldSpecGenLog extends SpecGenLog {
     public String getFieldName() {
         return fieldName;
     }
+
+    @Override
+    public String getLogMessage() {
+        return super.getLogMessage() + " for " + fieldName;
+    }
 }

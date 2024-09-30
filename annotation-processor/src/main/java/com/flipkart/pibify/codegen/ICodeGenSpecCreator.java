@@ -1,5 +1,10 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.codegen.log.SpecGenLog;
+import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
+
+import java.util.Collection;
+
 /**
  * This interface is designed for creating a CodeGenSpec from an input POJO class.
  * Author bageshwar.pn
@@ -22,4 +27,9 @@ public interface ICodeGenSpecCreator {
      * To clear any internal state of the implementation. Can be called when reusing a creator instance
      */
     void resetState();
+
+
+    Collection<SpecGenLog> getLogsForCurrentEntity();
+
+    SpecGenLogLevel status();
 }

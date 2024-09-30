@@ -4,8 +4,11 @@ import com.flipkart.pibify.codegen.BeanIntrospectorBasedCodeGenSpecCreator;
 import com.flipkart.pibify.codegen.CodeGenException;
 import com.flipkart.pibify.codegen.CodeGenSpec;
 import com.flipkart.pibify.codegen.CodeGeneratorImpl;
+import com.flipkart.pibify.codegen.ICodeGenSpecCreator;
 import com.flipkart.pibify.codegen.ICodeGenerator;
 import com.flipkart.pibify.codegen.JavaFileWrapper;
+import com.flipkart.pibify.codegen.log.SpecGenLog;
+import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.mvn.interfaces.SourcesScanner;
 import com.flipkart.pibify.mvn.util.PrefixLog;
@@ -57,7 +60,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         }
 
         SourcesScanner scanner = new JavaSourcesScanner(getLog());
-        BeanIntrospectorBasedCodeGenSpecCreator codeGenSpecCreator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        ICodeGenSpecCreator codeGenSpecCreator = new BeanIntrospectorBasedCodeGenSpecCreator();
         // TODO consume config from pom
         PibifyConfiguration.builder().build();
         ICodeGenerator codeGenerator = new CodeGeneratorImpl();
@@ -66,12 +69,16 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
 
 
         for (Class<?> pibifyAnnotatedClass : pibifyAnnotatedClasses) {
-            //File newFile = new File(outputDirectory, pibifyAnnotatedClass.getCanonicalName());
             try {
                 CodeGenSpec codeGenSpec = codeGenSpecCreator.create(pibifyAnnotatedClass);
-                JavaFileWrapper javaFile = codeGenerator.generate(codeGenSpec);
-                getLog().info("Creating " + javaFile.getPackageName().replaceAll("\\.", "/"));
-                javaFile.getJavaFile().writeTo(outputDirectory);
+                printCodeSpecGenLogs(codeGenSpecCreator);
+                if (SpecGenLogLevel.INFO.equals(codeGenSpecCreator.status())) {
+                    JavaFileWrapper javaFile = codeGenerator.generate(codeGenSpec);
+                    getLog().info("Creating " + javaFile.getPackageName().replaceAll("\\.", "/"));
+                    javaFile.getJavaFile().writeTo(outputDirectory);
+                } else {
+                    getLog().error("Unable to generate CodeGenSpec for " + pibifyAnnotatedClass.getName());
+                }
             } catch (IOException | CodeGenException e) {
                 throw new RuntimeException(e);
             }
@@ -79,6 +86,24 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
 
         if (!project.getCompileSourceRoots().contains(outputDirectory.getPath())) {
             project.addCompileSourceRoot(outputDirectory.getPath());
+        }
+    }
+
+    private void printCodeSpecGenLogs(ICodeGenSpecCreator codeGenSpecCreator) {
+        for (SpecGenLog specGenLog : codeGenSpecCreator.getLogsForCurrentEntity()) {
+            switch (specGenLog.getLogLevel()) {
+                case INFO:
+                    getLog().info(specGenLog.getLogMessage());
+                    break;
+                case WARN:
+                    getLog().warn(specGenLog.getLogMessage());
+                    break;
+                case ERROR:
+                    getLog().error(specGenLog.getLogMessage());
+                    break;
+                default:
+                    throw new UnsupportedOperationException("Unknown log level " + specGenLog.getLogLevel());
+            }
         }
     }
 }

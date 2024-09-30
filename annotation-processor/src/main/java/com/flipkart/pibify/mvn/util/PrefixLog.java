@@ -8,6 +8,13 @@ import org.apache.maven.plugin.logging.Log;
  * Date 29/09/24
  */
 public class PrefixLog implements Log {
+
+    // ANSI escape code constants for text colors
+    String RESET = "\u001B[0m";
+    String RED = "\u001B[31m";
+    String GREEN = "\u001B[32m";
+    String YELLOW = "\u001B[33m";
+
     private final Log underlying;
     private final String prefix;
 
@@ -44,12 +51,12 @@ public class PrefixLog implements Log {
 
     @Override
     public void info(CharSequence charSequence) {
-        underlying.info(prefix + charSequence);
+        underlying.info(GREEN + prefix + RESET + charSequence);
     }
 
     @Override
     public void info(CharSequence charSequence, Throwable throwable) {
-        underlying.info(prefix + charSequence, throwable);
+        underlying.info(GREEN + prefix + RESET + charSequence, throwable);
     }
 
     @Override
@@ -64,12 +71,12 @@ public class PrefixLog implements Log {
 
     @Override
     public void warn(CharSequence charSequence) {
-        underlying.warn(prefix + charSequence);
+        underlying.warn(YELLOW + prefix + RESET + charSequence);
     }
 
     @Override
     public void warn(CharSequence charSequence, Throwable throwable) {
-        underlying.warn(prefix + charSequence, throwable);
+        underlying.warn(YELLOW + prefix + RESET + charSequence, throwable);
     }
 
     @Override
@@ -84,12 +91,12 @@ public class PrefixLog implements Log {
 
     @Override
     public void error(CharSequence charSequence) {
-        underlying.error(prefix + charSequence);
+        underlying.error(RED + prefix + RESET + charSequence);
     }
 
     @Override
     public void error(CharSequence charSequence, Throwable throwable) {
-        underlying.error(prefix + charSequence, throwable);
+        underlying.error(RED + prefix + RESET + charSequence, throwable);
     }
 
     @Override
