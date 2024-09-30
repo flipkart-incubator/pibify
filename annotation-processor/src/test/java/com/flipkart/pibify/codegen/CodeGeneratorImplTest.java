@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.test.data.ClassForTestingNullValues;
@@ -11,6 +12,7 @@ import com.flipkart.pibify.test.data.ClassWithCollectionReference;
 import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
 import com.flipkart.pibify.test.data.ClassWithEnums;
 import com.flipkart.pibify.test.data.ClassWithInnerClasses;
+import com.flipkart.pibify.test.data.ClassWithInterestingFieldNames;
 import com.flipkart.pibify.test.data.ClassWithMapReference;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
@@ -634,5 +636,25 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.getStr1(), deserialized.getStr1());
         // although names are same, the index has changed
         assertNotEquals(testPayload.getStr2(), deserialized.getStr2());
+    }
+
+    @Test
+    public void testClassWithInterestingFieldNames() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithInterestingFieldNames.class);
+        assertNotNull(codeGenSpec);
+        assertNotNull(creator.getLogsForCurrentEntity());
+        assertEquals(SpecGenLogLevel.INFO, creator.status());
+        assertEquals(5, codeGenSpec.getFields().size());
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        javaFile.writeTo(System.out);
+        ClassWithInterestingFieldNames testPayload = new ClassWithInterestingFieldNames();
+        testPayload.randomize();
+
+        ClassWithInterestingFieldNames deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
     }
 }

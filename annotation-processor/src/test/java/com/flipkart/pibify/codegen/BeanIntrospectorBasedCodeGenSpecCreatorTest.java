@@ -4,6 +4,8 @@ import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
+import com.flipkart.pibify.test.data.ClassWithDuplicateFieldNames;
+import com.flipkart.pibify.test.data.ClassWithInterestingFieldNames;
 import com.flipkart.pibify.test.data.ClassWithInvalidPibifyIndex;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
 
@@ -528,5 +531,33 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(index).getLogLevel());
         assertEquals("e", ((FieldSpecGenLog) (specGenLogs.get(index))).getFieldName());
 
+    }
+
+    @Test
+    public void testClassWithDuplicateFieldNames() throws CodeGenException {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithDuplicateFieldNames.class);
+        assertNotNull(codeGenSpec);
+        assertNotNull(creator.getLogsForCurrentEntity());
+        assertEquals(SpecGenLogLevel.ERROR, creator.status());
+        assertEquals(1, codeGenSpec.getFields().size());
+        assertEquals(1, creator.getLogsForCurrentEntity().size());
+        ArrayList<SpecGenLog> specGenLogs = new ArrayList<>(creator.getLogsForCurrentEntity());
+
+        assertTrue(specGenLogs.get(0).getLogMessage().contains(
+                "com.flipkart.pibify.test.data.ClassWithDuplicateFieldNames Duplicate field"
+        ));
+        assertEquals(SpecGenLogLevel.ERROR, specGenLogs.get(0).getLogLevel());
+    }
+
+    @Test
+    public void testClassWithInterestingFieldNames() throws CodeGenException {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithInterestingFieldNames.class);
+        assertNotNull(codeGenSpec);
+        assertNotNull(creator.getLogsForCurrentEntity());
+        assertEquals(SpecGenLogLevel.INFO, creator.status());
+        assertEquals(5, codeGenSpec.getFields().size());
     }
 }

@@ -117,6 +117,12 @@
           <scope>test</scope>
       </dependency>
       <dependency>
+          <groupId>org.projectlombok</groupId>
+          <artifactId>lombok</artifactId>
+          <version>1.18.22</version>
+          <scope>test</scope>
+      </dependency>
+      <dependency>
           <groupId>com.google.protobuf</groupId>
           <artifactId>protobuf-java</artifactId>
           <version>${protobuf-java.version}</version>

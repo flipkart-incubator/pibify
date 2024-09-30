@@ -12,7 +12,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 
 import java.beans.BeanInfo;
-import java.beans.FeatureDescriptor;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -23,16 +22,15 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
-import java.util.stream.Collectors;
 
 /**
  * This class generates the CodeGenSpec based on incoming Class via Reflection
@@ -140,18 +138,33 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         try {
             BeanInfo beanInfo = Introspector.getBeanInfo(type);
 
-            Map<String, PropertyDescriptor> namesToBeanInfo = Arrays.stream(beanInfo.getPropertyDescriptors())
-                    .collect(Collectors.toMap(FeatureDescriptor::getName, f -> f));
+            Map<CaseInsensitiveString, PropertyDescriptor> namesToBeanInfo = new HashMap<>();
+            for (PropertyDescriptor f : beanInfo.getPropertyDescriptors()) {
+                if (namesToBeanInfo.put(CaseInsensitiveString.of(f.getName()), f) != null) {
+                    throw new IllegalStateException("Duplicate key");
+                }
+            }
 
             CodeGenSpec spec = getCodeGenSpec(type);
 
             Map<Integer, CodeGenSpec.FieldSpec> mapOfFields = new HashMap<>();
+            // This set is used to find duplicate field names (case-insensitive)
+            Set<CaseInsensitiveString> fieldNameSet = new HashSet<>();
 
             for (java.lang.reflect.Field reflectedField : type.getDeclaredFields()) {
+                CaseInsensitiveString name = CaseInsensitiveString.of(reflectedField.getName());
+
+                if (fieldNameSet.contains(name)) {
+                    // We cannot have duplicate field names, because it messes up with the getters
+                    log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Duplicate field"));
+                    break;
+                } else {
+                    fieldNameSet.add(name);
+                }
+
                 Pibify annotation = reflectedField.getAnnotation(Pibify.class);
                 if (annotation != null) {
                     validatePibifyAnnotation(reflectedField, annotation);
-                    String name = reflectedField.getName();
 
                     CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
 
@@ -164,26 +177,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     }
 
                     fieldSpec.setIndex(annotation.value());
-                    fieldSpec.setName(name);
+                    fieldSpec.setName(name.getString());
                     this.underProcessing.setReflectedField(reflectedField);
                     fieldSpec.setType(getTypeFromJavaType(reflectedField.getName(), reflectedField.getGenericType(),
                             reflectedField.getType()));
 
                     if (!namesToBeanInfo.containsKey(name)) {
-                        // hack for bean nomenclature for lombok classes
-                        // Lombok generates UpperCamelCase instead of camelCase
-                        // for fields where the size of the first word (lower-cased) is 1.
-                        // e.g for anApple, getter is AnApple and fieldName tagged is anApple
-                        // but for aMango, getter is AMango and fieldName is AMango instead of aMango
-                        if (Character.isLowerCase(name.charAt(0)) && Character.isUpperCase(name.charAt(1))) {
-                            name.toCharArray()[0] = Character.toUpperCase(name.charAt(0));
-                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.INFO, "Renamed field to " + name));
-                        }
-
-                        if (!namesToBeanInfo.containsKey(name)) {
-                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
-                            continue;
-                        }
+                        log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
+                        continue;
                     }
 
                     fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
