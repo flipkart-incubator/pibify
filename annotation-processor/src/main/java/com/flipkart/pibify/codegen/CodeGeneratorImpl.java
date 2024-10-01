@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.flipkart.pibify.codegen.CodeGenUtil.PIBIFY_GENERATED_PACKAGE_NAME;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isArray;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollection;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollectionOrMap;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isNotNative;
+import static com.flipkart.pibify.core.Constants.PIBIFY_GENERATED_PACKAGE_NAME;
 
 /**
  * This class is used for generating the JavaFile given a CodeGenSpec

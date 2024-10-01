@@ -14,8 +14,6 @@ import java.util.Deque;
  */
 public class CodeGenUtil {
 
-    public static final String PIBIFY_GENERATED_PACKAGE_NAME = "com.flipkart.pibify.generated.";
-
     public static boolean isCollectionOrMap(CodeGenSpec.DataType type) {
         return (type == CodeGenSpec.DataType.COLLECTION || type == CodeGenSpec.DataType.MAP);
     }

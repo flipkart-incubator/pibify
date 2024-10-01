@@ -18,7 +18,6 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <auto-service.version>1.1.1</auto-service.version>
     <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-    <protobuf-java.version>3.13.0</protobuf-java.version>
     <javapoet.version>1.13.0</javapoet.version>
       <maven.version>3.3.9</maven.version>
   </properties>
@@ -122,11 +121,6 @@
           <version>1.18.22</version>
           <scope>test</scope>
       </dependency>
-      <dependency>
-          <groupId>com.google.protobuf</groupId>
-          <artifactId>protobuf-java</artifactId>
-          <version>${protobuf-java.version}</version>
-      </dependency>
 
       <dependency>
           <groupId>com.squareup</groupId>
@@ -159,6 +153,12 @@
           <groupId>com.google.guava</groupId>
           <artifactId>guava</artifactId>
           <version>32.0.0-jre</version>
+      </dependency>
+      <dependency>
+          <groupId>com.flipkart.pibify</groupId>
+          <artifactId>pibify-core</artifactId>
+          <version>1.0-SNAPSHOT</version>
+          <scope>compile</scope>
       </dependency>
   </dependencies>
 </project>

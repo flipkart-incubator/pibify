@@ -1,7 +1,7 @@
 package com.flipkart.pibify.codegen.stub;
 
-import com.flipkart.pibify.codegen.CodeGenUtil;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
+import com.flipkart.pibify.core.Constants;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.serde.PibifyDeserializer;
@@ -28,7 +28,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
 
     private Class<PibifyGenerated<?>> getRefClassForTest(String refType) throws Exception {
 
-        String className = CodeGenUtil.PIBIFY_GENERATED_PACKAGE_NAME + refType + "Handler";
+        String className = Constants.PIBIFY_GENERATED_PACKAGE_NAME + refType + "Handler";
         if (forTest) {
             // Test code added because the adhoc compiled classes are not available to the test-runner class loader
             Class<?> compilerClass = Class.forName("com.flipkart.pibify.test.util.SimpleCompiler");

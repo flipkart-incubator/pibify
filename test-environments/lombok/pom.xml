@@ -85,10 +85,9 @@
             <version>2.17.2</version>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>com.flipkart.pibify</groupId>
-            <artifactId>pibify-maven-plugin</artifactId>
+            <artifactId>pibify-core</artifactId>
             <version>1.0-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
