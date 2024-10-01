@@ -54,6 +54,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         String packageName = PIBIFY_GENERATED_PACKAGE_NAME + codeGenSpec.getPackageName();
         JavaFileWrapper wrapper = new JavaFileWrapper();
         wrapper.setPackageName(packageName);
+        // TODO move this class name computation to a common place
+        wrapper.setClassName(ClassName.get(packageName, codeGenSpec.getClassName() + "Handler"));
         wrapper.setJavaFile(JavaFile.builder(packageName, pibifyGeneratedHandler)
                 .build());
         return wrapper;

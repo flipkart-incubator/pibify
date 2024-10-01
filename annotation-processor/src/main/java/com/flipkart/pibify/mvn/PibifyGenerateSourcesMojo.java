@@ -7,6 +7,7 @@ import com.flipkart.pibify.codegen.CodeGeneratorImpl;
 import com.flipkart.pibify.codegen.ICodeGenSpecCreator;
 import com.flipkart.pibify.codegen.ICodeGenerator;
 import com.flipkart.pibify.codegen.JavaFileWrapper;
+import com.flipkart.pibify.codegen.PibifyHandlerCacheGenerator;
 import com.flipkart.pibify.codegen.log.SpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.core.PibifyConfiguration;
@@ -64,6 +65,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         // TODO consume config from pom
         PibifyConfiguration.builder().build();
         ICodeGenerator codeGenerator = new CodeGeneratorImpl();
+        PibifyHandlerCacheGenerator handlerCacheGenerator = new PibifyHandlerCacheGenerator(project.getGroupId(), project.getArtifactId());
 
         Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory());
 
@@ -76,12 +78,19 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
                     JavaFileWrapper javaFile = codeGenerator.generate(codeGenSpec);
                     getLog().info("Creating " + javaFile.getPackageName().replaceAll("\\.", "/"));
                     javaFile.getJavaFile().writeTo(outputDirectory);
+                    handlerCacheGenerator.add(pibifyAnnotatedClass, javaFile.getClassName());
                 } else {
                     getLog().error("Unable to generate CodeGenSpec for " + pibifyAnnotatedClass.getName());
                 }
             } catch (IOException | CodeGenException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        try {
+            handlerCacheGenerator.generateCacheClass().getJavaFile().writeTo(outputDirectory);
+        } catch (IOException | CodeGenException e) {
+            throw new RuntimeException(e);
         }
 
         if (!project.getCompileSourceRoots().contains(outputDirectory.getPath())) {

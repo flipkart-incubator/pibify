@@ -102,7 +102,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
-        //javaFile.writeTo(System.out);
+        //javaFile.getJavaFile().writeTo(System.out);
         ClassWithNativeFields testPayload = new ClassWithNativeFields();
         testPayload.randomize();
         ClassWithNativeFields deserialized = invokeGeneratedCode(javaFile.getJavaFile(), testPayload);
@@ -650,7 +650,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        javaFile.writeTo(System.out);
+        //javaFile.writeTo(System.out);
         ClassWithInterestingFieldNames testPayload = new ClassWithInterestingFieldNames();
         testPayload.randomize();
 

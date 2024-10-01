@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 
 /**
@@ -11,6 +12,7 @@ public class JavaFileWrapper {
 
     private JavaFile javaFile;
     private String packageName;
+    private ClassName className;
 
     public JavaFile getJavaFile() {
         return javaFile;
@@ -26,5 +28,13 @@ public class JavaFileWrapper {
 
     public void setPackageName(String packageName) {
         this.packageName = packageName;
+    }
+
+    public ClassName getClassName() {
+        return className;
+    }
+
+    public void setClassName(ClassName className) {
+        this.className = className;
     }
 }
