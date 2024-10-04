@@ -161,4 +161,32 @@
           <scope>compile</scope>
       </dependency>
   </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>fk-jfrog-release</id>
+            <name>libs-rel</name>
+            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
+        </repository>
+        <snapshotRepository>
+            <id>fk-jfrog-snapshot</id>
+            <name>libs-snapshot</name>
+            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>fk-jfrog-snapshot</id>
+            <name>Flipkart-Artifactory</name>
+            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
+        </pluginRepository>
+        <pluginRepository>
+            <id>fk-jfrog-release</id>
+            <name>Flipkart-Artifactory</name>
+            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
+        </pluginRepository>
+    </pluginRepositories>
+
+
 </project>
