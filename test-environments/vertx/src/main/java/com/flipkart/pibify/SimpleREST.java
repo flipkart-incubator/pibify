@@ -58,13 +58,6 @@ public class SimpleREST extends AbstractVerticle {
         //router.get("/products").handler(this::handleListProducts);
         router.get("/products").respond(getProducts());
 
-        /*
-        Strategy
-        1. Create a new Router instead of Router.router()
-        2. return a Decorator instance of Route for each of the 33 methods
-        3. This Decorator takes care of the `respond` method by adding another handler based on the incoming request type
-         */
-
         vertx.createHttpServer().requestHandler(router).listen(8080);
     }
 
@@ -78,7 +71,6 @@ public class SimpleREST extends AbstractVerticle {
                 try {
                     Thread.sleep(1000);
                     promise.complete(productList);
-                    //promise.complete(Buffer.buffer(new byte[5]));
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }

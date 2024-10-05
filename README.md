@@ -14,10 +14,10 @@ This is the annotation to be added on any field of a Pojo class that has to be t
 ```java
 
 @Pibify(1)
-private String aStringVariable
+private String aStringVariable;
 
 @Pibify(2)
-private int anIntegerVariable
+private int anIntegerVariable;
 ```
 
 #### Handler
@@ -90,5 +90,9 @@ This is the class that the clients use to get an instance of Handler for the sup
 </plugin>
 ```
 
-3. As part of the `package` mvn goal, the code will be generated
+3. As part of the `package` mvn goal, the handler code will be generated
+
+# Integration with application containers
+
+1. [vert.x](vertx.md)
 
