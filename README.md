@@ -35,11 +35,18 @@ public abstract class PibifyGenerated<T> {
 This is the class that the clients use to get an instance of Handler for the supplied class and then call the serialize or deserialize method on it.
 
 ## Flow
-1. Add the dependency on pibify-core library
-2. In the desired pojos, add the `@Pibify(<index>)` annotation
-3. Clients configure a maven plugin which scans the source of the project during the build phase and collects all pojos which have the `@Pibify` annotation.
+
+1. Add the dependency on `pibify-core` library
+2. Add the `pibify-maven-plugin`
+2.
+   1. Use mvn target to annotate all classes within a given module using the mvn goal:
+      `mvn com.flipkart.pibify:pibify-maven-plugin:annotate`
+   1. Or, In the desired pojos, add the `@Pibify(<index>)` annotation manually
+3. The maven plugin scans the source of the project during the build phase and collects all pojos which have the
+   `@Pibify` annotation.
 4. This plugin generates the `Handler` and `PibifyHandlerCache` for the configured module and places them at a suitable place in the package(jar)
-5. Clients use the `PibifyHandlerCache` to get a reference to a `Handler` and call the serialize/deserialize method on it.
+5. Clients use the `PibifyHandlerCache` to get a reference to a `Handler` and call the `serialize`/`deserialize` method
+   on it.
 
 
 # Usage
@@ -48,7 +55,6 @@ This is the class that the clients use to get an instance of Handler for the sup
 <dependency>
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-core</artifactId>
-    <version>1.0-SNAPSHOT</version>
     <scope>compile</scope>
 </dependency>
 
@@ -58,7 +64,6 @@ This is the class that the clients use to get an instance of Handler for the sup
 <plugin>
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-maven-plugin</artifactId>
-    <version>1.0-SNAPSHOT</version>
     <executions>
         <execution>
             <id>generate-sources</id>
@@ -90,7 +95,10 @@ This is the class that the clients use to get an instance of Handler for the sup
 </plugin>
 ```
 
-3. As part of the `package` mvn goal, the handler code will be generated
+3. Either manually tag fields with the `@Pibify` annotation or run the mvn goal
+   `mvn com.flipkart.pibify:pibify-maven-plugin:annotate` to scan through all pojos in the module and add the `@Pibify`
+   annotation
+4. As part of the `package` mvn goal, the handler code will be generated
 
 # Integration with application containers
 
