@@ -9,5 +9,4 @@ public class ClassWithNoAnnotation {
     public String publicString;
     protected String protectedString;
     private String privateString;
-    private String multiLine1, multiLine2;
 }
