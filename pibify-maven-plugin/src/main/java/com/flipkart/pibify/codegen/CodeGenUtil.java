@@ -133,10 +133,15 @@ public class CodeGenUtil {
         return (Class<?>) getType(type, field).type;
     }
 
-    private static TypeInfo getType(Class<?> clazz, Field field) {
+    static TypeInfo getType(Class<?> clazz, Field field) {
+        //TypeVariable<?> genericTyp = (TypeVariable<?>) field.getGenericType();
+        return getType(clazz, field, field.getGenericType());
+    }
+
+    public static TypeInfo getType(Class<?> clazz, Field field, Type genericType) {
         TypeInfo type = new TypeInfo(null, null);
-        if (field.getGenericType() instanceof TypeVariable<?>) {
-            TypeVariable<?> genericTyp = (TypeVariable<?>) field.getGenericType();
+
+        if (genericType instanceof TypeVariable<?> || genericType instanceof ParameterizedType) {
             Class<?> superClazz = clazz.getSuperclass();
 
             if (clazz.getGenericSuperclass() instanceof ParameterizedType) {
@@ -145,7 +150,7 @@ public class CodeGenUtil {
                 if (!Object.class.equals(paramType)) {
                     if (field.getDeclaringClass().equals(superClazz)) {
                         // this is the root class an starting point for this search
-                        type.name = genericTyp;
+                        type.name = genericType;
                         type.type = null;
                     } else {
                         type = getType(superClazz, field);
@@ -158,16 +163,14 @@ public class CodeGenUtil {
                         if (type.name.equals(superTypeParam)) {
                             type.type = paramType.getActualTypeArguments()[j];
                             Type[] typeParameters = clazz.getTypeParameters();
-                            if (typeParameters.length > 0) {
-                                for (Type typeParam : typeParameters) {
-                                    TypeVariable<?> objectOfComparison = superTypeParam;
-                                    if (type.type instanceof TypeVariable<?>) {
-                                        objectOfComparison = (TypeVariable<?>) type.type;
-                                    }
-                                    if (objectOfComparison.getName().equals(((TypeVariable<?>) typeParam).getName())) {
-                                        type.name = typeParam;
-                                        break;
-                                    }
+                            for (Type typeParam : typeParameters) {
+                                TypeVariable<?> objectOfComparison = superTypeParam;
+                                if (type.type instanceof TypeVariable<?>) {
+                                    objectOfComparison = (TypeVariable<?>) type.type;
+                                }
+                                if (objectOfComparison.getName().equals(((TypeVariable<?>) typeParam).getName())) {
+                                    type.name = typeParam;
+                                    break;
                                 }
                             }
                             break;
@@ -176,7 +179,7 @@ public class CodeGenUtil {
                 }
             }
         } else {
-            type.type = field.getGenericType();
+            type.type = genericType;
         }
 
         return type;

@@ -10,6 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -58,6 +59,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
         // cannot use computeIfAbsent because of checked exception being thrown
         if (!cache.containsKey(type)) {
+            //System.out.println("Processing " + type.getName());
             CodeGenSpec codeGenSpec = createImpl(type);
             handleSuperTypes(codeGenSpec, type);
             cache.put(type, codeGenSpec);
@@ -146,6 +148,13 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             }
 
             CodeGenSpec spec = getCodeGenSpec(type);
+
+            // If the class under processing is an enum, there is no need of a codespec.
+            // enum cardinals are directly used in pibify
+            // To be revisited!
+            if (type.isEnum()) {
+                return spec;
+            }
 
             Map<Integer, CodeGenSpec.FieldSpec> mapOfFields = new HashMap<>();
             // This set is used to find duplicate field names (case-insensitive)
@@ -299,8 +308,19 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             ParameterizedType castedActualType = (ParameterizedType) actualTypeArgument;
             return getTypeFromJavaType(fieldName, actualTypeArgument, (Class<?>) castedActualType.getRawType());
         } else {
-            log(new FieldSpecGenLog(fieldName, SpecGenLogLevel.ERROR, type.getSimpleName() + " not supported in field " + fieldName));
-            return null;
+            Class<?> determinedType = (Class<?>) CodeGenUtil.getType(underProcessing.getType(), underProcessing.getReflectedField(), actualTypeArgument).type;
+            if (determinedType != null) {
+                // passing the generic type as null because it has been resolved at this level.
+                return getTypeFromJavaType(fieldName, null, determinedType);
+            } else {
+                log(new FieldSpecGenLog(fieldName, SpecGenLogLevel.ERROR, "Generic " + type.getName() + " not supported in field: " + fieldName));
+                // return dummy object to avoid NPE
+                CodeGenSpec.Type dummy = new CodeGenSpec.Type();
+                dummy.setNativeType(CodeGenSpec.DataType.OBJECT);
+                dummy.setjPTypeName(TypeName.OBJECT);
+
+                return dummy;
+            }
         }
     }
 

@@ -2,6 +2,9 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Objects;
 
 /**
@@ -19,6 +22,20 @@ public class SubClassOfClassWithTypeParameterReference
         str = "str" + Math.random();
         ClassWithReferences references = new ClassWithReferences();
         setGenericTypeReference(references.randomize());
+
+        list = new ArrayList<>();
+        list.add(references);
+
+        list2 = new ArrayList<>();
+        list2.add(list);
+
+        map = new HashMap<>();
+        map.put(references, references);
+
+        map2 = new HashMap<>();
+        HashSet<ClassWithReferences> objects = new HashSet<>();
+        objects.add(references);
+        map2.put(list, objects);
     }
 
     public String getStr() {
