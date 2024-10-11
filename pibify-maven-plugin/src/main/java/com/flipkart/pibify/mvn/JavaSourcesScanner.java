@@ -47,6 +47,28 @@ public class JavaSourcesScanner extends SourcesScanner {
         }
     }
 
+    private static boolean containsPibifyAnnotation(Class<?> clazz) {
+        return Arrays.stream(clazz.getDeclaredFields()).anyMatch(field -> field.getAnnotation(Pibify.class) != null);
+    }
+
+    // VisibleForTesting
+    static boolean isIgnorableClass(Class<?> clazz) {
+        if (clazz.isEnum()) {
+            return true;
+        } else {
+            if (containsPibifyAnnotation(clazz)) {
+                return false;
+            } else {
+                // check for superclass
+                if (Object.class.equals(clazz)) {
+                    return true;
+                } else {
+                    return isIgnorableClass(clazz.getSuperclass());
+                }
+            }
+        }
+    }
+
     private Set<Class<?>> scanAndLoadClasses(File dir, String packageName, ClassLoader classLoader) {
         Set<Class<?>> classes = new LinkedHashSet<>();
 
@@ -57,22 +79,18 @@ public class JavaSourcesScanner extends SourcesScanner {
                 String className = packageName + file.getName().substring(0, file.getName().length() - 6);
                 try {
                     Class<?> aClass = classLoader.loadClass(className);
-                    if (containsPibifyAnnotation(aClass)) {
+                    if (!isIgnorableClass(aClass)) {
                         classes.add(aClass);
                         getLog().info("  - " + aClass.getName());
                     } else {
                         getLog().info("Ignoring non-pibify class " + aClass.getName());
                     }
-                } catch (ClassNotFoundException e) {
+                } catch (Exception e) {
                     getLog().error("Failed to load class: " + className, e);
                 }
             }
         }
 
         return classes;
-    }
-
-    private boolean containsPibifyAnnotation(Class<?> clazz) {
-        return Arrays.stream(clazz.getDeclaredFields()).anyMatch(field -> field.getAnnotation(Pibify.class) != null);
     }
 }
