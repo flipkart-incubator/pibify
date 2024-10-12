@@ -60,7 +60,7 @@ public class JavaSourcesScanner extends SourcesScanner {
                 return false;
             } else {
                 // check for superclass
-                if (Object.class.equals(clazz)) {
+                if (Object.class.equals(clazz) || clazz.isInterface()) {
                     return true;
                 } else {
                     return isIgnorableClass(clazz.getSuperclass());

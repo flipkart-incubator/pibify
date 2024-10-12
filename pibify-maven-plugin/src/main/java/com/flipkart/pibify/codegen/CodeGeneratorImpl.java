@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isArray;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollection;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollectionOrMap;
+import static com.flipkart.pibify.codegen.CodeGenUtil.isJavaLangObject;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isNotNative;
 import static com.flipkart.pibify.core.Constants.PIBIFY_GENERATED_PACKAGE_NAME;
 
@@ -318,6 +319,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
                     //value = refHandler.deserialize(deserializer.readObjectAsBytes());
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
+
+                    // If we are processing a Object reference, get the MapEntry and use the value
+                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
+                        builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
+                    }
                 } else {
                     //value = deserializer.readString();
                     if (fieldSpec.getContainerTypes().get(0).getNativeType() == CodeGenSpec.DataType.ENUM) {
@@ -337,6 +343,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
                     builder.addStatement("key = keyHandler.deserialize(deserializer.readObjectAsBytes())");
+                    // If we are processing a Object reference, get the MapEntry and use the value
+                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
+                        builder.addStatement("key = ((Map.Entry<String,Object>)(key)).getValue()");
+                    }
                 } else {
                     if (fieldSpec.getContainerTypes().get(0).getNativeType() == CodeGenSpec.DataType.ENUM) {
                         builder.addStatement("key = $T.values()[deserializer.readEnum()]",
@@ -350,6 +360,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 if (isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
+                    // If we are processing a Object reference, get the MapEntry and use the value
+                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
+                        builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
+                    }
                 } else {
                     if (fieldSpec.getContainerTypes().get(1).getNativeType() == CodeGenSpec.DataType.ENUM) {
                         builder.addStatement("value = $T.values()[deserializer.readEnum()]",
@@ -489,7 +503,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     fieldSpec.getName(), fieldSpec.getGetter());
 
 
-            builder.addStatement("/*");
+            /*builder.addStatement("/*");
             builder.beginControlFlow("for ($T<$L, $L> entry : object.$L().entrySet())",
                             Map.Entry.class,
                             getReferenceTypeForContainers(keyType, true),
@@ -512,7 +526,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
             builder.addStatement("serializer.writeObjectAsBytes($L, $LSerializer.serialize())", fieldSpec.getIndex(), fieldSpec.getName())
                     .endControlFlow();
-            builder.addStatement("*/");
+            builder.addStatement("*\/");*/
         }
     }
 
@@ -618,7 +632,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         //object.setaString(aStringHandler.deserialize(deserializer.readObjectAsBytes()));
         builder.addStatement("object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))", fieldSpec.getSetter(), fieldSpec.getName());
 
-        builder.addStatement("/*");
+        /*builder.addStatement("/*");
         builder.addStatement("case $L: \n$>" +
                         "byte[] bytes$L = deserializer.readObjectAsBytes()", tag, tag)
                 .beginControlFlow("if (object.$L() == null)", fieldSpec.getGetter())
@@ -663,7 +677,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
 
         builder.addStatement("object.$L().put(key, value)", fieldSpec.getGetter());
-        builder.addStatement("*/");
+        builder.addStatement("*\/");*/
     }
 
     private void addCollectionDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
@@ -680,7 +694,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         //object.setaString(aStringHandler.deserialize(deserializer.readObjectAsBytes()));
         builder.addStatement("object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))", fieldSpec.getSetter(), fieldSpec.getName());
 
-        builder.addStatement("/*");
+        /*builder.addStatement("/*");
         if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
 
             CodeGenSpec refSpec = realizedType.getReferenceType();
@@ -707,7 +721,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 .endControlFlow()
                 .addStatement("$>object.$L().add(val$L)$<", fieldSpec.getGetter(), tag);
 
-        builder.addStatement("*/");
+        builder.addStatement("*\/");*/
     }
 
     private void addArrayDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {

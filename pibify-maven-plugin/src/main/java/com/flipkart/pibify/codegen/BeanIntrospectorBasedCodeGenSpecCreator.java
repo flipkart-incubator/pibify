@@ -10,7 +10,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
+import org.apache.maven.plugin.logging.Log;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -48,6 +48,15 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     private final Multimap<EntityUnderProcessing, SpecGenLog> logs = ArrayListMultimap.create();
     private final Stack<EntityUnderProcessing> stackOfUnderProcessing = new Stack<>();
     private EntityUnderProcessing underProcessing;
+    private final Log mavenLogger;
+
+    public BeanIntrospectorBasedCodeGenSpecCreator(Log logger) {
+        this.mavenLogger = logger;
+    }
+
+    public BeanIntrospectorBasedCodeGenSpecCreator() {
+        this(null);
+    }
 
     @Override
     public CodeGenSpec create(Class<?> type) throws CodeGenException {
@@ -101,6 +110,20 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     private void log(SpecGenLog spec) {
         spec.prependMessage(underProcessing.getFqdn());
         logs.put(underProcessing, spec);
+        if (mavenLogger != null) {
+            switch (spec.getLogLevel()) {
+                case ERROR:
+                    mavenLogger.error("CodeSpecCreator: " + spec.getLogMessage());
+                    break;
+                case WARN:
+                    mavenLogger.warn("CodeSpecCreator: " + spec.getLogMessage());
+                    break;
+                case INFO:
+                default:
+                    mavenLogger.info("CodeSpecCreator: " + spec.getLogMessage());
+                    break;
+            }
+        }
     }
 
     private void handleSuperTypes(CodeGenSpec rootCodeGenSpec, Class<?> type) throws CodeGenException {
@@ -308,18 +331,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             ParameterizedType castedActualType = (ParameterizedType) actualTypeArgument;
             return getTypeFromJavaType(fieldName, actualTypeArgument, (Class<?>) castedActualType.getRawType());
         } else {
-            Class<?> determinedType = (Class<?>) CodeGenUtil.getType(underProcessing.getType(), underProcessing.getReflectedField(), actualTypeArgument).type;
-            if (determinedType != null) {
+            Type resolvedType = CodeGenUtil.getType(underProcessing.getType(), underProcessing.getReflectedField(), actualTypeArgument).type;
+            if (resolvedType instanceof Class) {
                 // passing the generic type as null because it has been resolved at this level.
-                return getTypeFromJavaType(fieldName, null, determinedType);
+                return getTypeFromJavaType(fieldName, null, (Class<?>) resolvedType);
             } else {
-                log(new FieldSpecGenLog(fieldName, SpecGenLogLevel.ERROR, "Generic " + type.getName() + " not supported in field: " + fieldName));
-                // return dummy object to avoid NPE
-                CodeGenSpec.Type dummy = new CodeGenSpec.Type();
-                dummy.setNativeType(CodeGenSpec.DataType.OBJECT);
-                dummy.setjPTypeName(TypeName.OBJECT);
-
-                return dummy;
+                // return Object as the type if we cannot resolve the actual type
+                // then the PibifyObjectHandler takes care of marshalling
+                return getTypeFromJavaType(fieldName, null, Object.class);
             }
         }
     }

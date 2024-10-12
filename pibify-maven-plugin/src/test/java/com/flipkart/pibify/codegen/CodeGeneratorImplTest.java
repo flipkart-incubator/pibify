@@ -25,6 +25,7 @@ import com.flipkart.pibify.test.data.ClassWithReferences;
 import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange1;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange2;
+import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
@@ -539,6 +540,39 @@ public class CodeGeneratorImplTest {
 
         SubClassOfClassWithTypeParameterReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
         assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testClassWithUnresolvedGenericType() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithUnresolvedGenericType.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        javaFile.writeTo(System.out);
+        ClassWithUnresolvedGenericType<Double> testPayload = new ClassWithUnresolvedGenericType<>();
+        testPayload.randomize(Math.random());
+
+        SimpleCompiler compiler = new SimpleCompiler();
+        // load dependent class upfront
+        Class[] dependent = new Class[]{AnotherClassWithNativeCollections.class, ClassWithReferences.class};
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(System.out);
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+        }
+
+        ClassWithUnresolvedGenericType deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getList(), deserialized.getList());
+        assertEquals(testPayload.getList2(), deserialized.getList2());
+        assertEquals(testPayload.getMap(), deserialized.getMap());
+        assertEquals(testPayload.getMap2(), deserialized.getMap2());
+        assertEquals(testPayload.getGenericTypeReference(), deserialized.getGenericTypeReference());
     }
 
 

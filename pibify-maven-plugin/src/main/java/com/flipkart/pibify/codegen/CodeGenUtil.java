@@ -1,5 +1,8 @@
 package com.flipkart.pibify.codegen;
 
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.TypeName;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -49,6 +52,10 @@ public class CodeGenUtil {
 
     public static boolean isJavaLangObject(CodeGenSpec spec) {
         return (spec.getClassName().equals("Object") && spec.getPackageName().equals("java.lang"));
+    }
+
+    public static boolean isJavaLangObject(TypeName spec) {
+        return spec.equals(ClassName.get(Object.class));
     }
 
     public static boolean isNotNative(CodeGenSpec.DataType dataType) {
@@ -130,7 +137,12 @@ public class CodeGenUtil {
 
     // Credits to https://stackoverflow.com/a/19363555
     public static Class<?> determineType(Field field, Class<?> type) {
-        return (Class<?>) getType(type, field).type;
+        Type resolvedType = getType(type, field).type;
+        if (resolvedType instanceof Class) {
+            return (Class<?>) resolvedType;
+        } else {
+            return Object.class;
+        }
     }
 
     static TypeInfo getType(Class<?> clazz, Field field) {

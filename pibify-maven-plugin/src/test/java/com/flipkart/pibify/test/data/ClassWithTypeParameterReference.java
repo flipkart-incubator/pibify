@@ -2,6 +2,9 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -28,6 +31,25 @@ public class ClassWithTypeParameterReference<T> {
 
     @Pibify(5)
     Map<List<T>, Set<T>> map2;
+
+    public void randomize(T obj) {
+        genericTypeReference = obj;
+
+        list = new ArrayList<>();
+        list.add(obj);
+
+        list2 = new ArrayList<>();
+        list2.add(list);
+
+        map = new HashMap<>();
+        map.put(obj, obj);
+
+        map2 = new HashMap<>();
+        Set<T> objects = new HashSet<>();
+        objects.add(obj);
+        map2.put(list, objects);
+    }
+
 
     public T getGenericTypeReference() {
         return genericTypeReference;
