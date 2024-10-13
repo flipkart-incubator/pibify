@@ -46,7 +46,7 @@ Support for
 Jackson
 
 1.
-    - [ ] @JsonIgnore
+    - [x] @JsonIgnore
 2.
     - [ ] @JsonProperty on arbitrary methods
 3.

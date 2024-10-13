@@ -34,6 +34,7 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
 
     private static final String PIBIFY_IMPORT = "com.flipkart.pibify.core.Pibify";
     private static final String PIBIFY_ANNOTATION = "Pibify";
+    private static final String JSON_IGNORE = "JsonIgnore";
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
 
@@ -136,7 +137,8 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
         String fieldName = field.getVariables().get(0).toString();
 
         getLog().info("Processing field: " + fieldName);
-        if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent()) {
+        if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent() ||
+                field.getAnnotationByName(JSON_IGNORE).isPresent()) {
             getLog().info("Skipping field: " + fieldName);
             counter.incrementAndGet();
             return false;
