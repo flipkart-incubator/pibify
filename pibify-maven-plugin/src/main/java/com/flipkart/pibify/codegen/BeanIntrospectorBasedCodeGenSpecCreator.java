@@ -71,6 +71,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             //System.out.println("Processing " + type.getName());
             CodeGenSpec codeGenSpec = createImpl(type);
             handleSuperTypes(codeGenSpec, type);
+            handleCollectionOrMap(codeGenSpec, type);
             cache.put(type, codeGenSpec);
         }
 
@@ -79,6 +80,46 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
 
         return cache.get(type);
+    }
+
+    private void handleCollectionOrMap(CodeGenSpec codeGenSpec, Class<?> type) throws CodeGenException {
+        if (type.equals(Object.class)) {
+            return;
+        }
+
+        try {
+            // find the index of the last field and use that to identify the next shift value
+            // for collection/map add 1/2 fields to write the (key and) value at that index
+            int index = MAX_FIELD_COUNT;
+            if (!codeGenSpec.getFields().isEmpty()) {
+                index = codeGenSpec.getFields().get(codeGenSpec.getFields().size() - 1).getIndex();
+                int hCount = index / MAX_FIELD_COUNT;
+                index = (hCount + 1) * MAX_FIELD_COUNT;
+            }
+
+
+            if (Collection.class.isAssignableFrom(type)) {
+                CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
+                fieldSpec.setIndex(index++);
+                fieldSpec.setName("this");
+                fieldSpec.setType(getTypeFromJavaType("this", type.getGenericSuperclass(), type));
+                fieldSpec.setGetter("");
+                fieldSpec.setSetter("addAll");
+                codeGenSpec.addField(fieldSpec);
+            } else if (Map.class.isAssignableFrom(type)) {
+                CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
+                fieldSpec.setIndex(index++);
+                fieldSpec.setName("this");
+                fieldSpec.setType(getTypeFromJavaType("this", type.getGenericSuperclass(), type));
+                fieldSpec.setGetter("");
+                fieldSpec.setSetter("putAll");
+                codeGenSpec.addField(fieldSpec);
+            } else {
+                // ignore
+            }
+        } catch (Exception e) {
+            throw new CodeGenException(e.getMessage(), e);
+        }
     }
 
     @Override
@@ -283,7 +324,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 specType.setContainerTypes(null);
                 if (fieldGenericType instanceof TypeVariable) {
                     // if this is generic type reference, try and extract its actual type
-                    Class<?> determinedType = CodeGenUtil.determineType(underProcessing.getReflectedField(), underProcessing.getType());
+                    Field field = underProcessing.getReflectedField();
+                    Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
                     specType.setReferenceType(create(determinedType));
                 } else {
                     specType.setReferenceType(create(type));
@@ -321,6 +363,16 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
     private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type, int index) throws CodeGenException {
         ParameterizedType genericType = (ParameterizedType) fieldGenericType;
+        // If we are processing a map, its possible that there are
+        // sub-classes with part of the type parameter specified.
+        // In those cases, try and get the parameter from superclass
+        if (Map.class.isAssignableFrom(type) && genericType.getActualTypeArguments().length != 2) {
+            Class<?> typeInHierarchy = type;
+            do {
+                genericType = (ParameterizedType) typeInHierarchy.getGenericSuperclass();
+                typeInHierarchy = typeInHierarchy.getSuperclass();
+            } while (genericType.getActualTypeArguments().length != 2);
+        }
         Type actualTypeArgument = genericType.getActualTypeArguments()[index];
         if (actualTypeArgument instanceof Class) {
             Class<?> typeParamClass = (Class<?>) actualTypeArgument;
@@ -331,7 +383,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             ParameterizedType castedActualType = (ParameterizedType) actualTypeArgument;
             return getTypeFromJavaType(fieldName, actualTypeArgument, (Class<?>) castedActualType.getRawType());
         } else {
-            Type resolvedType = CodeGenUtil.getType(underProcessing.getType(), underProcessing.getReflectedField(), actualTypeArgument).type;
+            Type resolvedType = CodeGenUtil.getType(underProcessing.getType(), actualTypeArgument, underProcessing.getReflectedField().getDeclaringClass()).type;
             if (resolvedType instanceof Class) {
                 // passing the generic type as null because it has been resolved at this level.
                 return getTypeFromJavaType(fieldName, null, (Class<?>) resolvedType);

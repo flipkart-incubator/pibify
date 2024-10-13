@@ -37,6 +37,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
             Method loadClassMethod = compilerClass.getMethod("loadClass", String.class);
             return (Class<PibifyGenerated<?>>) loadClassMethod.invoke(compilerInstance, className);
         } else {
+            // TODO use HandlerCache instead of creating new instance
             return (Class<PibifyGenerated<?>>) Class.forName(className);
         }
     }

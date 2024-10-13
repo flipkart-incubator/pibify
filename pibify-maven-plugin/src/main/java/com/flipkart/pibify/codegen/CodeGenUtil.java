@@ -3,7 +3,6 @@ package com.flipkart.pibify.codegen;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -136,8 +135,8 @@ public class CodeGenUtil {
     }
 
     // Credits to https://stackoverflow.com/a/19363555
-    public static Class<?> determineType(Field field, Class<?> type) {
-        Type resolvedType = getType(type, field).type;
+    public static Class<?> determineType(Type fieldGenericType, Class<?> declaringClass, Class<?> underProcessingType) {
+        Type resolvedType = getType(underProcessingType, fieldGenericType, declaringClass).type;
         if (resolvedType instanceof Class) {
             return (Class<?>) resolvedType;
         } else {
@@ -145,12 +144,12 @@ public class CodeGenUtil {
         }
     }
 
-    static TypeInfo getType(Class<?> clazz, Field field) {
+    /*static TypeInfo getType(Class<?> clazz, Field field) {
         //TypeVariable<?> genericTyp = (TypeVariable<?>) field.getGenericType();
         return getType(clazz, field, field.getGenericType());
-    }
+    }*/
 
-    public static TypeInfo getType(Class<?> clazz, Field field, Type genericType) {
+    public static TypeInfo getType(Class<?> clazz, Type genericType, Class<?> fieldDeclaringClass) {
         TypeInfo type = new TypeInfo(null, null);
 
         if (genericType instanceof TypeVariable<?> || genericType instanceof ParameterizedType) {
@@ -160,19 +159,19 @@ public class CodeGenUtil {
                 ParameterizedType paramType = (ParameterizedType) clazz.getGenericSuperclass();
                 TypeVariable<?>[] superTypeParameters = superClazz.getTypeParameters();
                 if (!Object.class.equals(paramType)) {
-                    if (field.getDeclaringClass().equals(superClazz)) {
+                    if (fieldDeclaringClass.equals(superClazz)) {
                         // this is the root class an starting point for this search
                         type.name = genericType;
                         type.type = null;
                     } else {
-                        type = getType(superClazz, field);
+                        type = getType(superClazz, genericType, fieldDeclaringClass);
                     }
                 }
                 if (type.type == null || type.type instanceof TypeVariable<?>) {
                     // lookup if type is not found or type needs a lookup in current concrete class
                     for (int j = 0; j < superClazz.getTypeParameters().length; ++j) {
                         TypeVariable<?> superTypeParam = superTypeParameters[j];
-                        if (type.name.equals(superTypeParam)) {
+                        if (superTypeParam.equals(type.name)) {
                             type.type = paramType.getActualTypeArguments()[j];
                             Type[] typeParameters = clazz.getTypeParameters();
                             for (Type typeParam : typeParameters) {

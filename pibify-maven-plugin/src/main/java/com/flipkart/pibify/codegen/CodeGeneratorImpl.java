@@ -337,6 +337,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 //collection.add(value);
                 builder.addStatement("object.add(value)");
             } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
+                // TODO The key and value blocks are identical and can be simplified
                 builder.addStatement("$T key", fieldSpec.getContainerTypes().get(0).getjPTypeName());
                 builder.addStatement("$T value", fieldSpec.getContainerTypes().get(1).getjPTypeName());
                 builder.beginControlFlow("while (tag != 0) ");
@@ -361,7 +362,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 if (isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
                     // If we are processing a Object reference, get the MapEntry and use the value
-                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
+                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(1).getjPTypeName())) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
                     }
                 } else {
@@ -414,9 +415,16 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.addStatement("PibifyGenerated<$L> $LHandler = HANDLER_MAP.get($S)",
                         fieldSpec.getType().getGenericTypeSignature(), fieldSpec.getName(), fieldSpec.getType().getGenericTypeSignature());
 
-                // handler.serialize(object.getaString());
-                builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))",
-                        fieldSpec.getIndex(), fieldSpec.getName(), fieldSpec.getGetter());
+                if (fieldSpec.getName().equals("this")) {
+                    // serializer.writeObjectAsBytes(0, handler.serialize(this));
+                    builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object))",
+                            fieldSpec.getIndex(), fieldSpec.getName());
+                } else {
+                    // serializer.writeObjectAsBytes(0, handler.serialize(object.getaString()));
+                    builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))",
+                            fieldSpec.getIndex(), fieldSpec.getName(), fieldSpec.getGetter());
+                }
+
             } else if (isArray(fieldSpec)) {
                 builder.beginControlFlow("for ($T val : object.$L())",
                         getReferenceTypeForContainers(realizedType, false), fieldSpec.getGetter());
@@ -498,9 +506,16 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             builder.addStatement("PibifyGenerated<$L> $LHandler = HANDLER_MAP.get($S)",
                     fieldSpec.getType().getGenericTypeSignature(), fieldSpec.getName(), fieldSpec.getType().getGenericTypeSignature());
 
-            // serializer.writeObjectAsBytes(1, handler.serialize(object.getaString()));
-            builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))", fieldSpec.getIndex(),
-                    fieldSpec.getName(), fieldSpec.getGetter());
+            if (fieldSpec.getName().equals("this")) {
+                // serializer.writeObjectAsBytes(1, handler.serialize(object.getaString()));
+                builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object))", fieldSpec.getIndex(),
+                        fieldSpec.getName());
+            } else {
+                // serializer.writeObjectAsBytes(1, handler.serialize(object.getaString()));
+                builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))", fieldSpec.getIndex(),
+                        fieldSpec.getName(), fieldSpec.getGetter());
+            }
+
 
 
             /*builder.addStatement("/*");

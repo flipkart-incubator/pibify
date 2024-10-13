@@ -29,6 +29,16 @@ import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
+import com.flipkart.pibify.test.data.generics.ListClassLevel1;
+import com.flipkart.pibify.test.data.generics.ListClassLevel2;
+import com.flipkart.pibify.test.data.generics.ListClassLevel3;
+import com.flipkart.pibify.test.data.generics.ListClassLevel4;
+import com.flipkart.pibify.test.data.generics.MapClassLevel1;
+import com.flipkart.pibify.test.data.generics.MapClassLevel2;
+import com.flipkart.pibify.test.data.generics.MapClassLevel3;
+import com.flipkart.pibify.test.data.generics.MapClassLevel4;
+import com.flipkart.pibify.test.data.generics.MapClassLevel5;
+import com.flipkart.pibify.test.data.generics.MapClassLevel6;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.BeforeAll;
@@ -551,7 +561,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        javaFile.writeTo(System.out);
+        //javaFile.writeTo(System.out);
         ClassWithUnresolvedGenericType<Double> testPayload = new ClassWithUnresolvedGenericType<>();
         testPayload.randomize(Math.random());
 
@@ -690,5 +700,232 @@ public class CodeGeneratorImplTest {
 
         ClassWithInterestingFieldNames deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testListClassLevel2() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ListClassLevel2.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ListClassLevel2 testPayload = new ListClassLevel2();
+        testPayload.randomize("str" + Math.random());
+
+        ListClassLevel2 deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getObj(), deserialized.getObj());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testListClassLevel1() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ListClassLevel1.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ListClassLevel1 testPayload = new ListClassLevel1();
+        testPayload.randomize("str" + Math.random(), "str" + Math.random());
+
+        ListClassLevel1 deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getObj(), deserialized.getObj());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testListClassLevel3() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ListClassLevel3.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ListClassLevel3 testPayload = new ListClassLevel3();
+        testPayload.randomize("str" + Math.random());
+
+        ListClassLevel3 deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getObj(), deserialized.getObj());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testListClassLevel4() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ListClassLevel4.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        ListClassLevel4 testPayload = new ListClassLevel4();
+        testPayload.randomize("str" + Math.random(), "str" + Math.random());
+
+        ListClassLevel4 deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getObj(), deserialized.getObj());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testMapClassLevel1() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(MapClassLevel1.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        MapClassLevel1<Double, Double> testPayload = new MapClassLevel1<>();
+        testPayload.randomize(Math.random(), Math.random());
+
+        MapClassLevel1<Double, Double> deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testMapClassLevel2() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(MapClassLevel2.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        MapClassLevel2<Double> testPayload = new MapClassLevel2<>();
+        testPayload.randomize(Math.random());
+
+        MapClassLevel2<Double> deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testMapClassLevel3() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(MapClassLevel3.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        MapClassLevel3<Double> testPayload = new MapClassLevel3<>();
+        testPayload.randomize(Math.random());
+
+        MapClassLevel3<Double> deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testMapClassLevel4() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(MapClassLevel4.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        MapClassLevel4<Double, String> testPayload = new MapClassLevel4<>();
+        testPayload.randomize();
+        testPayload.randomize(Math.random(), "str" + Math.random());
+
+        MapClassLevel4<Double, String> deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getStr1(), deserialized.getStr1());
+        assertEquals(testPayload, deserialized);
+
+        // Trying a different variation of generics
+        MapClassLevel4<String, Double> testPayload2 = new MapClassLevel4<>();
+        testPayload2.randomize();
+        testPayload2.randomize("str" + Math.random(), Math.random());
+
+        MapClassLevel4<String, Double> deserialized2 = invokeGeneratedCode(javaFile, testPayload2);
+        assertEquals(testPayload2.getStr(), deserialized2.getStr());
+        assertEquals(testPayload2.getStr1(), deserialized2.getStr1());
+        assertEquals(testPayload2, deserialized2);
+
+        Class[] dependent = new Class[]{ClassWithNativeFields.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
+        // Trying a different variation of generics
+        MapClassLevel4<String, ClassWithNativeFields> testPayload3 = new MapClassLevel4<>();
+        testPayload3.randomize();
+        testPayload3.randomize("str" + Math.random(), new ClassWithNativeFields().randomize());
+
+        PibifyObjectHandler.forTest = true;
+        MapClassLevel4<String, ClassWithNativeFields> deserialized3 = invokeGeneratedCode(compiler, javaFile, testPayload3);
+        PibifyObjectHandler.forTest = false;
+        assertEquals(testPayload3.getStr(), deserialized3.getStr());
+        assertEquals(testPayload3.getStr1(), deserialized3.getStr1());
+        assertEquals(testPayload3, deserialized3);
+    }
+
+    @Test
+    public void testMapClassLevel5() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(MapClassLevel5.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        MapClassLevel5 testPayload = new MapClassLevel5();
+        testPayload.randomize();
+
+        MapClassLevel5 deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getStr2(), deserialized.getStr2());
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testMapClassLevel6() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(MapClassLevel6.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        MapClassLevel6<Integer> testPayload = new MapClassLevel6<>();
+        testPayload.randomize((int) (Math.random() * 100));
+
+        MapClassLevel6<Integer> deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getStr(), deserialized.getStr());
+        assertEquals(testPayload.getStr2(), deserialized.getStr2());
+        assertEquals(testPayload, deserialized);
+
+        MapClassLevel6<String> testPayload2 = new MapClassLevel6<>();
+        testPayload2.randomize("str" + Math.random() * 100);
+
+        MapClassLevel6<String> deserialized2 = invokeGeneratedCode(javaFile, testPayload2);
+        assertEquals(testPayload2.getStr(), deserialized2.getStr());
+        assertEquals(testPayload2.getStr2(), deserialized2.getStr2());
+        assertEquals(testPayload2, deserialized2);
     }
 }
