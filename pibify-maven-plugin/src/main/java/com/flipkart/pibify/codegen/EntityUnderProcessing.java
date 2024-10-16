@@ -13,9 +13,13 @@ public class EntityUnderProcessing {
     private final String fqdn;
     private Field reflectedField;
 
-    public EntityUnderProcessing(Class<?> type, String fqdn) {
+    public EntityUnderProcessing(Class<?> type) {
         this.type = type;
-        this.fqdn = fqdn;
+        this.fqdn = type.getCanonicalName();
+    }
+
+    public static EntityUnderProcessing of(Class<?> type) {
+        return new EntityUnderProcessing(type);
     }
 
     public Field getReflectedField() {

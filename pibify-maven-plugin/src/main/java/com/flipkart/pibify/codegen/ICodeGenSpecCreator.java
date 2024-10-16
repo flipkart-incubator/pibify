@@ -31,5 +31,7 @@ public interface ICodeGenSpecCreator {
 
     Collection<SpecGenLog> getLogsForCurrentEntity();
 
-    SpecGenLogLevel status();
+    Collection<SpecGenLog> getLogsForCurrentEntity(Class<?> entity);
+
+    SpecGenLogLevel status(Class<?> entity);
 }

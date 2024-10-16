@@ -480,7 +480,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithInvalidPibifyIndex.class);
         assertNotNull(codeGenSpec);
         assertNotNull(creator.getLogsForCurrentEntity());
-        assertEquals(SpecGenLogLevel.ERROR, creator.status());
+        assertEquals(SpecGenLogLevel.ERROR, creator.status(ClassWithInvalidPibifyIndex.class));
         assertEquals(0, codeGenSpec.getFields().size());
         assertEquals(9, creator.getLogsForCurrentEntity().size());
 
@@ -540,7 +540,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithDuplicateFieldNames.class);
         assertNotNull(codeGenSpec);
         assertNotNull(creator.getLogsForCurrentEntity());
-        assertEquals(SpecGenLogLevel.ERROR, creator.status());
+        assertEquals(SpecGenLogLevel.ERROR, creator.status(ClassWithDuplicateFieldNames.class));
         assertEquals(1, codeGenSpec.getFields().size());
         assertEquals(1, creator.getLogsForCurrentEntity().size());
         ArrayList<SpecGenLog> specGenLogs = new ArrayList<>(creator.getLogsForCurrentEntity());
@@ -557,7 +557,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithInterestingFieldNames.class);
         assertNotNull(codeGenSpec);
         assertNotNull(creator.getLogsForCurrentEntity());
-        assertEquals(SpecGenLogLevel.INFO, creator.status());
+        assertEquals(SpecGenLogLevel.INFO, creator.status(ClassWithInterestingFieldNames.class));
         assertEquals(5, codeGenSpec.getFields().size());
     }
 }

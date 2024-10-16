@@ -65,7 +65,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         if (underProcessing != null) {
             stackOfUnderProcessing.push(underProcessing);
         }
-        underProcessing = new EntityUnderProcessing(type, type.getCanonicalName());
+        underProcessing = new EntityUnderProcessing(type);
 
         // cannot use computeIfAbsent because of checked exception being thrown
         if (!cache.containsKey(type)) {
@@ -137,10 +137,15 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     @Override
-    public SpecGenLogLevel status() {
+    public Collection<SpecGenLog> getLogsForCurrentEntity(Class<?> entity) {
+        return logs.get(EntityUnderProcessing.of(entity));
+    }
+
+    @Override
+    public SpecGenLogLevel status(Class<?> entity) {
         SpecGenLogLevel level = SpecGenLogLevel.INFO;
 
-        for (SpecGenLog value : logs.values()) {
+        for (SpecGenLog value : logs.get(EntityUnderProcessing.of(entity))) {
             if (value.getLogLevel().ordinal() > level.ordinal()) {
                 level = value.getLogLevel();
             }
@@ -169,14 +174,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private void handleSuperTypes(CodeGenSpec rootCodeGenSpec, Class<?> type) throws CodeGenException {
-        // This short-circuit is needed to handle reference types which have been type-erased.
-        if (type.equals(Object.class)) {
+        // This short-circuit is needed to handle reference types which have been type-erased and interfaces.
+        if (type.equals(Object.class) || type.isInterface()) {
             return;
         }
 
         Class<?> sType = type.getSuperclass();
         int shiftBy = MAX_FIELD_COUNT;
-        while (!sType.equals(Object.class)) {
+        while (!Object.class.equals(sType)) {
             CodeGenSpec codeGenSpec = createImpl(sType);
             for (CodeGenSpec.FieldSpec field : codeGenSpec.getFields()) {
                 field.setIndex(field.getIndex() + shiftBy);
@@ -258,6 +263,12 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
                     if (!namesToBeanInfo.containsKey(name)) {
                         log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
+                        continue;
+                    }
+
+                    if (namesToBeanInfo.get(name).getReadMethod() == null
+                            || namesToBeanInfo.get(name).getWriteMethod() == null) {
+                        log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/getter missing"));
                         continue;
                     }
 

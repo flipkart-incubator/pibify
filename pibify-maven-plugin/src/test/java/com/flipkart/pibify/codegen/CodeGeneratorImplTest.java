@@ -690,7 +690,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithInterestingFieldNames.class);
         assertNotNull(codeGenSpec);
         assertNotNull(creator.getLogsForCurrentEntity());
-        assertEquals(SpecGenLogLevel.INFO, creator.status());
+        assertEquals(SpecGenLogLevel.INFO, creator.status(ClassWithInterestingFieldNames.class));
         assertEquals(5, codeGenSpec.getFields().size());
 
         ICodeGenerator impl = new CodeGeneratorImpl();
