@@ -2,6 +2,7 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,6 +26,9 @@ public class ClassWithNativeCollections {
     @Pibify(3)
     private Map<Float, Boolean> aMap;
 
+    @Pibify(4)
+    private List<byte[]> listOfBytes;
+
     /*
     @Pibify(4)
     private Collection<?> aCollection;
@@ -39,6 +43,10 @@ public class ClassWithNativeCollections {
         aMap.put((float) Math.random(), Math.random() > 0.5);
         aMap.put((float) Math.random(), Math.random() > 0.5);
         aMap.put((float) Math.random(), Math.random() > 0.5);
+
+        listOfBytes = new ArrayList<>();
+        listOfBytes.add(new byte[]{(byte) (Math.random() * 255), (byte) (Math.random() * 255), (byte) (Math.random() * 255)});
+        listOfBytes.add(new byte[]{(byte) (Math.random() * 255), (byte) (Math.random() * 255), (byte) (Math.random() * 255)});
         return this;
     }
 
@@ -65,5 +73,13 @@ public class ClassWithNativeCollections {
 
     public void setaMap(Map<Float, Boolean> aMap) {
         this.aMap = aMap;
+    }
+
+    public List<byte[]> getListOfBytes() {
+        return listOfBytes;
+    }
+
+    public void setListOfBytes(List<byte[]> listOfBytes) {
+        this.listOfBytes = listOfBytes;
     }
 }

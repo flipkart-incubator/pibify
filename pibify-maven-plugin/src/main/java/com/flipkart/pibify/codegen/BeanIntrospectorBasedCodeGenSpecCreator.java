@@ -8,6 +8,7 @@ import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.core.Pibify;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
 import org.apache.maven.plugin.logging.Log;
@@ -298,8 +299,20 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             specType.setContainerTypes(new ArrayList<>(2));
             if (type.isArray()) {
                 Class<?> arrayType = type.getComponentType();
-                specType.setNativeType(CodeGenSpec.DataType.ARRAY);
+                specType.setNativeType(getNativeArrayType(arrayType));
                 specType.getContainerTypes().add(getTypeFromJavaType(fieldName, fieldGenericType, arrayType));
+
+                specType.setCollectionType(getCollectionType(type));
+
+                // TO avoid autoboxing primitive arrays
+                if (arrayType.isPrimitive()) {
+                    specType.setjPTypeName(ArrayTypeName.of(arrayType));
+                    specType.setGenericTypeSignature(arrayType.getTypeName() + "[]");
+                } else {
+                    specType.setjPTypeName(ArrayTypeName.of(specType.getContainerTypes().get(0).getjPTypeName()));
+                    specType.setGenericTypeSignature(specType.getContainerTypes().get(0).getGenericTypeSignature() + "[]");
+                }
+
             } else if (Collection.class.isAssignableFrom(type)) {
                 specType.setNativeType(CodeGenSpec.DataType.COLLECTION);
                 specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
@@ -335,11 +348,19 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             }
         }
 
-        if (!CodeGenUtil.isArray(specType.getNativeType())) {
+        if (!type.isArray()) {
             specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
         }
 
         return specType;
+    }
+
+    private CodeGenSpec.DataType getNativeArrayType(Class<?> arrayType) {
+        if (byte.class.equals(arrayType)) {
+            return CodeGenSpec.DataType.BYTE_ARRAY;
+        } else {
+            return CodeGenSpec.DataType.ARRAY;
+        }
     }
 
     private CodeGenSpec.CollectionType getCollectionType(Class<?> type) {

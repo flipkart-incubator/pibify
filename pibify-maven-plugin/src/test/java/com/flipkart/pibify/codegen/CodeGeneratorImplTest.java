@@ -226,6 +226,8 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.getaMap(), deserialized.getaMap());
+        assertArrayEquals(testPayload.getListOfBytes().get(0), deserialized.getListOfBytes().get(0));
+        assertArrayEquals(testPayload.getListOfBytes().get(1), deserialized.getListOfBytes().get(1));
     }
 
     @Test

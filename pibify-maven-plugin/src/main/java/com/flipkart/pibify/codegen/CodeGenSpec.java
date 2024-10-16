@@ -95,6 +95,8 @@ public class CodeGenSpec {
         MAP(null, null, null),
         OBJECT("ObjectAsBytes", null, null),
 
+        BYTE_ARRAY("ObjectAsBytes", byte[].class, null),
+
         UNKNOWN(null, null, null); /*These types will be serde'd using json */
 
         private final String readWriteMethodName;

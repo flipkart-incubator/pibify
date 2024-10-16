@@ -60,7 +60,8 @@ public class CodeGenUtil {
     public static boolean isNotNative(CodeGenSpec.DataType dataType) {
         return dataType == CodeGenSpec.DataType.OBJECT
                 || dataType == CodeGenSpec.DataType.COLLECTION
-                || dataType == CodeGenSpec.DataType.MAP;
+                || dataType == CodeGenSpec.DataType.MAP
+                || dataType == CodeGenSpec.DataType.ARRAY;
     }
 
     /**
@@ -95,6 +96,11 @@ public class CodeGenUtil {
                 result.append(type.getReferenceType().getPackageName())
                         .append(".")
                         .append(type.getReferenceType().getClassName());
+            } else if (type.getNativeType() == CodeGenSpec.DataType.ARRAY) {
+                result.append(type.getContainerTypes().get(0).getGenericTypeSignature())
+                        .append("[]");
+            } else if (type.getNativeType() == CodeGenSpec.DataType.BYTE_ARRAY) {
+                result.append(type.getGenericTypeSignature());
             } else {
                 result.append(type.getNativeType().getAutoboxedClass().getCanonicalName());
             }
