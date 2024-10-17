@@ -225,7 +225,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollections.class);
         assertNotNull(codeGenSpec);
-        assertEquals(3, codeGenSpec.getFields().size());
+        assertEquals(4, codeGenSpec.getFields().size());
 
         Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));

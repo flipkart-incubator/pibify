@@ -148,6 +148,8 @@ public class CodeGenSpec {
         Type type;
         String getter;
         String setter;
+        // set to false if getters and setters are not methods
+        boolean hasBeanMethods = true;
 
         public String getName() {
             return name;
@@ -187,6 +189,14 @@ public class CodeGenSpec {
 
         public void setSetter(String setter) {
             this.setter = setter;
+        }
+
+        public boolean hasBeanMethods() {
+            return hasBeanMethods;
+        }
+
+        public void setHasBeanMethods(boolean hasBeanMethods) {
+            this.hasBeanMethods = hasBeanMethods;
         }
     }
 

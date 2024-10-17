@@ -248,11 +248,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         generateSerializerForObjectReference(fieldSpec, builder);
                         break;
                     case ENUM:
-                        builder.addStatement("serializer.writeEnum($L, object.$L())", fieldSpec.getIndex(), fieldSpec.getGetter());
+                        builder.addStatement("serializer.writeEnum($L, object.$L$L)", fieldSpec.getIndex(), fieldSpec.getGetter(), handleGetterBean(fieldSpec));
                         break;
                     default:
-                        builder.addStatement("serializer.write$L($L, object.$L())",
-                                fieldSpec.getType().getNativeType().getReadWriteMethodName(), fieldSpec.getIndex(), fieldSpec.getGetter());
+                        builder.addStatement("serializer.write$L($L, object.$L$L)",
+                                fieldSpec.getType().getNativeType().getReadWriteMethodName(),
+                                fieldSpec.getIndex(), fieldSpec.getGetter(),
+                                handleGetterBean(fieldSpec));
                 }
             }
 
@@ -265,6 +267,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         } catch (Exception e) {
             throw new CodeGenException(e.getMessage(), e);
         }
+    }
+
+    // This method takes care of public fields vs methods
+    private String handleGetterBean(CodeGenSpec.FieldSpec fieldSpec) {
+        return fieldSpec.hasBeanMethods() ? "()" : "";
     }
 
     private void addHandlerForObjectReference(String name, MethodSpec.Builder builder, CodeGenSpec codeGenSpec) {
@@ -421,13 +428,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                             fieldSpec.getIndex(), fieldSpec.getName());
                 } else {
                     // serializer.writeObjectAsBytes(0, handler.serialize(object.getaString()));
-                    builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))",
-                            fieldSpec.getIndex(), fieldSpec.getName(), fieldSpec.getGetter());
+                    builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L$L))",
+                            fieldSpec.getIndex(), fieldSpec.getName(), fieldSpec.getGetter(), handleGetterBean(fieldSpec));
                 }
 
             } else if (isArray(fieldSpec)) {
-                builder.beginControlFlow("for ($T val : object.$L())",
-                        getReferenceTypeForContainers(realizedType, false), fieldSpec.getGetter());
+                builder.beginControlFlow("for ($T val : object.$L$L)",
+                        getReferenceTypeForContainers(realizedType, false), fieldSpec.getGetter(), handleGetterBean(fieldSpec));
 
                 if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
                     builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(val))",
@@ -512,8 +519,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         fieldSpec.getName());
             } else {
                 // serializer.writeObjectAsBytes(1, handler.serialize(object.getaString()));
-                builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))", fieldSpec.getIndex(),
-                        fieldSpec.getName(), fieldSpec.getGetter());
+                builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L$L))", fieldSpec.getIndex(),
+                        fieldSpec.getName(), fieldSpec.getGetter(), handleGetterBean(fieldSpec));
             }
 
 
@@ -552,8 +559,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
 
         addHandlerForObjectReference(fieldSpec, builder, fieldSpec.getType().getReferenceType());
-        builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L()))", fieldSpec.getIndex(),
-                fieldSpec.getName(), fieldSpec.getGetter());
+        builder.addStatement("serializer.writeObjectAsBytes($L, $LHandler.serialize(object.$L$L))", fieldSpec.getIndex(),
+                fieldSpec.getName(), fieldSpec.getGetter(), handleGetterBean(fieldSpec));
     }
 
     private MethodSpec getDeserializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -620,14 +627,16 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 }
 
                 builder.addStatement("case $L: \n $>" +
-                                "object.$L($L$L deserializer.read$L()$L)$<",
+                                "object.$L$L($L$L deserializer.read$L()$L)$<",
                         TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)),
                         fieldSpec.getSetter(),
+                        handleBeanSetter(fieldSpec),
                         enumBlock,
                         getCastIfRequired(fieldSpec.getType().getNativeType()),
                         fieldSpec.getType().getNativeType().getReadWriteMethodName(),
                         enumEndBlock
                 );
+
                 break;
         }
     }
@@ -645,7 +654,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 fieldSpec.getName(), fieldSpec.getType().getGenericTypeSignature());
 
         //object.setaString(aStringHandler.deserialize(deserializer.readObjectAsBytes()));
-        builder.addStatement("object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))", fieldSpec.getSetter(), fieldSpec.getName());
+        builder.addStatement("object.$L$L($LHandler.deserialize(deserializer.readObjectAsBytes()))",
+                fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
 
         /*builder.addStatement("/*");
         builder.addStatement("case $L: \n$>" +
@@ -707,7 +717,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 fieldSpec.getName(), fieldSpec.getType().getGenericTypeSignature());
 
         //object.setaString(aStringHandler.deserialize(deserializer.readObjectAsBytes()));
-        builder.addStatement("object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))", fieldSpec.getSetter(), fieldSpec.getName());
+        builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
+                fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
 
         /*builder.addStatement("/*");
         if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
@@ -747,7 +758,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec));
         Object typeForContainers = getReferenceTypeForContainers(fieldSpec.getType().getContainerTypes().get(0), false);
         builder.addStatement("case $L: \n$>$T[] newArray$L", tag, typeForContainers, tag)
-                .addStatement("$>$T[] oldArray$L = object.$L()$<", typeForContainers, tag, fieldSpec.getGetter());
+                .addStatement("$>$T[] oldArray$L = object.$L$L$<", typeForContainers, tag, fieldSpec.getGetter(), handleGetterBean(fieldSpec));
         if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
             CodeGenSpec refSpec = realizedType.getReferenceType();
             addHandlerForObjectReference(fieldSpec, builder, refSpec);
@@ -772,7 +783,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 .addStatement("$>newArray$L = $T.copyOf(oldArray$L, oldArray$L.length + 1)$<", tag, Arrays.class, tag, tag)
                 .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
                 .endControlFlow()
-                .addStatement("$>object.$L(newArray$L)$<", fieldSpec.getSetter(), tag);
+                .addStatement("$>object.$L$L(newArray$L)$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), tag);
     }
 
     private void addObjectDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
@@ -783,11 +794,16 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         if (CodeGenUtil.isJavaLangObject(refSpec)) {
             builder.addStatement("$>$T<$T,$T> $LEntry = (Map.Entry<String,Object>)($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
                     Map.Entry.class, String.class, Object.class, fieldSpec.getName(), fieldSpec.getName());
-            builder.addStatement("$>object.$L($LEntry.getValue())$<", fieldSpec.getSetter(), fieldSpec.getName());
+            builder.addStatement("$>object.$L$L($LEntry.getValue())$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
         } else {
-            builder.addStatement("$>object.$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
-                    fieldSpec.getSetter(), fieldSpec.getName());
+            builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
+                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
         }
+    }
+
+    // This method takes care of public fields vs methods
+    private String handleBeanSetter(CodeGenSpec.FieldSpec fieldSpec) {
+        return fieldSpec.hasBeanMethods() ? "" : " = ";
     }
 
     private Class<?> getClassForTag(CodeGenSpec.FieldSpec fieldSpec) {

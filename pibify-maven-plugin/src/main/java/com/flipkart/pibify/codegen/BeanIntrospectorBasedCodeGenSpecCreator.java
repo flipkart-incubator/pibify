@@ -262,18 +262,26 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                             reflectedField.getType()));
 
                     if (!namesToBeanInfo.containsKey(name)) {
-                        log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
-                        continue;
+                        // if we have a public field, use that instead of beanInfo
+                        if (Modifier.isPublic(reflectedField.getModifiers())) {
+                            fieldSpec.setGetter(name.getString());
+                            fieldSpec.setSetter(name.getString());
+                            fieldSpec.setHasBeanMethods(false);
+                        } else {
+                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "BeanInfo missing"));
+                            continue;
+                        }
+                    } else {
+                        if (namesToBeanInfo.get(name).getReadMethod() == null
+                                || namesToBeanInfo.get(name).getWriteMethod() == null) {
+                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/getter missing"));
+                            continue;
+                        } else {
+                            fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
+                            fieldSpec.setSetter(namesToBeanInfo.get(name).getWriteMethod().getName());
+                        }
                     }
 
-                    if (namesToBeanInfo.get(name).getReadMethod() == null
-                            || namesToBeanInfo.get(name).getWriteMethod() == null) {
-                        log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/getter missing"));
-                        continue;
-                    }
-
-                    fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
-                    fieldSpec.setSetter(namesToBeanInfo.get(name).getWriteMethod().getName());
                     spec.addField(fieldSpec);
 
                     if (spec.getFields().size() >= MAX_FIELD_COUNT) {
