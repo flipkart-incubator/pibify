@@ -67,9 +67,13 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
         underProcessing = new EntityUnderProcessing(type);
 
+        if (Modifier.isAbstract(type.getModifiers())) {
+            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Skipping abstract class"));
+            return null;
+        }
+
         // cannot use computeIfAbsent because of checked exception being thrown
         if (!cache.containsKey(type)) {
-            //System.out.println("Processing " + type.getName());
             CodeGenSpec codeGenSpec = createImpl(type);
             handleSuperTypes(codeGenSpec, type);
             handleCollectionOrMap(codeGenSpec, type);

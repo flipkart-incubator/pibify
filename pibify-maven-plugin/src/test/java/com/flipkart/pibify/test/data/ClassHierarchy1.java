@@ -7,7 +7,7 @@ import com.flipkart.pibify.core.Pibify;
  * Author bageshwar.pn
  * Date 07/09/24
  */
-public class ClassHierarchy1 {
+abstract public class ClassHierarchy1 {
 
     @Pibify(3)
     public String str3;

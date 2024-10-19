@@ -3,6 +3,7 @@ package com.flipkart.pibify.codegen;
 import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
+import com.flipkart.pibify.test.data.ClassHierarchy1;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
 import com.flipkart.pibify.test.data.ClassWithDuplicateFieldNames;
 import com.flipkart.pibify.test.data.ClassWithInterestingFieldNames;
@@ -559,5 +560,13 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNotNull(creator.getLogsForCurrentEntity());
         assertEquals(SpecGenLogLevel.INFO, creator.status(ClassWithInterestingFieldNames.class));
         assertEquals(5, codeGenSpec.getFields().size());
+    }
+
+    @Test
+    public void testAbstractClass() throws CodeGenException {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassHierarchy1.class);
+        assertNull(codeGenSpec);
+        assertEquals(SpecGenLogLevel.ERROR, creator.status(ClassHierarchy1.class));
     }
 }
