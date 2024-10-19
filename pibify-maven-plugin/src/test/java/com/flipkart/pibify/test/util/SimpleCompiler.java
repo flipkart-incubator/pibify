@@ -1,6 +1,8 @@
 package com.flipkart.pibify.test.util;
 
 
+import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.FileObject;
@@ -17,6 +19,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.ParameterizedType;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -123,7 +127,24 @@ public class SimpleCompiler {
     }
 
     public Class<?> loadClass(String name) throws ClassNotFoundException {
-        return loader.loadClass(name);
+        try {
+
+            Class<?> aClass = loader.loadClass(name);
+            if (PibifyGenerated.class.isAssignableFrom(aClass)) {
+                try {
+                    PibifyHandlerCacheForTest.addEntry((Class) (((ParameterizedType) aClass.getGenericSuperclass()).getActualTypeArguments()[0]),
+                            (PibifyGenerated) aClass.getDeclaredConstructor().newInstance());
+                } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
+                         NoSuchMethodException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            return aClass;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     public Class<?> compile(String name, String source) throws ClassNotFoundException {

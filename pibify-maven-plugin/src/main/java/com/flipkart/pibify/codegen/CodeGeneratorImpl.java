@@ -39,6 +39,12 @@ import static com.flipkart.pibify.core.Constants.PIBIFY_GENERATED_PACKAGE_NAME;
  */
 public class CodeGeneratorImpl implements ICodeGenerator {
 
+    private final String handlerCacheClassName;
+
+    public CodeGeneratorImpl(String handlerCacheClassName) {
+        this.handlerCacheClassName = handlerCacheClassName + ".getInstance().getHandler";
+    }
+
     @Override
     public JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
 
@@ -123,7 +129,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
         for (CodeGenSpec reference : innerClassReferences) {
             TypeSpec.Builder specBuilderForInnerClass = getTypeSpecBuilder(reference);
-            // Need inner classes to be static to enable static bock for the reference map
+            // Need inner classes to be static to enable static block for the reference map
             specBuilderForInnerClass.addModifiers(Modifier.STATIC);
             addInnerClasses(specBuilderForInnerClass, reference);
             typeSpecBuilder.addType(specBuilderForInnerClass.build());
@@ -281,7 +287,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             // Special handling for object references
             reference = ClassName.get(PibifyObjectHandler.class);
         } else {
-            String handlerClassName = codeGenSpec.getClassName() + "Handler";
+            String handlerClassName = codeGenSpec.getClassName();
             String packageName = "";
             if (!codeGenSpec.isInnerClass()) {
                 packageName = PIBIFY_GENERATED_PACKAGE_NAME + codeGenSpec.getPackageName();
@@ -289,11 +295,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             reference = ClassName.get(packageName, handlerClassName);
         }
 
+        ClassName referenceTypeClassName = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
         // TODO Re-use instances of handlers and serde classes
-        builder.addStatement("$T $LHandler = new $T()",
-                ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class),
-                        ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName())
-                ), name, reference);
+        builder.addStatement("$T $LHandler = $L($T.class).get()",
+                ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), referenceTypeClassName),
+                name, handlerCacheClassName, referenceTypeClassName);
     }
 
     private MethodSpec getDeserializerForCollectionHandler(CodeGenSpec.Type fieldSpec) throws CodeGenException {
@@ -304,6 +310,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .returns(fieldSpec.getjPTypeName())
                     .addException(PibifyCodeExecException.class)
                     .addParameter(byte[].class, "bytes")
+                    .addParameter(ParameterizedTypeName.get(ClassName.get(Class.class), fieldSpec.getjPTypeName()), "clazz")
                     .beginControlFlow("try")
 
                     .addStatement("$T deserializer = new $T(bytes)", IDeserializer.class, PibifyDeserializer.class)
@@ -324,10 +331,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.beginControlFlow("while (tag != 0) ");
 
                 if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
-                    //value = refHandler.deserialize(deserializer.readObjectAsBytes());
-                    builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
+                    //value = refHandler.deserialize(deserializer.readObjectAsBytes(), Class.class);
+                    builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
+                            getClassTypeForObjectMapperHandler(fieldSpec.getContainerTypes().get(0)));
 
-                    // If we are processing a Object reference, get the MapEntry and use the value
+                    // If we are processing an Object reference, get the MapEntry and use the value
                     if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
                     }
@@ -350,8 +358,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.beginControlFlow("while (tag != 0) ");
 
                 if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
-                    builder.addStatement("key = keyHandler.deserialize(deserializer.readObjectAsBytes())");
-                    // If we are processing a Object reference, get the MapEntry and use the value
+                    builder.addStatement("key = keyHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
+                            getClassTypeForObjectMapperHandler(fieldSpec.getContainerTypes().get(0)));
+                    // If we are processing an Object reference, get the MapEntry and use the value
                     if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
                         builder.addStatement("key = ((Map.Entry<String,Object>)(key)).getValue()");
                     }
@@ -367,8 +376,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.addStatement("tag = deserializer.getNextTag()");
 
                 if (isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
-                    builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes())");
-                    // If we are processing a Object reference, get the MapEntry and use the value
+                    builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
+                            getClassTypeForObjectMapperHandler(fieldSpec.getContainerTypes().get(1)));
+                    // If we are processing an Object reference, get the MapEntry and use the value
                     if (isJavaLangObject(fieldSpec.getContainerTypes().get(1).getjPTypeName())) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
                     }
@@ -398,6 +408,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             return builder.build();
         } catch (Exception e) {
             throw new CodeGenException(e.getMessage(), e);
+        }
+    }
+
+    private String getClassTypeForObjectMapperHandler(CodeGenSpec.Type type) {
+        if (CodeGenUtil.isCollectionOrMap(type.getNativeType())) {
+            return "null";
+        } else {
+            return type.getjPTypeName() + ".class";
         }
     }
 
@@ -571,6 +589,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .returns(thePojo)
                     .addException(PibifyCodeExecException.class)
                     .addParameter(byte[].class, "bytes")
+                    .addParameter(ParameterizedTypeName.get(ClassName.get(Class.class), thePojo), "clazz")
                     .beginControlFlow("try")
                     .addStatement("$T object = new $T()", thePojo, thePojo)
                     .addStatement("$T deserializer = new $T(bytes)", IDeserializer.class, PibifyDeserializer.class)
@@ -763,9 +782,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             CodeGenSpec refSpec = realizedType.getReferenceType();
             addHandlerForObjectReference(fieldSpec, builder, refSpec);
 
-            builder.addStatement("$>$T val$L = $LHandler.deserialize(deserializer.read$L())",
-                    getReferenceTypeForContainers(fieldSpec.getType().getContainerTypes().get(0), false), tag,
-                    fieldSpec.getName(), realizedType.getNativeType().getReadWriteMethodName());
+            builder.addStatement("$>$T val$L = $LHandler.deserialize(deserializer.read$L(), $T.class)",
+                    typeForContainers, tag, fieldSpec.getName(), realizedType.getNativeType().getReadWriteMethodName(),
+                    typeForContainers);
         } else {
             if (realizedType.getNativeType() == CodeGenSpec.DataType.ENUM) {
                 builder.addStatement("$>$T val$L = $T.values()[deserializer.readEnum()]$<",
@@ -796,8 +815,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     Map.Entry.class, String.class, Object.class, fieldSpec.getName(), fieldSpec.getName());
             builder.addStatement("$>object.$L$L($LEntry.getValue())$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
         } else {
-            builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
-                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+            builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer.readObjectAsBytes(), $T.class))$<",
+                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName(),
+                    ClassName.get(refSpec.getPackageName(), refSpec.getClassName()));
         }
     }
 

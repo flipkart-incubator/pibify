@@ -27,7 +27,7 @@ public class PibifyGeneratedTest {
             }
 
             @Override
-            public Object deserialize(byte[] bytes) throws PibifyCodeExecException {
+            public Object deserialize(byte[] bytes, Class clazz) throws PibifyCodeExecException {
                 return null;
             }
         };
@@ -52,7 +52,7 @@ public class PibifyGeneratedTest {
             }
 
             @Override
-            public Object deserialize(byte[] bytes) throws PibifyCodeExecException {
+            public Object deserialize(byte[] bytes, Class clazz) throws PibifyCodeExecException {
                 return null;
             }
         };

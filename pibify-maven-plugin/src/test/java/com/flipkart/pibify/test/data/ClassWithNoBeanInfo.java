@@ -2,6 +2,7 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,9 @@ public class ClassWithNoBeanInfo {
     @Pibify(2)
     private String str2;
 
+    @Pibify(7)
+    public BigDecimal bigDecimal;
+
     public void randomize() {
         str1 = "str" + Math.random();
         str2 = "str" + Math.random();
@@ -39,6 +43,8 @@ public class ClassWithNoBeanInfo {
             put("str" + Math.random(), Math.random() > 0.5);
             put("str" + Math.random(), Math.random() > 0.5);
         }};
+
+        bigDecimal = new BigDecimal(Math.random());
     }
 
     public String getStr2() {

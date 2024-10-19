@@ -3,7 +3,9 @@ package com.flipkart.pibify.test.data;
 import com.flipkart.pibify.core.Pibify;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +31,12 @@ public class ClassWithObjectCollections {
     @Pibify(4)
     private Map<ClassWithNativeFields, ClassWithAutoboxFields> mapOfObjects;
 
+    @Pibify(5)
+    private List<BigDecimal> bigDecimalList;
+
+    @Pibify(6)
+    private Map<BigDecimal, Date> bigDecimalMap;
+
     /*
     @Pibify(4)
     private Collection<?> aCollection;
@@ -43,6 +51,12 @@ public class ClassWithObjectCollections {
         mapOfObjects.put(new ClassWithNativeFields().randomize(), new ClassWithAutoboxFields().randomize());
         mapOfObjects.put(new ClassWithNativeFields().randomize(), new ClassWithAutoboxFields().randomize());
         mapOfObjects.put(new ClassWithNativeFields().randomize(), new ClassWithAutoboxFields().randomize());
+        bigDecimalList = Arrays.asList(new BigDecimal(Math.random()), new BigDecimal(Math.random()), new BigDecimal(Math.random()));
+
+        bigDecimalMap = new HashMap<>();
+        bigDecimalMap.put(new BigDecimal(Math.random()), new Date(System.currentTimeMillis() - (long) (Math.random() * 10000)));
+        bigDecimalMap.put(new BigDecimal(Math.random()), new Date(System.currentTimeMillis() - (long) (Math.random() * 10000)));
+        bigDecimalMap.put(new BigDecimal(Math.random()), new Date(System.currentTimeMillis() - (long) (Math.random() * 10000)));
     }
 
     public List<ClassWithNativeFields> getNativeFields() {
@@ -75,5 +89,21 @@ public class ClassWithObjectCollections {
 
     public void setMapOfObjects(Map<ClassWithNativeFields, ClassWithAutoboxFields> mapOfObjects) {
         this.mapOfObjects = mapOfObjects;
+    }
+
+    public List<BigDecimal> getBigDecimalList() {
+        return bigDecimalList;
+    }
+
+    public void setBigDecimalList(List<BigDecimal> bigDecimalList) {
+        this.bigDecimalList = bigDecimalList;
+    }
+
+    public Map<BigDecimal, Date> getBigDecimalMap() {
+        return bigDecimalMap;
+    }
+
+    public void setBigDecimalMap(Map<BigDecimal, Date> bigDecimalMap) {
+        this.bigDecimalMap = bigDecimalMap;
     }
 }

@@ -17,7 +17,11 @@ import java.util.function.Supplier;
 public abstract class PibifyGenerated<T> {
     public abstract byte[] serialize(T object) throws PibifyCodeExecException;
 
-    public abstract T deserialize(byte[] bytes) throws PibifyCodeExecException;
+    public T deserialize(byte[] bytes) throws PibifyCodeExecException {
+        return deserialize(bytes, null);
+    }
+
+    public abstract T deserialize(byte[] bytes, Class<T> type) throws PibifyCodeExecException;
 
     @SuppressWarnings("unchecked")
     protected <A> void handleArrayDeserialization(Class<A> type, Supplier<A[]> objectGetter,

@@ -94,7 +94,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
     }
 
     @Override
-    public Object deserialize(byte[] bytes) throws PibifyCodeExecException {
+    public Object deserialize(byte[] bytes, Class clazzType) throws PibifyCodeExecException {
         try {
             Object object = null;
             IDeserializer deserializer = new PibifyDeserializer(bytes);
@@ -140,7 +140,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
                             object = deserializer.readEnum();
                         } else {
                             PibifyGenerated refHandler = getRefClassForTest(refType).newInstance();
-                            object = refHandler.deserialize(deserializer.readObjectAsBytes());
+                            object = refHandler.deserialize(deserializer.readObjectAsBytes(), clazzType);
                         }
 
                         break;

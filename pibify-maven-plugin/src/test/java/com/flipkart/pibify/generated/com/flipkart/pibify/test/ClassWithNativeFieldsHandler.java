@@ -41,7 +41,8 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
     }
 
     @Override
-    public ClassWithNativeFields deserialize(byte[] bytes) throws PibifyCodeExecException {
+    public ClassWithNativeFields deserialize(byte[] bytes, Class<ClassWithNativeFields> clazz) throws
+            PibifyCodeExecException {
         try {
             ClassWithNativeFields object = new ClassWithNativeFields();
             IDeserializer deserializer = new PibifyDeserializer(bytes);

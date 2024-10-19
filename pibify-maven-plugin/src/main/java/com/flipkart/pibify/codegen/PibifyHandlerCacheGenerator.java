@@ -19,6 +19,7 @@ import java.util.Map;
  */
 public class PibifyHandlerCacheGenerator {
 
+    public static final String PIBIFY_HANDLER_CACHE_CLASS_NAME = "PibifyHandlerCache";
     private final Map<Class<?>, ClassName> cache;
     private final String packageName;
 
@@ -32,6 +33,10 @@ public class PibifyHandlerCacheGenerator {
     public PibifyHandlerCacheGenerator(String packageName) {
         cache = new HashMap<>();
         this.packageName = packageName;
+    }
+
+    public String getClassName() {
+        return packageName + "." + PIBIFY_HANDLER_CACHE_CLASS_NAME;
     }
 
     public void add(Class<?> clazz, ClassName handler) {
@@ -60,7 +65,7 @@ public class PibifyHandlerCacheGenerator {
 
 
     private TypeSpec.Builder getTypeSpecBuilder() throws CodeGenException {
-        return TypeSpec.classBuilder("PibifyHandlerCache")
+        return TypeSpec.classBuilder(PIBIFY_HANDLER_CACHE_CLASS_NAME)
                 .addStaticBlock(getMapInsertBlock())
                 .addMethod(getInstanceMethod())
                 .addField(getInstanceField())
@@ -68,7 +73,7 @@ public class PibifyHandlerCacheGenerator {
     }
 
     private FieldSpec getInstanceField() {
-        return FieldSpec.builder(ClassName.get(packageName, "PibifyHandlerCache"),
+        return FieldSpec.builder(ClassName.get(packageName, PIBIFY_HANDLER_CACHE_CLASS_NAME),
                         "INSTANCE", Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                 .build();
     }
@@ -76,7 +81,7 @@ public class PibifyHandlerCacheGenerator {
     private MethodSpec getInstanceMethod() {
         return MethodSpec.methodBuilder("getInstance")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                .returns(ClassName.get(packageName, "PibifyHandlerCache"))
+                .returns(ClassName.get(packageName, PIBIFY_HANDLER_CACHE_CLASS_NAME))
                 .addStatement("return INSTANCE")
                 .build();
     }

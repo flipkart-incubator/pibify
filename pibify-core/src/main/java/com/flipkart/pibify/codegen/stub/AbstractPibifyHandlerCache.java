@@ -14,20 +14,31 @@ import java.util.Optional;
 public abstract class AbstractPibifyHandlerCache {
 
     protected static final ImmutableMap.Builder<Class<?>, PibifyGenerated<?>> mapBuilder = ImmutableMap.builder();
-    protected final Map<Class<?>, PibifyGenerated<?>> cache;
+    private static final PibifyGenerated<Object> objectMapperHandler;
 
-    protected AbstractPibifyHandlerCache() {
-        cache = packMap();
+    static {
+        mapBuilder.put(Object.class, new PibifyObjectHandler());
+        objectMapperHandler = new PibifyObjectHandlerViaObjectMapper();
     }
 
-    protected Map<Class<?>, PibifyGenerated<?>> packMap() {
-        return mapBuilder.build();
+    protected Map<Class<?>, PibifyGenerated<?>> cache;
+
+    protected AbstractPibifyHandlerCache() {
+        packMap();
+    }
+
+    protected void packMap() {
+        cache = mapBuilder.build();
     }
 
     public <T> Optional<PibifyGenerated<T>> getHandler(Class<T> clazz) throws PibifyCodeExecException {
 
-        if (clazz == null || !cache.containsKey(clazz)) {
+        if (clazz == null) {
             return Optional.empty();
+        }
+
+        if (!cache.containsKey(clazz)) {
+            return Optional.of((PibifyGenerated<T>) objectMapperHandler);
         }
 
         //noinspection unchecked
