@@ -12,7 +12,7 @@ public class PibifyHandlerCacheForTest extends AbstractPibifyHandlerCache {
     private static PibifyHandlerCacheForTest INSTANCE;
 
     private PibifyHandlerCacheForTest() {
-
+        packMap();
     }
 
     public static PibifyHandlerCacheForTest getInstance() {

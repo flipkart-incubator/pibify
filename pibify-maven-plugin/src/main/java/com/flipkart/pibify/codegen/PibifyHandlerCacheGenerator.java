@@ -66,10 +66,25 @@ public class PibifyHandlerCacheGenerator {
 
     private TypeSpec.Builder getTypeSpecBuilder() throws CodeGenException {
         return TypeSpec.classBuilder(PIBIFY_HANDLER_CACHE_CLASS_NAME)
-                .addStaticBlock(getMapInsertBlock())
+                .addStaticBlock(getStaticBlock())
                 .addMethod(getInstanceMethod())
+                .addMethod(getConstructor())
                 .addField(getInstanceField())
                 .superclass(AbstractPibifyHandlerCache.class);
+    }
+
+    private CodeBlock getStaticBlock() {
+        CodeBlock.Builder staticBlock = CodeBlock.builder();
+        staticBlock.addStatement("INSTANCE = new PibifyHandlerCache()");
+        return staticBlock.build();
+    }
+
+    private MethodSpec getConstructor() {
+        return MethodSpec.constructorBuilder()
+                .addModifiers(Modifier.PROTECTED)
+                .addCode(getMapInsertBlock())
+                .addStatement("packMap()")
+                .build();
     }
 
     private FieldSpec getInstanceField() {
@@ -87,13 +102,11 @@ public class PibifyHandlerCacheGenerator {
     }
 
     private CodeBlock getMapInsertBlock() {
-        CodeBlock.Builder staticBlockBuilder = CodeBlock.builder();
+        CodeBlock.Builder mapInsertBlock = CodeBlock.builder();
         for (Map.Entry<Class<?>, ClassName> entry : cache.entrySet()) {
-            staticBlockBuilder.addStatement("mapBuilder.put($T.class, new $T())", entry.getKey(), entry.getValue());
+            mapInsertBlock.addStatement("mapBuilder.put($T.class, new $T())", entry.getKey(), entry.getValue());
         }
 
-        staticBlockBuilder.addStatement("INSTANCE = new PibifyHandlerCache()");
-
-        return staticBlockBuilder.build();
+        return mapInsertBlock.build();
     }
 }

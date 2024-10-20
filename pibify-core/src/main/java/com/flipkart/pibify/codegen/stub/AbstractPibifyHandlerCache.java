@@ -28,7 +28,6 @@ public abstract class AbstractPibifyHandlerCache {
 
     protected AbstractPibifyHandlerCache() {
         mapBuilder.put(Object.class, new PibifyObjectHandler(this));
-        packMap();
     }
 
     protected void packMap() {
