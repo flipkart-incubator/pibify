@@ -16,6 +16,10 @@ public class PibifyHandlerCacheImpl extends AbstractPibifyHandlerCache {
     private static final PibifyHandlerCacheImpl INSTANCE;
 
     static {
+        INSTANCE = new PibifyHandlerCacheImpl();
+    }
+
+    public PibifyHandlerCacheImpl() {
         mapBuilder.put(ArrayList.class, new PibifyGenerated<ArrayList>() {
             @Override
             public byte[] serialize(ArrayList object) throws PibifyCodeExecException {
@@ -23,11 +27,11 @@ public class PibifyHandlerCacheImpl extends AbstractPibifyHandlerCache {
             }
 
             @Override
-            public ArrayList deserialize(byte[] bytes) throws PibifyCodeExecException {
+            public ArrayList deserialize(byte[] bytes, Class<ArrayList> type) throws PibifyCodeExecException {
                 return null;
             }
         });
-        INSTANCE = new PibifyHandlerCacheImpl();
+
     }
 
     public static PibifyHandlerCacheImpl getInstance() {

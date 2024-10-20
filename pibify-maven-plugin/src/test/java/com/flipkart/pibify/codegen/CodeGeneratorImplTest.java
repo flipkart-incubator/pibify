@@ -30,6 +30,7 @@ import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
+import com.flipkart.pibify.test.data.generics.GenericMapFields;
 import com.flipkart.pibify.test.data.generics.ListClassLevel1;
 import com.flipkart.pibify.test.data.generics.ListClassLevel2;
 import com.flipkart.pibify.test.data.generics.ListClassLevel3;
@@ -943,5 +944,35 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.aMap, deserialized.aMap);
         assertArrayEquals(testPayload.intArray, deserialized.intArray);
         assertEquals(testPayload.bigDecimal, deserialized.bigDecimal);
+    }
+
+    @Test
+    public void testGenericMapFields() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(GenericMapFields.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(System.out);
+        GenericMapFields testPayload = new GenericMapFields();
+        testPayload.randomize();
+
+        Class[] dependent = new Class[]{MapClassLevel3.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            compiler.compile(javaFile1.toJavaFileObject());
+            //javaFile1.writeTo(System.out);
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
+        GenericMapFields deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload.bigDecimalToString, deserialized.bigDecimalToString);
+        assertEquals(testPayload.bigDecimalToString.getStr(), deserialized.bigDecimalToString.getStr());
+        assertEquals(testPayload.doubleToString.getStr(), deserialized.doubleToString.getStr());
     }
 }

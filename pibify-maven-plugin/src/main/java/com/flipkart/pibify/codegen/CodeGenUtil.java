@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.core.Pibify;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 
@@ -7,6 +8,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 
 /**
@@ -150,10 +152,44 @@ public class CodeGenUtil {
         }
     }
 
-    /*static TypeInfo getType(Class<?> clazz, Field field) {
-        //TypeVariable<?> genericTyp = (TypeVariable<?>) field.getGenericType();
-        return getType(clazz, field, field.getGenericType());
-    }*/
+    public static Type resolveTypeViaSuperClassHierarchy(Type actualTypeArgument, ParameterizedType subGenericType, ParameterizedType fieldGenericType, int index) {
+        // This method tries to find the concrete generic type parameter based on the scenario
+        // where subclass passes a subset of generic params to superclass as concrete params
+        long typeVariablesInSuperClass = Arrays.stream(fieldGenericType.getActualTypeArguments()).filter(g -> g instanceof TypeVariable).count();
+        long typeVariablesInSubClass = Arrays.stream(subGenericType.getActualTypeArguments()).filter(g -> g instanceof TypeVariable).count();
+
+        if (typeVariablesInSuperClass == (subGenericType.getActualTypeArguments().length - typeVariablesInSubClass)) {
+            // all type variables in super class have been provided as concrete types  in subclass
+            if (subGenericType.getActualTypeArguments().length >= index) {
+                return subGenericType.getActualTypeArguments()[index];
+            }
+
+        }
+
+        return actualTypeArgument;
+    }
+
+    private static boolean containsPibifyAnnotation(Class<?> clazz) {
+        return Arrays.stream(clazz.getDeclaredFields()).anyMatch(field -> field.getAnnotation(Pibify.class) != null);
+    }
+
+
+    public static boolean isNonPibifyClass(Class<?> clazz) {
+        if (clazz.isEnum()) {
+            return true;
+        } else {
+            if (containsPibifyAnnotation(clazz)) {
+                return false;
+            } else {
+                // check for superclass
+                if (Object.class.equals(clazz) || clazz.isInterface()) {
+                    return true;
+                } else {
+                    return isNonPibifyClass(clazz.getSuperclass());
+                }
+            }
+        }
+    }
 
     public static TypeInfo getType(Class<?> clazz, Type genericType, Class<?> fieldDeclaringClass) {
         TypeInfo type = new TypeInfo(null, null);

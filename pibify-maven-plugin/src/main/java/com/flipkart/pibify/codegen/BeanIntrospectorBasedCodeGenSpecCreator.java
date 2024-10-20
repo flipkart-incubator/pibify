@@ -107,7 +107,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
                 fieldSpec.setIndex(index++);
                 fieldSpec.setName("this");
-                fieldSpec.setType(getTypeFromJavaType("this", type.getGenericSuperclass(), type));
+                fieldSpec.setType(getTypeFromJavaType("this", type.getGenericSuperclass(), type, true));
                 fieldSpec.setGetter("");
                 fieldSpec.setSetter("addAll");
                 codeGenSpec.addField(fieldSpec);
@@ -115,7 +115,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
                 fieldSpec.setIndex(index++);
                 fieldSpec.setName("this");
-                fieldSpec.setType(getTypeFromJavaType("this", type.getGenericSuperclass(), type));
+                fieldSpec.setType(getTypeFromJavaType("this", type.getGenericSuperclass(), type, true));
                 fieldSpec.setGetter("");
                 fieldSpec.setSetter("putAll");
                 codeGenSpec.addField(fieldSpec);
@@ -312,6 +312,10 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private CodeGenSpec.Type getTypeFromJavaType(String fieldName, Type fieldGenericType, Class<?> type) throws CodeGenException {
+        return getTypeFromJavaType(fieldName, fieldGenericType, type, false);
+    }
+
+    private CodeGenSpec.Type getTypeFromJavaType(String fieldName, Type fieldGenericType, Class<?> type, boolean noPibify) throws CodeGenException {
         CodeGenSpec.Type specType = new CodeGenSpec.Type();
         CodeGenSpec.DataType nativeType = CodeSpecMeta.CLASS_TO_TYPE_MAP.get(type);
 
@@ -337,37 +341,59 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 }
 
             } else if (Collection.class.isAssignableFrom(type)) {
-                specType.setNativeType(CodeGenSpec.DataType.COLLECTION);
-                specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
-                specType.setCollectionType(getCollectionType(type));
-                specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getInterfaceClass()),
-                        specType.getContainerTypes().get(0).getjPTypeName()));
+
+                if (!CodeGenUtil.isNonPibifyClass(type) && !noPibify) {
+                    specType.setNativeType(CodeGenSpec.DataType.OBJECT);
+                    // release the object, since it's not needed
+                    specType.setContainerTypes(null);
+                    if (fieldGenericType instanceof TypeVariable) {
+                        // if this is generic type reference, try and extract its actual type
+                        Field field = underProcessing.getReflectedField();
+                        Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
+                        specType.setReferenceType(create(determinedType));
+                    } else {
+                        specType.setReferenceType(create(type));
+                    }
+
+                    specType.setjPTypeName(getNativeClassName(specType));
+                } else {
+                    specType.setNativeType(CodeGenSpec.DataType.COLLECTION);
+                    specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
+                    specType.setCollectionType(getCollectionType(type));
+                    specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getInterfaceClass()),
+                            specType.getContainerTypes().get(0).getjPTypeName()));
+                }
             } else if (Map.class.isAssignableFrom(type)) {
-                specType.setNativeType(CodeGenSpec.DataType.MAP);
-                specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 0));
-                specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 1));
-                specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(Map.class),
-                        specType.getContainerTypes().get(0).getjPTypeName(),
-                        specType.getContainerTypes().get(1).getjPTypeName()));
+
+                if (!CodeGenUtil.isNonPibifyClass(type) && !noPibify) {
+                    specType.setNativeType(CodeGenSpec.DataType.OBJECT);
+                    // release the object, since it's not needed
+                    specType.setContainerTypes(null);
+                    if (fieldGenericType instanceof TypeVariable) {
+                        // if this is generic type reference, try and extract its actual type
+                        Field field = underProcessing.getReflectedField();
+                        Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
+                        specType.setReferenceType(create(determinedType));
+                    } else {
+                        specType.setReferenceType(create(type));
+                    }
+
+                    specType.setjPTypeName(getNativeClassName(specType));
+                } else {
+                    specType.setNativeType(CodeGenSpec.DataType.MAP);
+                    specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 0));
+                    specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 1));
+                    specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(Map.class),
+                            specType.getContainerTypes().get(0).getjPTypeName(),
+                            specType.getContainerTypes().get(1).getjPTypeName()));
+                }
             } else if (Enum.class.isAssignableFrom(type)) {
                 specType.setNativeType(CodeGenSpec.DataType.ENUM);
                 specType.setContainerTypes(null);
                 specType.setReferenceType(create(type));
                 specType.setjPTypeName(getNativeClassName(specType));
             } else {
-                specType.setNativeType(CodeGenSpec.DataType.OBJECT);
-                // release the object, since it's not needed
-                specType.setContainerTypes(null);
-                if (fieldGenericType instanceof TypeVariable) {
-                    // if this is generic type reference, try and extract its actual type
-                    Field field = underProcessing.getReflectedField();
-                    Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
-                    specType.setReferenceType(create(determinedType));
-                } else {
-                    specType.setReferenceType(create(type));
-                }
-
-                specType.setjPTypeName(getNativeClassName(specType));
+                typeForObjectType(fieldGenericType, type, specType);
             }
         }
 
@@ -376,6 +402,22 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
 
         return specType;
+    }
+
+    private void typeForObjectType(Type fieldGenericType, Class<?> type, CodeGenSpec.Type specType) throws CodeGenException {
+        specType.setNativeType(CodeGenSpec.DataType.OBJECT);
+        // release the object, since it's not needed
+        specType.setContainerTypes(null);
+        if (fieldGenericType instanceof TypeVariable) {
+            // if this is generic type reference, try and extract its actual type
+            Field field = underProcessing.getReflectedField();
+            Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
+            specType.setReferenceType(create(determinedType));
+        } else {
+            specType.setReferenceType(create(type));
+        }
+
+        specType.setjPTypeName(getNativeClassName(specType));
     }
 
     private CodeGenSpec.DataType getNativeArrayType(Class<?> arrayType) {
@@ -427,6 +469,11 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             ParameterizedType castedActualType = (ParameterizedType) actualTypeArgument;
             return getTypeFromJavaType(fieldName, actualTypeArgument, (Class<?>) castedActualType.getRawType());
         } else {
+            actualTypeArgument = CodeGenUtil.resolveTypeViaSuperClassHierarchy(actualTypeArgument, (ParameterizedType) fieldGenericType, genericType, index);
+            if (actualTypeArgument instanceof Class) {
+                Class<?> typeParamClass = (Class<?>) actualTypeArgument;
+                return getTypeFromJavaType(fieldName, fieldGenericType, typeParamClass);
+            }
             Type resolvedType = CodeGenUtil.getType(underProcessing.getType(), actualTypeArgument, underProcessing.getReflectedField().getDeclaringClass()).type;
             if (resolvedType instanceof Class) {
                 // passing the generic type as null because it has been resolved at this level.

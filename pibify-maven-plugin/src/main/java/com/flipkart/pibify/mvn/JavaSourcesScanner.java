@@ -1,6 +1,6 @@
 package com.flipkart.pibify.mvn;
 
-import com.flipkart.pibify.core.Pibify;
+import com.flipkart.pibify.codegen.CodeGenUtil;
 import com.flipkart.pibify.mvn.interfaces.SourcesScanner;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
@@ -8,7 +8,6 @@ import org.apache.maven.plugin.logging.Log;
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -47,28 +46,6 @@ public class JavaSourcesScanner extends SourcesScanner {
         }
     }
 
-    private static boolean containsPibifyAnnotation(Class<?> clazz) {
-        return Arrays.stream(clazz.getDeclaredFields()).anyMatch(field -> field.getAnnotation(Pibify.class) != null);
-    }
-
-    // VisibleForTesting
-    static boolean isIgnorableClass(Class<?> clazz) {
-        if (clazz.isEnum()) {
-            return true;
-        } else {
-            if (containsPibifyAnnotation(clazz)) {
-                return false;
-            } else {
-                // check for superclass
-                if (Object.class.equals(clazz) || clazz.isInterface()) {
-                    return true;
-                } else {
-                    return isIgnorableClass(clazz.getSuperclass());
-                }
-            }
-        }
-    }
-
     private Set<Class<?>> scanAndLoadClasses(File dir, String packageName, ClassLoader classLoader) {
         Set<Class<?>> classes = new LinkedHashSet<>();
 
@@ -79,7 +56,7 @@ public class JavaSourcesScanner extends SourcesScanner {
                 String className = packageName + file.getName().substring(0, file.getName().length() - 6);
                 try {
                     Class<?> aClass = classLoader.loadClass(className);
-                    if (!isIgnorableClass(aClass)) {
+                    if (!CodeGenUtil.isNonPibifyClass(aClass)) {
                         classes.add(aClass);
                         getLog().info("  - " + aClass.getName());
                     } else {

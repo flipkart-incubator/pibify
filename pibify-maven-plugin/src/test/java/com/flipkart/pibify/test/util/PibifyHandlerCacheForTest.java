@@ -11,6 +11,10 @@ import com.flipkart.pibify.codegen.stub.PibifyGenerated;
 public class PibifyHandlerCacheForTest extends AbstractPibifyHandlerCache {
     private static PibifyHandlerCacheForTest INSTANCE;
 
+    private PibifyHandlerCacheForTest() {
+
+    }
+
     public static PibifyHandlerCacheForTest getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new PibifyHandlerCacheForTest();
@@ -20,7 +24,7 @@ public class PibifyHandlerCacheForTest extends AbstractPibifyHandlerCache {
 
     public static <T> void addEntry(Class<T> type, PibifyGenerated<T> handler) {
         if (!getInstance().cache.containsKey(type)) {
-            //mapBuilder.put(type, handler);
+            getInstance().mapBuilder.put(type, handler);
             getInstance().packMap();
         }
     }

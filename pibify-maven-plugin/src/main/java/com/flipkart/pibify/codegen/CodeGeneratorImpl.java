@@ -296,7 +296,6 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
 
         ClassName referenceTypeClassName = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
-        // TODO Re-use instances of handlers and serde classes
         builder.addStatement("$T $LHandler = $L($T.class).get()",
                 ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), referenceTypeClassName),
                 name, handlerCacheClassName, referenceTypeClassName);

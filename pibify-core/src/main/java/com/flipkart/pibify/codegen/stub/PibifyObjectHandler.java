@@ -25,20 +25,27 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
 
     // hacky flag to control the flow of `getRefClassForTest()`
     public static boolean forTest = false;
+    // Cache to look-up for the handler at runtime
+    private final AbstractPibifyHandlerCache pibifyHandlerCache;
 
-    private Class<PibifyGenerated<?>> getRefClassForTest(String refType) throws Exception {
+    public PibifyObjectHandler(AbstractPibifyHandlerCache pibifyHandlerCache) {
+        this.pibifyHandlerCache = pibifyHandlerCache;
+    }
 
-        String className = Constants.PIBIFY_GENERATED_PACKAGE_NAME + refType + "Handler";
+
+    private PibifyGenerated<?> getRefClassForTest(String refType, Class<?> objectClass) throws Exception {
+
         if (forTest) {
+            String className = Constants.PIBIFY_GENERATED_PACKAGE_NAME + refType + "Handler";
             // Test code added because the adhoc compiled classes are not available to the test-runner class loader
             Class<?> compilerClass = Class.forName("com.flipkart.pibify.test.util.SimpleCompiler");
             Field instance = compilerClass.getField("INSTANCE");
             Object compilerInstance = instance.get(null);
             Method loadClassMethod = compilerClass.getMethod("loadClass", String.class);
-            return (Class<PibifyGenerated<?>>) loadClassMethod.invoke(compilerInstance, className);
+            Class<PibifyGenerated<?>> generatedClass = (Class<PibifyGenerated<?>>) loadClassMethod.invoke(compilerInstance, className);
+            return generatedClass.getDeclaredConstructor().newInstance();
         } else {
-            // TODO use HandlerCache instead of creating new instance
-            return (Class<PibifyGenerated<?>>) Class.forName(className);
+            return pibifyHandlerCache.getHandler(objectClass).get();
         }
     }
 
@@ -82,7 +89,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
             } else if (Enum.class.isAssignableFrom(objectClass)) {
                 serializer.writeEnum(2, (Enum) object);
             } else {
-                PibifyGenerated refHandler = getRefClassForTest(refType).newInstance();
+                PibifyGenerated refHandler = getRefClassForTest(refType, objectClass);
                 // Write the object binary as the second attribute.
                 serializer.writeObjectAsBytes(2, refHandler.serialize(object));
             }
@@ -139,8 +146,8 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
                         } else if (Enum.class.isAssignableFrom(objectClass)) {
                             object = deserializer.readEnum();
                         } else {
-                            PibifyGenerated refHandler = getRefClassForTest(refType).newInstance();
-                            object = refHandler.deserialize(deserializer.readObjectAsBytes(), clazzType);
+                            PibifyGenerated refHandler = getRefClassForTest(refType, objectClass);
+                            object = refHandler.deserialize(deserializer.readObjectAsBytes(), objectClass);
                         }
 
                         break;
