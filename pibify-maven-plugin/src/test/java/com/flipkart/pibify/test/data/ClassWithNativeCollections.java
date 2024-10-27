@@ -29,6 +29,8 @@ public class ClassWithNativeCollections {
     @Pibify(4)
     private List<byte[]> listOfBytes;
 
+    @Pibify(5)
+    private HashMap<Float, Boolean> anotherMap;
     /*
     @Pibify(4)
     private Collection<?> aCollection;
@@ -43,6 +45,11 @@ public class ClassWithNativeCollections {
         aMap.put((float) Math.random(), Math.random() > 0.5);
         aMap.put((float) Math.random(), Math.random() > 0.5);
         aMap.put((float) Math.random(), Math.random() > 0.5);
+
+        anotherMap = new HashMap<>();
+        anotherMap.put((float) Math.random(), Math.random() > 0.5);
+        anotherMap.put((float) Math.random(), Math.random() > 0.5);
+        anotherMap.put((float) Math.random(), Math.random() > 0.5);
 
         listOfBytes = new ArrayList<>();
         listOfBytes.add(new byte[]{(byte) (Math.random() * 255), (byte) (Math.random() * 255), (byte) (Math.random() * 255)});
@@ -81,5 +88,13 @@ public class ClassWithNativeCollections {
 
     public void setListOfBytes(List<byte[]> listOfBytes) {
         this.listOfBytes = listOfBytes;
+    }
+
+    public HashMap<Float, Boolean> getAnotherMap() {
+        return anotherMap;
+    }
+
+    public void setAnotherMap(HashMap<Float, Boolean> anotherMap) {
+        this.anotherMap = anotherMap;
     }
 }

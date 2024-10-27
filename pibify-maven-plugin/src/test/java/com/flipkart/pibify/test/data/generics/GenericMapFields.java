@@ -15,7 +15,19 @@ public class GenericMapFields {
     public MapClassLevel3<Double> doubleToString;
 
     @Pibify(2)
+    public MapClassLevel2<Double> stringToDouble;
+
+    @Pibify(3)
     public MapClassLevel3<BigDecimal> bigDecimalToString;
+
+    @Pibify(4)
+    public MapClassLevel2<BigDecimal> stringToBigDecimal;
+
+    @Pibify(5)
+    public MapClassLevel7<Double> l7Double;
+
+    @Pibify(6)
+    public MapClassLevel7<BigDecimal> l7BigDecimal;
 
 
     public void randomize() {
@@ -24,5 +36,17 @@ public class GenericMapFields {
 
         bigDecimalToString = new MapClassLevel3<>();
         bigDecimalToString.randomize(BigDecimal.valueOf(Math.random()));
+
+        stringToDouble = new MapClassLevel2<>();
+        stringToDouble.randomize(Math.random());
+
+        stringToBigDecimal = new MapClassLevel2<>();
+        stringToBigDecimal.randomize(BigDecimal.valueOf(Math.random()));
+
+        l7Double = new MapClassLevel7<>();
+        l7Double.randomize(Math.random());
+
+        l7BigDecimal = new MapClassLevel7<>();
+        l7BigDecimal.randomize(BigDecimal.valueOf(Math.random()));
     }
 }

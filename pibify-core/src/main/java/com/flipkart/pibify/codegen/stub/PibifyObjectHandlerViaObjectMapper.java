@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 
 import java.io.IOException;
+import java.util.logging.Logger;
 
 /**
  * This class is used for serde of non-pibify classes
@@ -14,6 +15,7 @@ import java.io.IOException;
 public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> {
 
     private final NonPibifyObjectMapper pibifyObjectMapper;
+    private static final Logger logger = Logger.getLogger(PibifyObjectHandlerViaObjectMapper.class.getName());
 
     public PibifyObjectHandlerViaObjectMapper(NonPibifyObjectMapper pibifyObjectMapper) {
         this.pibifyObjectMapper = pibifyObjectMapper;
@@ -45,6 +47,7 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
 
     @Override
     public byte[] serialize(Object object) throws PibifyCodeExecException {
+        logger.fine("Serializing via ObjectMapper " + object.getClass().getName());
         return pibifyObjectMapper.writeValueAsBytes(object);
     }
 
@@ -53,6 +56,7 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
         if (type == null) {
             throw new PibifyCodeExecException("Class Type cannot be null");
         }
+        logger.fine("Deserializing via ObjectMapper " + type.getName());
         return pibifyObjectMapper.readObjectFromBytes(bytes, type);
     }
 }

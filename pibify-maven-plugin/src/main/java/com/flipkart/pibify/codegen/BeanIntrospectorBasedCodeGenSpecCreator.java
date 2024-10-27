@@ -365,10 +365,9 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 }
             } else if (Map.class.isAssignableFrom(type)) {
 
-                if (!CodeGenUtil.isNonPibifyClass(type) && !noPibify) {
-                    specType.setNativeType(CodeGenSpec.DataType.OBJECT);
-                    // release the object, since it's not needed
-                    specType.setContainerTypes(null);
+                // If this is not an interface reference type, capture the actual type
+                // to be used for typecasting during serde
+                if (!type.equals(Map.class) && !noPibify) {
                     if (fieldGenericType instanceof TypeVariable) {
                         // if this is generic type reference, try and extract its actual type
                         Field field = underProcessing.getReflectedField();
@@ -377,8 +376,19 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     } else {
                         specType.setReferenceType(create(type));
                     }
+                }
 
-                    specType.setjPTypeName(getNativeClassName(specType));
+                if (!CodeGenUtil.isNonPibifyClass(type) && !noPibify) {
+                    // the class is a non-pibify map
+                    // embed the object creator macro
+                    specType.setNativeType(CodeGenSpec.DataType.OBJECT);
+                    // release the object, since it's not needed
+                    specType.setContainerTypes(null);
+
+                    if (specType.getReferenceType() != null) {
+                        specType.setjPTypeName(getNativeClassName(specType));
+                    }
+
                 } else {
                     specType.setNativeType(CodeGenSpec.DataType.MAP);
                     specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 0));
@@ -449,8 +459,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
     private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type, int index) throws CodeGenException {
         ParameterizedType genericType = (ParameterizedType) fieldGenericType;
-        // If we are processing a map, its possible that there are
-        // sub-classes with part of the type parameter specified.
+        // If we are processing a map, it's possible that there are
+        // subclasses with part of the type parameter specified.
         // In those cases, try and get the parameter from superclass
         if (Map.class.isAssignableFrom(type) && genericType.getActualTypeArguments().length != 2) {
             Class<?> typeInHierarchy = type;
@@ -474,6 +484,13 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 Class<?> typeParamClass = (Class<?>) actualTypeArgument;
                 return getTypeFromJavaType(fieldName, fieldGenericType, typeParamClass);
             }
+
+            if (underProcessing.getReflectedField() == null) {
+                // return Object as the type if we cannot resolve the actual type
+                // then the PibifyObjectHandler takes care of marshalling
+                return getTypeFromJavaType(fieldName, null, Object.class);
+            }
+
             Type resolvedType = CodeGenUtil.getType(underProcessing.getType(), actualTypeArgument, underProcessing.getReflectedField().getDeclaringClass()).type;
             if (resolvedType instanceof Class) {
                 // passing the generic type as null because it has been resolved at this level.

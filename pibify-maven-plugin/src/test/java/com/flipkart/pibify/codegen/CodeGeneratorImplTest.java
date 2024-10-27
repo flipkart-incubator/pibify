@@ -47,11 +47,13 @@ import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.LogManager;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -68,7 +70,11 @@ public class CodeGeneratorImplTest {
     // TODO: Use equals of test class instead of manual comparision of members
 
     @BeforeAll
-    public static void setup() {
+    public static void setup() throws IOException {
+
+        LogManager.getLogManager().readConfiguration(
+                CodeGeneratorImplTest.class.getResourceAsStream("/logging.properties"));
+
         PibifyConfiguration.builder().build();
     }
 
@@ -228,6 +234,7 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.getaMap(), deserialized.getaMap());
+        assertEquals(testPayload.getAnotherMap(), deserialized.getAnotherMap());
         assertArrayEquals(testPayload.getListOfBytes().get(0), deserialized.getListOfBytes().get(0));
         assertArrayEquals(testPayload.getListOfBytes().get(1), deserialized.getListOfBytes().get(1));
     }
@@ -500,6 +507,7 @@ public class CodeGeneratorImplTest {
     @Test
     public void testClassWithInnerClasses() throws Exception {
 
+        // TODO - This test is picking jackson object mapper.
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithInnerClasses.class);
 
@@ -959,7 +967,7 @@ public class CodeGeneratorImplTest {
         GenericMapFields testPayload = new GenericMapFields();
         testPayload.randomize();
 
-        Class[] dependent = new Class[]{MapClassLevel3.class};
+        Class[] dependent = new Class[]{MapClassLevel3.class, MapClassLevel2.class};
         SimpleCompiler compiler = SimpleCompiler.INSTANCE;
 
         for (Class clazz : dependent) {
@@ -971,8 +979,19 @@ public class CodeGeneratorImplTest {
         }
 
         GenericMapFields deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+
+        assertEquals(testPayload.l7Double, deserialized.l7Double);
+        assertEquals(testPayload.l7BigDecimal, deserialized.l7BigDecimal);
         assertEquals(testPayload.bigDecimalToString, deserialized.bigDecimalToString);
+        assertEquals(testPayload.doubleToString, deserialized.doubleToString);
+        assertEquals(testPayload.stringToDouble, deserialized.stringToDouble);
+        assertEquals(testPayload.stringToBigDecimal, deserialized.stringToBigDecimal);
+
         assertEquals(testPayload.bigDecimalToString.getStr(), deserialized.bigDecimalToString.getStr());
         assertEquals(testPayload.doubleToString.getStr(), deserialized.doubleToString.getStr());
+        assertEquals(testPayload.stringToDouble.getStr(), deserialized.stringToDouble.getStr());
+        assertEquals(testPayload.stringToBigDecimal.getStr(), deserialized.stringToBigDecimal.getStr());
     }
+
+
 }

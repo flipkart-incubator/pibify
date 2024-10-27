@@ -2,6 +2,7 @@ package com.flipkart.pibify.test.data.generics;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.Objects;
 import java.util.TreeMap;
 
 /**
@@ -25,5 +26,22 @@ public class MapClassLevel3<K> extends TreeMap<K, String> {
 
     public void setStr(String str) {
         this.str = str;
+    }
+
+    @Override
+    public final boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof MapClassLevel3)) return false;
+        if (!super.equals(o)) return false;
+
+        MapClassLevel3<?> that = (MapClassLevel3<?>) o;
+        return Objects.equals(str, that.str);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Objects.hashCode(str);
+        return result;
     }
 }

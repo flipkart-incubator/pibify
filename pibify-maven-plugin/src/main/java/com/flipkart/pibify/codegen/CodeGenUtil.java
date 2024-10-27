@@ -158,6 +158,9 @@ public class CodeGenUtil {
         long typeVariablesInSuperClass = Arrays.stream(fieldGenericType.getActualTypeArguments()).filter(g -> g instanceof TypeVariable).count();
         long typeVariablesInSubClass = Arrays.stream(subGenericType.getActualTypeArguments()).filter(g -> g instanceof TypeVariable).count();
 
+        if (typeVariablesInSuperClass == 1 && typeVariablesInSubClass == 0) {
+            return subGenericType.getActualTypeArguments()[0];
+        }
         if (typeVariablesInSuperClass == (subGenericType.getActualTypeArguments().length - typeVariablesInSubClass)) {
             // all type variables in super class have been provided as concrete types  in subclass
             if (subGenericType.getActualTypeArguments().length >= index) {
