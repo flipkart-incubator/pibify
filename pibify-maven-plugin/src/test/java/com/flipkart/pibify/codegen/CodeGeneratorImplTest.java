@@ -233,6 +233,7 @@ public class CodeGeneratorImplTest {
 
         assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
         assertEquals(testPayload.getaString(), deserialized.getaString());
+        assertEquals(testPayload.getAnotherString(), deserialized.getAnotherString());
         assertEquals(testPayload.getaMap(), deserialized.getaMap());
         assertEquals(testPayload.getAnotherMap(), deserialized.getAnotherMap());
         assertArrayEquals(testPayload.getListOfBytes().get(0), deserialized.getListOfBytes().get(0));
@@ -986,6 +987,8 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.doubleToString, deserialized.doubleToString);
         assertEquals(testPayload.stringToDouble, deserialized.stringToDouble);
         assertEquals(testPayload.stringToBigDecimal, deserialized.stringToBigDecimal);
+        assertEquals(testPayload.inheritedHashMap, deserialized.inheritedHashMap);
+        assertEquals(testPayload.inheritedSet, deserialized.inheritedSet);
 
         assertEquals(testPayload.bigDecimalToString.getStr(), deserialized.bigDecimalToString.getStr());
         assertEquals(testPayload.doubleToString.getStr(), deserialized.doubleToString.getStr());

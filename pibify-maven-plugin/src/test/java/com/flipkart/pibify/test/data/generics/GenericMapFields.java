@@ -29,6 +29,11 @@ public class GenericMapFields {
     @Pibify(6)
     public MapClassLevel7<BigDecimal> l7BigDecimal;
 
+    @Pibify(7)
+    public InheritedHashMap inheritedHashMap;
+
+    @Pibify(8)
+    public InheritedTreeSet inheritedSet;
 
     public void randomize() {
         doubleToString = new MapClassLevel3<>();
@@ -48,5 +53,15 @@ public class GenericMapFields {
 
         l7BigDecimal = new MapClassLevel7<>();
         l7BigDecimal.randomize(BigDecimal.valueOf(Math.random()));
+
+        inheritedHashMap = new InheritedHashMap();
+        inheritedHashMap.put("str" + Math.random(), "str" + Math.random());
+        inheritedHashMap.put("str" + Math.random(), "str" + Math.random());
+        inheritedHashMap.put("str" + Math.random(), "str" + Math.random());
+
+        inheritedSet = new InheritedTreeSet();
+        inheritedSet.add(Math.random());
+        inheritedSet.add(Math.random());
+        inheritedSet.add(Math.random());
     }
 }

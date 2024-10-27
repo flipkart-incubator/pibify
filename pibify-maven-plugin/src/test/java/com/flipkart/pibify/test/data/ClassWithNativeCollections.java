@@ -31,13 +31,13 @@ public class ClassWithNativeCollections {
 
     @Pibify(5)
     private HashMap<Float, Boolean> anotherMap;
-    /*
-    @Pibify(4)
-    private Collection<?> aCollection;
-     */
+
+    @Pibify(6)
+    private ArrayList<String> anotherString;
 
     public ClassWithNativeCollections randomize() {
         aString = Arrays.asList("str" + Math.random(), "str" + Math.random(), "str" + Math.random());
+        anotherString = new ArrayList<>(Arrays.asList("str" + Math.random(), "str" + Math.random(), "str" + Math.random()));
         anInt = new HashSet<>(Arrays.asList(
                 (int) (Math.random() * 1000), (int) (Math.random() * 1000), (int) (Math.random() * 1000)));
 
@@ -96,5 +96,13 @@ public class ClassWithNativeCollections {
 
     public void setAnotherMap(HashMap<Float, Boolean> anotherMap) {
         this.anotherMap = anotherMap;
+    }
+
+    public ArrayList<String> getAnotherString() {
+        return anotherString;
+    }
+
+    public void setAnotherString(ArrayList<String> anotherString) {
+        this.anotherString = anotherString;
     }
 }

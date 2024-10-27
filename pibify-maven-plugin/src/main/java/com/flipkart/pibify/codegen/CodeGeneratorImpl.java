@@ -748,9 +748,23 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 fieldSpec.getType().getGenericTypeSignature(),
                 fieldSpec.getName(), fieldSpec.getType().getGenericTypeSignature());
 
-        //object.setaString(aStringHandler.deserialize(deserializer.readObjectAsBytes()));
-        builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer.readObjectAsBytes()))$<",
-                fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+
+        if (fieldSpec.getType().getReferenceType() == null) {
+            // interface reference type should work
+            builder.addStatement("object.$L$L($LHandler.deserialize(deserializer.readObjectAsBytes()))",
+                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+        } else {
+            // create new concrete type
+            // TODO optimize for cases where the ref type is ArrayList, HashSet (and other well known collections)
+            // In those cases we can do a typecast instead of creating a new object
+            ClassName refType = ClassName.get(fieldSpec.getType().getReferenceType().getPackageName(),
+                    fieldSpec.getType().getReferenceType().getClassName());
+            builder.addStatement("$T $LIntermediate = new $T()", refType, fieldSpec.getName(), refType);
+            builder.addStatement("$LIntermediate.addAll($LHandler.deserialize(deserializer.readObjectAsBytes()))",
+                    fieldSpec.getName(), fieldSpec.getName());
+            builder.addStatement("object.$L$L($LIntermediate)",
+                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+        }
 
         /*builder.addStatement("/*");
         if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
