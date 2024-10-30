@@ -35,6 +35,9 @@ public class GenericMapFields {
     @Pibify(8)
     public InheritedTreeSet inheritedSet;
 
+    @Pibify(9)
+    public MapClassLevel9<Double, Double> inheritedMap2;
+
     public void randomize() {
         doubleToString = new MapClassLevel3<>();
         doubleToString.randomize(Math.random());
@@ -63,5 +66,10 @@ public class GenericMapFields {
         inheritedSet.add(Math.random());
         inheritedSet.add(Math.random());
         inheritedSet.add(Math.random());
+
+        inheritedMap2 = new MapClassLevel9<>();
+        inheritedMap2.put(Math.random(), Math.random());
+        inheritedMap2.put(Math.random(), Math.random());
+        inheritedMap2.put(Math.random(), Math.random());
     }
 }

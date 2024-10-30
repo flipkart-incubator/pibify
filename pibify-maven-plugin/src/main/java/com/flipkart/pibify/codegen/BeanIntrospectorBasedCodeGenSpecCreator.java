@@ -463,6 +463,13 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
     private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type, int index) throws CodeGenException {
         ParameterizedType genericType = null;
+
+        if (fieldGenericType.equals(Object.class)) {
+            // We have reached the end of the tunnel
+            // this usually happens for type-erased containers
+            return getTypeFromJavaType(fieldName, fieldGenericType, Object.class);
+        }
+
         if (fieldGenericType instanceof ParameterizedType) {
             genericType = (ParameterizedType) fieldGenericType;
         }

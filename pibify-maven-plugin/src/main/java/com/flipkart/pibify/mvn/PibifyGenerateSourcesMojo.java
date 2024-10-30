@@ -72,6 +72,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
 
         for (Class<?> pibifyAnnotatedClass : pibifyAnnotatedClasses) {
             try {
+                getLog().debug("Processing file " + pibifyAnnotatedClass.getName());
                 CodeGenSpec codeGenSpec = codeGenSpecCreator.create(pibifyAnnotatedClass);
                 printCodeSpecGenLogs(codeGenSpecCreator);
                 if (SpecGenLogLevel.INFO.equals(codeGenSpecCreator.status(pibifyAnnotatedClass))) {

@@ -992,6 +992,7 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.stringToBigDecimal, deserialized.stringToBigDecimal);
         assertEquals(testPayload.inheritedHashMap, deserialized.inheritedHashMap);
         assertEquals(testPayload.inheritedSet, deserialized.inheritedSet);
+        assertEquals(testPayload.inheritedMap2, deserialized.inheritedMap2);
 
         assertEquals(testPayload.bigDecimalToString.getStr(), deserialized.bigDecimalToString.getStr());
         assertEquals(testPayload.doubleToString.getStr(), deserialized.doubleToString.getStr());
