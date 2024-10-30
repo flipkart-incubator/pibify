@@ -13,6 +13,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
@@ -295,7 +296,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             reference = ClassName.get(packageName, handlerClassName);
         }
 
-        ClassName referenceTypeClassName = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
+        ClassName referenceTypeClassName = codeGenSpec.isAbstract()
+                ? ClassName.OBJECT
+                : ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
         builder.addStatement("$T $LHandler = $L($T.class).get()",
                 ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), referenceTypeClassName),
                 name, handlerCacheClassName, referenceTypeClassName);
@@ -326,30 +329,41 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             addHandlerBasedOnDatatype(fieldSpec, builder);
 
             if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
-                builder.addStatement("$T value", fieldSpec.getContainerTypes().get(0).getjPTypeName());
+                CodeGenSpec.Type containerType = fieldSpec.getContainerTypes().get(0);
+                TypeName jpTypeName = (containerType.getReferenceType() != null && containerType.getReferenceType().isAbstract())
+                        ? TypeName.OBJECT
+                        : containerType.getjPTypeName();
+                builder.addStatement("$T value", jpTypeName);
                 builder.beginControlFlow("while (tag != 0) ");
 
-                if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                if (isNotNative(containerType.getNativeType())) {
                     //value = refHandler.deserialize(deserializer.readObjectAsBytes(), Class.class);
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
-                            getClassTypeForObjectMapperHandler(fieldSpec.getContainerTypes().get(0)));
+                            getClassTypeForObjectMapperHandler(containerType, jpTypeName));
 
                     // If we are processing an Object reference, get the MapEntry and use the value
-                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
+                    if (isJavaLangObject(jpTypeName)) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
                     }
                 } else {
                     //value = deserializer.readString();
-                    if (fieldSpec.getContainerTypes().get(0).getNativeType() == CodeGenSpec.DataType.ENUM) {
-                        builder.addStatement("value = $T.values()[deserializer.readEnum()]",
-                                fieldSpec.getContainerTypes().get(0).getjPTypeName());
+                    if (containerType.getNativeType() == CodeGenSpec.DataType.ENUM) {
+                        builder.addStatement("value = $T.values()[deserializer.readEnum()]", jpTypeName);
                     } else {
-                        builder.addStatement("value = deserializer.read$L()", fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                        builder.addStatement("value = deserializer.read$L()", containerType.getNativeType().getReadWriteMethodName());
                     }
                 }
 
                 //collection.add(value);
-                builder.addStatement("object.add(value)");
+                // refType will be null for native types
+                if (containerType.getReferenceType() != null && containerType.getReferenceType().isAbstract()) {
+                    // need a typecast from object
+                    builder.addStatement("object.add(($T)value)", ClassName.get(containerType.getReferenceType().getPackageName()
+                            , containerType.getReferenceType().getClassName()));
+                } else {
+                    builder.addStatement("object.add(value)");
+                }
+
             } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
                 // TODO The key and value blocks are identical and can be simplified
                 builder.addStatement("$T key", fieldSpec.getContainerTypes().get(0).getjPTypeName());
@@ -411,10 +425,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private String getClassTypeForObjectMapperHandler(CodeGenSpec.Type type) {
+        return getClassTypeForObjectMapperHandler(type, type.getjPTypeName());
+    }
+
+    private String getClassTypeForObjectMapperHandler(CodeGenSpec.Type type, TypeName jpTypeName) {
         if (CodeGenUtil.isCollectionOrMap(type.getNativeType())) {
             return "null";
         } else {
-            return type.getjPTypeName() + ".class";
+            return jpTypeName + ".class";
         }
     }
 

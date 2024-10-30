@@ -4,6 +4,7 @@ import com.flipkart.pibify.core.Pibify;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,6 +38,12 @@ public class ClassWithObjectCollections {
     @Pibify(6)
     private Map<BigDecimal, Date> bigDecimalMap;
 
+    @Pibify(7)
+    public List<AbstractClassWithNativeFields> listOfAbstractClass;
+
+    //@Pibify(8)
+    public Map<AbstractClassWithNativeFields, AbstractClassWithNativeFields> mapOfAbstractValues;
+
     /*
     @Pibify(4)
     private Collection<?> aCollection;
@@ -57,6 +64,16 @@ public class ClassWithObjectCollections {
         bigDecimalMap.put(new BigDecimal(Math.random()), new Date(System.currentTimeMillis() - (long) (Math.random() * 10000)));
         bigDecimalMap.put(new BigDecimal(Math.random()), new Date(System.currentTimeMillis() - (long) (Math.random() * 10000)));
         bigDecimalMap.put(new BigDecimal(Math.random()), new Date(System.currentTimeMillis() - (long) (Math.random() * 10000)));
+
+        listOfAbstractClass = new ArrayList<>();
+        listOfAbstractClass.add(new ConcreteClassWithNativeFields().randomize());
+        listOfAbstractClass.add(new ConcreteClassWithNativeFields().randomize());
+        listOfAbstractClass.add(new ConcreteClassWithNativeFields().randomize());
+
+        mapOfAbstractValues = new HashMap<>();
+        mapOfAbstractValues.put(new ConcreteClassWithNativeFields().randomize(), new ConcreteClassBWithNativeFields().randomize());
+        mapOfAbstractValues.put(new ConcreteClassWithNativeFields().randomize(), new ConcreteClassBWithNativeFields().randomize());
+        mapOfAbstractValues.put(new ConcreteClassWithNativeFields().randomize(), new ConcreteClassBWithNativeFields().randomize());
     }
 
     public List<ClassWithNativeFields> getNativeFields() {

@@ -27,6 +27,7 @@ import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange1;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange2;
 import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
+import com.flipkart.pibify.test.data.ConcreteClassWithNativeFields;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
@@ -276,13 +277,13 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithObjectCollections testPayload = new ClassWithObjectCollections();
         testPayload.randomize();
 
         SimpleCompiler compiler = new SimpleCompiler();
         // load dependent class upfront
-        Class[] dependent = new Class[]{ClassWithNativeFields.class, ClassWithAutoboxFields.class, AnotherClassWithNativeFields.class};
+        Class[] dependent = new Class[]{ClassWithNativeFields.class, ClassWithAutoboxFields.class, AnotherClassWithNativeFields.class, ConcreteClassWithNativeFields.class};
 
         for (Class clazz : dependent) {
             compiler.compile(impl.generate(creator.create(clazz)).getJavaFile().toJavaFileObject());
@@ -297,6 +298,8 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.getMapOfObjects(), deserialized.getMapOfObjects());
         assertEquals(testPayload.getBigDecimalList(), deserialized.getBigDecimalList());
         assertEquals(testPayload.getBigDecimalMap(), deserialized.getBigDecimalMap());
+        assertEquals(testPayload.listOfAbstractClass, deserialized.listOfAbstractClass);
+        //assertEquals(testPayload.mapOfAbstractValues, deserialized.mapOfAbstractValues);
     }
 
     @Test

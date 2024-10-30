@@ -76,7 +76,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
                 printCodeSpecGenLogs(codeGenSpecCreator);
                 if (SpecGenLogLevel.INFO.equals(codeGenSpecCreator.status(pibifyAnnotatedClass))) {
                     JavaFileWrapper javaFile = codeGenerator.generate(codeGenSpec);
-                    getLog().info("Creating " + javaFile.getPackageName().replaceAll("\\.", "/") + "/" + codeGenSpec.getClassName());
+                    getLog().info("Writing Java File " + javaFile.getPackageName().replaceAll("\\.", "/") + "/" + codeGenSpec.getClassName() + ".java");
                     javaFile.getJavaFile().writeTo(outputDirectory);
                     handlerCacheGenerator.add(pibifyAnnotatedClass, javaFile.getClassName());
                 } else {

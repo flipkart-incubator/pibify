@@ -566,7 +566,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
     public void testAbstractClass() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassHierarchy1.class);
-        assertNull(codeGenSpec);
-        assertEquals(SpecGenLogLevel.ERROR, creator.status(ClassHierarchy1.class));
+        assertNotNull(codeGenSpec);
+        assertTrue(codeGenSpec.isAbstract());
     }
 }

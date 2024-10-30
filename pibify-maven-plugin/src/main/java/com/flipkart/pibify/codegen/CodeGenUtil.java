@@ -1,7 +1,6 @@
 package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.core.Pibify;
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 
 import java.lang.reflect.ParameterizedType;
@@ -56,7 +55,7 @@ public class CodeGenUtil {
     }
 
     public static boolean isJavaLangObject(TypeName spec) {
-        return spec.equals(ClassName.get(Object.class));
+        return spec.equals(TypeName.OBJECT);
     }
 
     public static boolean isNotNative(CodeGenSpec.DataType dataType) {

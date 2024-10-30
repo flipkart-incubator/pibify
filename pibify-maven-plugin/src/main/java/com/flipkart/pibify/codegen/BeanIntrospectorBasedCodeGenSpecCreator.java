@@ -62,29 +62,26 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     @Override
     public CodeGenSpec create(Class<?> type) throws CodeGenException {
 
-        if (underProcessing != null) {
-            stackOfUnderProcessing.push(underProcessing);
-        }
-        underProcessing = new EntityUnderProcessing(type);
+        try {
+            if (underProcessing != null) {
+                stackOfUnderProcessing.push(underProcessing);
+            }
+            underProcessing = new EntityUnderProcessing(type);
 
-        if (Modifier.isAbstract(type.getModifiers())) {
-            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Skipping abstract class"));
-            return null;
-        }
+            // cannot use computeIfAbsent because of checked exception being thrown
+            if (!cache.containsKey(type)) {
+                CodeGenSpec codeGenSpec = createImpl(type);
+                handleSuperTypes(codeGenSpec, type);
+                handleCollectionOrMap(codeGenSpec, type);
+                cache.put(type, codeGenSpec);
+            }
 
-        // cannot use computeIfAbsent because of checked exception being thrown
-        if (!cache.containsKey(type)) {
-            CodeGenSpec codeGenSpec = createImpl(type);
-            handleSuperTypes(codeGenSpec, type);
-            handleCollectionOrMap(codeGenSpec, type);
-            cache.put(type, codeGenSpec);
+            return cache.get(type);
+        } finally {
+            if (!stackOfUnderProcessing.empty()) {
+                underProcessing = stackOfUnderProcessing.pop();
+            }
         }
-
-        if (!stackOfUnderProcessing.empty()) {
-            underProcessing = stackOfUnderProcessing.pop();
-        }
-
-        return cache.get(type);
     }
 
     private void handleCollectionOrMap(CodeGenSpec codeGenSpec, Class<?> type) throws CodeGenException {
@@ -228,6 +225,10 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             // To be revisited!
             if (type.isEnum()) {
                 return spec;
+            }
+
+            if (Modifier.isAbstract(type.getModifiers())) {
+                spec.setAbstract(true);
             }
 
             Map<Integer, CodeGenSpec.FieldSpec> mapOfFields = new HashMap<>();

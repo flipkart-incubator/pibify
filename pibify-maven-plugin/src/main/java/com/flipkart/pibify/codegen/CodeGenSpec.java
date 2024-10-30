@@ -31,6 +31,7 @@ public class CodeGenSpec {
     private final String className;
     private final List<FieldSpec> fieldSpecs;
     private final boolean isInnerClass;
+    private boolean isAbstract = false;
 
     public CodeGenSpec(String packageName, String className, boolean isInnerClass) {
         // to ensure the package name in imports does not have $.
@@ -59,6 +60,14 @@ public class CodeGenSpec {
 
     public boolean isInnerClass() {
         return isInnerClass;
+    }
+
+    public boolean isAbstract() {
+        return isAbstract;
+    }
+
+    public void setAbstract(boolean anAbstract) {
+        isAbstract = anAbstract;
     }
 
     @Override
