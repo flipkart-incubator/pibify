@@ -969,7 +969,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
         GenericMapFields testPayload = new GenericMapFields();
         testPayload.randomize();
 

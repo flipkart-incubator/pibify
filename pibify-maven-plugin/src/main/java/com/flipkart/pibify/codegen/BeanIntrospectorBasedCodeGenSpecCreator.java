@@ -25,6 +25,7 @@ import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.lang.reflect.WildcardType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.HashMap;
@@ -369,6 +370,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
                     setJavaPoetMetaObjects(type, specType, ClassName.get(specType.getCollectionType().getInterfaceClass()),
                             ClassName.get(specType.getCollectionType().getImplementationClass()),
+                            fieldGenericType,
                             specType.getContainerTypes().get(0).getjPTypeName());
                 }
             } else if (Map.class.isAssignableFrom(type)) {
@@ -402,6 +404,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 1));
 
                     setJavaPoetMetaObjects(type, specType, ClassName.get(Map.class), ClassName.get(HashMap.class),
+                            fieldGenericType,
                             specType.getContainerTypes().get(0).getjPTypeName(),
                             specType.getContainerTypes().get(1).getjPTypeName());
                     // TBF
@@ -427,11 +430,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private void setJavaPoetMetaObjects(Class<?> type, CodeGenSpec.Type specType, ClassName interfaceClass,
-                                        ClassName defaultImplementationType, TypeName... parameterizedTypeParams) {
+                                        ClassName defaultImplementationType, Type fieldGenericType, TypeName... parameterizedTypeParams) {
         TypeName jpTypeName;
         if (specType.getReferenceType() != null) {
             if (type.getTypeParameters().length != 0) {
-                jpTypeName = ParameterizedTypeName.get(specType.getReferenceType().getJpClassName(), parameterizedTypeParams);
+                // since jpTypes are used to create field/method signatures
+                // picking the type params of containers from the fieldGenericType of the reference.
+                TypeName[] types = Arrays.stream(((ParameterizedType) fieldGenericType).getActualTypeArguments()).map(TypeName::get).toArray(TypeName[]::new);
+                jpTypeName = ParameterizedTypeName.get(specType.getReferenceType().getJpClassName(), types);
             } else {
                 jpTypeName = specType.getReferenceType().getJpClassName();
             }
