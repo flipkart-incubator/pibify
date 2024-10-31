@@ -6,8 +6,10 @@ import com.squareup.javapoet.TypeName;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -37,6 +39,8 @@ public class CodeGenSpec {
 
     private final ClassName jpClassName;
 
+    private final Map<String, Object> thirdPartyData;
+
     public CodeGenSpec(String packageName, String className, boolean isInnerClass) {
         // to ensure the package name in imports does not have $.
         // in case of inner classes, the enclosing class's package becomes a problem
@@ -45,6 +49,7 @@ public class CodeGenSpec {
         this.jpClassName = ClassName.get(packageName, className);
         this.isInnerClass = isInnerClass;
         fieldSpecs = new ArrayList<>();
+        thirdPartyData = new HashMap<>();
     }
 
     public void addField(FieldSpec fieldSpec) {
@@ -77,6 +82,14 @@ public class CodeGenSpec {
 
     public ClassName getJpClassName() {
         return jpClassName;
+    }
+
+    public Object getThirdPartyData(String id) {
+        return thirdPartyData.get(id);
+    }
+
+    public void addThirdPartyData(String id, Object object) {
+        this.thirdPartyData.put(id, object);
     }
 
     @Override

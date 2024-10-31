@@ -1,6 +1,7 @@
 package com.flipkart.pibify.codegen;
 
 
+import com.flipkart.pibify.ThirdPartyProcessorResult;
 import com.flipkart.pibify.codegen.log.CodeSpecGenLog;
 import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLog;
@@ -18,6 +19,7 @@ import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -52,9 +54,12 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     private final Stack<EntityUnderProcessing> stackOfUnderProcessing = new Stack<>();
     private EntityUnderProcessing underProcessing;
     private final Log mavenLogger;
+    private final List<ThirdPartyProcessor> thirdPartyProcessors;
 
-    public BeanIntrospectorBasedCodeGenSpecCreator(Log logger) {
+    public BeanIntrospectorBasedCodeGenSpecCreator(Log logger, ThirdPartyProcessor... processors) {
         this.mavenLogger = logger;
+        this.thirdPartyProcessors = new ArrayList<>();
+        this.thirdPartyProcessors.addAll(Arrays.asList(processors));
     }
 
     public BeanIntrospectorBasedCodeGenSpecCreator() {
@@ -75,6 +80,15 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 CodeGenSpec codeGenSpec = createImpl(type);
                 handleSuperTypes(codeGenSpec, type);
                 handleCollectionOrMap(codeGenSpec, type);
+
+                for (ThirdPartyProcessor thirdPartyProcessor : thirdPartyProcessors) {
+                    ThirdPartyProcessorResult processorResult = thirdPartyProcessor.process(codeGenSpec, type);
+                    if (processorResult.getData().isPresent()) {
+                        codeGenSpec.addThirdPartyData(thirdPartyProcessor.getId(), processorResult.getData().get());
+                    }
+
+                    processorResult.getLogs().forEach(this::log);
+                }
                 cache.put(type, codeGenSpec);
             }
 
@@ -233,6 +247,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 spec.setAbstract(true);
             }
 
+            validate(type);
+
             Map<Integer, CodeGenSpec.FieldSpec> mapOfFields = new HashMap<>();
             // This set is used to find duplicate field names (case-insensitive)
             Set<CaseInsensitiveString> fieldNameSet = new HashSet<>();
@@ -300,6 +316,24 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             return spec;
         } catch (IntrospectionException e) {
             throw new CodeGenException(e.getMessage(), e);
+        }
+    }
+
+    private void validate(Class<?> type) {
+        checkNoArgsConstructor(type);
+    }
+
+    private void checkNoArgsConstructor(Class<?> type) {
+        boolean found = false;
+        for (Constructor<?> declaredConstructor : type.getDeclaredConstructors()) {
+            if (declaredConstructor.getParameterCount() == 0) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "NoArgs constructor is mandatory"));
         }
     }
 

@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.codegen.log.SpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.core.PibifyConfiguration;
@@ -14,6 +15,7 @@ import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
 import com.flipkart.pibify.test.data.ClassWithEnums;
 import com.flipkart.pibify.test.data.ClassWithInnerClasses;
 import com.flipkart.pibify.test.data.ClassWithInterestingFieldNames;
+import com.flipkart.pibify.test.data.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.ClassWithMapReference;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
@@ -45,6 +47,7 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel5;
 import com.flipkart.pibify.test.data.generics.MapClassLevel6;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
+import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -54,8 +57,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.logging.LogManager;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -1021,5 +1026,28 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.mapOfMapsAndSets, deserialized.mapOfMapsAndSets);
     }
 
+    @Test
+    public void testClassWithJsonCreator() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator(null, new JsonCreatorFactory());
+        CodeGenSpec codeGenSpec = creator.create(ClassWithJsonCreator.class);
+        assertNotNull(codeGenSpec);
+        List<SpecGenLog> logsForCurrentEntity = creator.getLogsForCurrentEntity().stream().collect(Collectors.toList());
+        assertNotNull(logsForCurrentEntity);
+        assertEquals(SpecGenLogLevel.ERROR, creator.status(ClassWithJsonCreator.class));
+        assertEquals("com.flipkart.pibify.test.data.ClassWithJsonCreator NoArgs constructor is mandatory",
+                logsForCurrentEntity.get(0).getLogMessage());
 
+        assertEquals("com.flipkart.pibify.test.data.ClassWithJsonCreator Cannot process a class with `@JsonCreator` annotated constructor",
+                logsForCurrentEntity.get(1).getLogMessage());
+
+        /*ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        ClassWithJsonCreator testPayload = ClassWithJsonCreator.randomize();
+
+        ClassWithJsonCreator deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getaString(), deserialized.getaString());
+        assertEquals(testPayload.getBigDecimal(), deserialized.getBigDecimal());*/
+    }
 }

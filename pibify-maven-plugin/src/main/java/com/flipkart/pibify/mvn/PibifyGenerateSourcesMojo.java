@@ -13,6 +13,7 @@ import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.mvn.interfaces.SourcesScanner;
 import com.flipkart.pibify.mvn.util.PrefixLog;
+import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -61,12 +62,14 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         }
 
         SourcesScanner scanner = new JavaSourcesScanner(getLog());
-        ICodeGenSpecCreator codeGenSpecCreator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        // TODO take third party processor config from pom
+        ICodeGenSpecCreator codeGenSpecCreator = new BeanIntrospectorBasedCodeGenSpecCreator(getLog(),
+                new JsonCreatorFactory());
         // TODO consume config from pom
         PibifyConfiguration.builder().build();
         ICodeGenerator codeGenerator = new CodeGeneratorImpl();
         PibifyHandlerCacheGenerator handlerCacheGenerator = new PibifyHandlerCacheGenerator(project.getGroupId(), project.getArtifactId());
-
+        ICodeGenerator codeGenerator = new CodeGeneratorImpl(handlerCacheGenerator.getClassName());
         Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory());
         List<String> classesWithErrors = new ArrayList<>();
 
@@ -92,7 +95,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         getLog().info("*** Pibify Summary ***");
         getLog().info("\t #Processed\t" + (pibifyAnnotatedClasses.size()));
         getLog().info("\t #Success\t" + (pibifyAnnotatedClasses.size() - classesWithErrors.size()));
-        getLog().info("\t\t #Failed\t" + (classesWithErrors.size()));
+        getLog().info("\t #Failed\t" + (classesWithErrors.size()));
         getLog().warn("Classes with issues: " + classesWithErrors);
 
         try {
