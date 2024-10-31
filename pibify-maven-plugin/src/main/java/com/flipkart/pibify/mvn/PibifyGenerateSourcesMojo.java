@@ -37,7 +37,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
 
-    @Parameter(defaultValue = "${project.build.directory}/generated-sources/pibify", required = true)
+    @Parameter(defaultValue = "${project.build.directory}/generated-sources", required = true)
     private File outputDirectory;
 
     public PibifyGenerateSourcesMojo() {
@@ -68,6 +68,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         PibifyHandlerCacheGenerator handlerCacheGenerator = new PibifyHandlerCacheGenerator(project.getGroupId(), project.getArtifactId());
 
         Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory());
+        List<String> classesWithErrors = new ArrayList<>();
 
 
         for (Class<?> pibifyAnnotatedClass : pibifyAnnotatedClasses) {
@@ -87,6 +88,12 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
                 throw new RuntimeException(e);
             }
         }
+
+        getLog().info("*** Pibify Summary ***");
+        getLog().info("\t #Processed\t" + (pibifyAnnotatedClasses.size()));
+        getLog().info("\t #Success\t" + (pibifyAnnotatedClasses.size() - classesWithErrors.size()));
+        getLog().info("\t\t #Failed\t" + (classesWithErrors.size()));
+        getLog().warn("Classes with issues: " + classesWithErrors);
 
         try {
             handlerCacheGenerator.generateCacheClass().getJavaFile().writeTo(outputDirectory);
