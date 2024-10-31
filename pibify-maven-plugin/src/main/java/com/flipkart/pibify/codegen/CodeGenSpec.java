@@ -46,7 +46,7 @@ public class CodeGenSpec {
         // in case of inner classes, the enclosing class's package becomes a problem
         this.packageName = packageName.replaceAll("\\$", ".");
         this.className = className;
-        this.jpClassName = ClassName.get(packageName, className);
+        this.jpClassName = ClassName.get(this.packageName, className);
         this.isInnerClass = isInnerClass;
         fieldSpecs = new ArrayList<>();
         thirdPartyData = new HashMap<>();
