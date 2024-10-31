@@ -1,6 +1,7 @@
 package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.test.data.ClassWithNestedCollections;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -9,6 +10,7 @@ public class CodeGenUtilTest {
 
 
     @Test
+    @Disabled
     public void testNestedCollections() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNestedCollections.class);

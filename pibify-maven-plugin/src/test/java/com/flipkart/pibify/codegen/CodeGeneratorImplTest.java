@@ -43,7 +43,6 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel3;
 import com.flipkart.pibify.test.data.generics.MapClassLevel4;
 import com.flipkart.pibify.test.data.generics.MapClassLevel5;
 import com.flipkart.pibify.test.data.generics.MapClassLevel6;
-import com.flipkart.pibify.test.util.CodePrinterWithLineNumbers;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
@@ -1011,7 +1010,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassForNestedReferenceList testPayload = new ClassForNestedReferenceList();
         testPayload.randomize();
 
