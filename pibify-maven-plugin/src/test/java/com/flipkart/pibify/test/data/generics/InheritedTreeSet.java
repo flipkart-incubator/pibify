@@ -8,4 +8,11 @@ import java.util.TreeSet;
  * Date 27/10/24
  */
 public class InheritedTreeSet extends TreeSet<Double> {
+
+    public InheritedTreeSet randomize() {
+        this.add(Math.random());
+        this.add(Math.random());
+        this.add(Math.random());
+        return this;
+    }
 }

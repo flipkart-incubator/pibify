@@ -8,4 +8,11 @@ import java.util.HashMap;
  * Date 27/10/24
  */
 public class InheritedHashMap extends HashMap<String, String> {
+
+    public InheritedHashMap randomize() {
+        this.put("str" + Math.random(), "str" + Math.random());
+        this.put("str" + Math.random(), "str" + Math.random());
+        this.put("str" + Math.random(), "str" + Math.random());
+        return this;
+    }
 }

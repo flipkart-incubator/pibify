@@ -367,33 +367,9 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
                     specType.setCollectionType(getCollectionType(type));
 
-                    TypeName jpTypeName;
-                    if (specType.getReferenceType() != null) {
-                        if (type.getTypeParameters().length != 0) {
-                            jpTypeName = ParameterizedTypeName.get(specType.getReferenceType().getJpClassName(),
-                                    specType.getContainerTypes().get(0).getjPTypeName());
-                        } else {
-                            jpTypeName = specType.getReferenceType().getJpClassName();
-                        }
-
-                        // if there is a different reference type for this collection
-                        // use that to create new instances if possible
-                        if (specType.getReferenceType().isAbstract()) {
-                            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Abstract subclasses of Collection not supported"));
-                            // Still go ahead and set dummy implementation
-                            specType.setNewInstanceType(ClassName.get(specType.getCollectionType().getImplementationClass()));
-                        } else {
-                            specType.setNewInstanceType(specType.getReferenceType().getJpClassName());
-                        }
-                    } else {
-                        jpTypeName = ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getInterfaceClass()),
-                                specType.getContainerTypes().get(0).getjPTypeName());
-                        // If we don't have a different reference type, use the default implementation types of collections.
-                        // i.e. if reference type is a List/Set etc, use new ArrayList() or new HashSet() when creating instances.
-                        specType.setNewInstanceType(ClassName.get(specType.getCollectionType().getImplementationClass()));
-                    }
-
-                    specType.setjPTypeName(jpTypeName);
+                    setJavaPoetMetaObjects(type, specType, ClassName.get(specType.getCollectionType().getInterfaceClass()),
+                            ClassName.get(specType.getCollectionType().getImplementationClass()),
+                            specType.getContainerTypes().get(0).getjPTypeName());
                 }
             } else if (Map.class.isAssignableFrom(type)) {
 
@@ -424,9 +400,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     specType.setNativeType(CodeGenSpec.DataType.MAP);
                     specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 0));
                     specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type, 1));
-                    specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(Map.class),
+
+                    setJavaPoetMetaObjects(type, specType, ClassName.get(Map.class), ClassName.get(HashMap.class),
                             specType.getContainerTypes().get(0).getjPTypeName(),
-                            specType.getContainerTypes().get(1).getjPTypeName()));
+                            specType.getContainerTypes().get(1).getjPTypeName());
+                    // TBF
+                    /*specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(Map.class),
+                            specType.getContainerTypes().get(0).getjPTypeName(),
+                            specType.getContainerTypes().get(1).getjPTypeName()));*/
                 }
             } else if (Enum.class.isAssignableFrom(type)) {
                 specType.setNativeType(CodeGenSpec.DataType.ENUM);
@@ -439,11 +420,39 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
 
         if (!type.isArray()) {
-            //specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
             specType.setGenericTypeSignature(specType.getjPTypeName().toString());
         }
 
         return specType;
+    }
+
+    private void setJavaPoetMetaObjects(Class<?> type, CodeGenSpec.Type specType, ClassName interfaceClass,
+                                        ClassName defaultImplementationType, TypeName... parameterizedTypeParams) {
+        TypeName jpTypeName;
+        if (specType.getReferenceType() != null) {
+            if (type.getTypeParameters().length != 0) {
+                jpTypeName = ParameterizedTypeName.get(specType.getReferenceType().getJpClassName(), parameterizedTypeParams);
+            } else {
+                jpTypeName = specType.getReferenceType().getJpClassName();
+            }
+
+            // if there is a different reference type for this collection
+            // use that to create new instances if possible
+            if (specType.getReferenceType().isAbstract()) {
+                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Abstract subclasses of Collection not supported"));
+                // Still go ahead and set dummy implementation
+                specType.setNewInstanceType(defaultImplementationType);
+            } else {
+                specType.setNewInstanceType(specType.getReferenceType().getJpClassName());
+            }
+        } else {
+            jpTypeName = ParameterizedTypeName.get(interfaceClass, parameterizedTypeParams);
+            // If we don't have a different reference type, use the default implementation types of collections.
+            // i.e. if reference type is a List/Set etc., use new ArrayList() or new HashSet() when creating instances.
+            specType.setNewInstanceType(defaultImplementationType);
+        }
+
+        specType.setjPTypeName(jpTypeName);
     }
 
     private void typeForObjectType(Type fieldGenericType, Class<?> type, CodeGenSpec.Type specType) throws CodeGenException {

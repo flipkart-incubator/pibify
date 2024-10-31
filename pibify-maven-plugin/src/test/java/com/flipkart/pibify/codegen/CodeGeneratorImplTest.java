@@ -43,6 +43,7 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel3;
 import com.flipkart.pibify.test.data.generics.MapClassLevel4;
 import com.flipkart.pibify.test.data.generics.MapClassLevel5;
 import com.flipkart.pibify.test.data.generics.MapClassLevel6;
+import com.flipkart.pibify.test.util.CodePrinterWithLineNumbers;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.JavaFile;
@@ -250,14 +251,14 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithReferences testPayload = new ClassWithReferences();
         testPayload.randomize();
 
         SimpleCompiler compiler = new SimpleCompiler();
         // load dependent class upfront
         JavaFile javaFile1 = impl.generate(creator.create(AnotherClassWithNativeCollections.class)).getJavaFile();
-        //javaFile1.writeTo(System.out);
+        //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
         compiler.compile(javaFile1.toJavaFileObject());
         Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." +
                 AnotherClassWithNativeCollections.class.getCanonicalName() + "Handler");
@@ -968,7 +969,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         GenericMapFields testPayload = new GenericMapFields();
         testPayload.randomize();
 
@@ -1010,13 +1011,15 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassForNestedReferenceList testPayload = new ClassForNestedReferenceList();
         testPayload.randomize();
 
         ClassForNestedReferenceList deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload.words, deserialized.words);
         assertEquals(testPayload.listOfArrayLists, deserialized.listOfArrayLists);
+        assertEquals(testPayload.mapOfMapsAndMaps, deserialized.mapOfMapsAndMaps);
+        assertEquals(testPayload.mapOfMapsAndSets, deserialized.mapOfMapsAndSets);
     }
 
 

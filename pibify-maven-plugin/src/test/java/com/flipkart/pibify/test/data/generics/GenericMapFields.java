@@ -57,15 +57,9 @@ public class GenericMapFields {
         l7BigDecimal = new MapClassLevel7<>();
         l7BigDecimal.randomize(BigDecimal.valueOf(Math.random()));
 
-        inheritedHashMap = new InheritedHashMap();
-        inheritedHashMap.put("str" + Math.random(), "str" + Math.random());
-        inheritedHashMap.put("str" + Math.random(), "str" + Math.random());
-        inheritedHashMap.put("str" + Math.random(), "str" + Math.random());
+        inheritedHashMap = new InheritedHashMap().randomize();
 
-        inheritedSet = new InheritedTreeSet();
-        inheritedSet.add(Math.random());
-        inheritedSet.add(Math.random());
-        inheritedSet.add(Math.random());
+        inheritedSet = new InheritedTreeSet().randomize();
 
         inheritedMap2 = new MapClassLevel9<>();
         inheritedMap2.put(Math.random(), Math.random());

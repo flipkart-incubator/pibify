@@ -321,7 +321,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
                 builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), fieldSpec.getNewInstanceType());
             } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
-                builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), HashMap.class);
+                // TBF
+                //builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), HashMap.class);
+                builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), fieldSpec.getNewInstanceType());
             } else {
                 throw new UnsupportedOperationException();
             }
