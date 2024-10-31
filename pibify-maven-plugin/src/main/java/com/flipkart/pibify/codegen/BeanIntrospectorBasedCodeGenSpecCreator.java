@@ -11,6 +11,7 @@ import com.google.common.collect.Multimap;
 import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeName;
 import org.apache.maven.plugin.logging.Log;
 
 import java.beans.BeanInfo;
@@ -365,8 +366,34 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     specType.setNativeType(CodeGenSpec.DataType.COLLECTION);
                     specType.getContainerTypes().add(getContainerType(fieldName, fieldGenericType, type));
                     specType.setCollectionType(getCollectionType(type));
-                    specType.setjPTypeName(ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getInterfaceClass()),
-                            specType.getContainerTypes().get(0).getjPTypeName()));
+
+                    TypeName jpTypeName;
+                    if (specType.getReferenceType() != null) {
+                        if (type.getTypeParameters().length != 0) {
+                            jpTypeName = ParameterizedTypeName.get(specType.getReferenceType().getJpClassName(),
+                                    specType.getContainerTypes().get(0).getjPTypeName());
+                        } else {
+                            jpTypeName = specType.getReferenceType().getJpClassName();
+                        }
+
+                        // if there is a different reference type for this collection
+                        // use that to create new instances if possible
+                        if (specType.getReferenceType().isAbstract()) {
+                            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Abstract subclasses of Collection not supported"));
+                            // Still go ahead and set dummy implementation
+                            specType.setNewInstanceType(ClassName.get(specType.getCollectionType().getImplementationClass()));
+                        } else {
+                            specType.setNewInstanceType(specType.getReferenceType().getJpClassName());
+                        }
+                    } else {
+                        jpTypeName = ParameterizedTypeName.get(ClassName.get(specType.getCollectionType().getInterfaceClass()),
+                                specType.getContainerTypes().get(0).getjPTypeName());
+                        // If we don't have a different reference type, use the default implementation types of collections.
+                        // i.e. if reference type is a List/Set etc, use new ArrayList() or new HashSet() when creating instances.
+                        specType.setNewInstanceType(ClassName.get(specType.getCollectionType().getImplementationClass()));
+                    }
+
+                    specType.setjPTypeName(jpTypeName);
                 }
             } else if (Map.class.isAssignableFrom(type)) {
 
@@ -412,7 +439,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
 
         if (!type.isArray()) {
-            specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
+            //specType.setGenericTypeSignature(CodeGenUtil.getGenericTypeStringForField(specType));
+            specType.setGenericTypeSignature(specType.getjPTypeName().toString());
         }
 
         return specType;
@@ -464,7 +492,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type, int index) throws CodeGenException {
         ParameterizedType genericType = null;
 
-        if (fieldGenericType.equals(Object.class)) {
+        if (Object.class.equals(fieldGenericType)) {
             // We have reached the end of the tunnel
             // this usually happens for type-erased containers
             return getTypeFromJavaType(fieldName, fieldGenericType, Object.class);
@@ -495,7 +523,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         Type actualTypeArgument = genericType.getActualTypeArguments()[index];
         if (actualTypeArgument instanceof Class) {
             Class<?> typeParamClass = (Class<?>) actualTypeArgument;
-            return getTypeFromJavaType(fieldName, fieldGenericType, typeParamClass);
+            return getTypeFromJavaType(fieldName, null, typeParamClass);
         } else if (actualTypeArgument instanceof WildcardType) {
             return getUnknownType();
         } else if (actualTypeArgument instanceof ParameterizedType) {

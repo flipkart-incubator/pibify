@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 
 import java.util.ArrayDeque;
@@ -33,11 +34,14 @@ public class CodeGenSpec {
     private final boolean isInnerClass;
     private boolean isAbstract = false;
 
+    private final ClassName jpClassName;
+
     public CodeGenSpec(String packageName, String className, boolean isInnerClass) {
         // to ensure the package name in imports does not have $.
         // in case of inner classes, the enclosing class's package becomes a problem
         this.packageName = packageName.replaceAll("\\$", ".");
         this.className = className;
+        this.jpClassName = ClassName.get(packageName, className);
         this.isInnerClass = isInnerClass;
         fieldSpecs = new ArrayList<>();
     }
@@ -68,6 +72,10 @@ public class CodeGenSpec {
 
     public void setAbstract(boolean anAbstract) {
         isAbstract = anAbstract;
+    }
+
+    public ClassName getJpClassName() {
+        return jpClassName;
     }
 
     @Override
@@ -219,6 +227,8 @@ public class CodeGenSpec {
         // javapoet pre-computes
         private TypeName jPTypeName;
 
+        private ClassName newInstanceType;
+
         public DataType getNativeType() {
             return nativeType;
         }
@@ -265,6 +275,14 @@ public class CodeGenSpec {
 
         public void setjPTypeName(TypeName jPTypeName) {
             this.jPTypeName = jPTypeName;
+        }
+
+        public ClassName getNewInstanceType() {
+            return newInstanceType;
+        }
+
+        public void setNewInstanceType(ClassName newInstanceType) {
+            this.newInstanceType = newInstanceType;
         }
     }
 }

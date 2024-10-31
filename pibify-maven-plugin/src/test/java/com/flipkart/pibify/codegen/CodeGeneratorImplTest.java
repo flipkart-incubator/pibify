@@ -3,6 +3,7 @@ package com.flipkart.pibify.codegen;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.core.PibifyConfiguration;
+import com.flipkart.pibify.test.data.ClassForNestedReferenceList;
 import com.flipkart.pibify.test.data.ClassForTestingNullValues;
 import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
@@ -998,6 +999,24 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.doubleToString.getStr(), deserialized.doubleToString.getStr());
         assertEquals(testPayload.stringToDouble.getStr(), deserialized.stringToDouble.getStr());
         assertEquals(testPayload.stringToBigDecimal.getStr(), deserialized.stringToBigDecimal.getStr());
+    }
+
+    @Test
+    public void testClassForNestedReferenceList() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassForNestedReferenceList.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        ClassForNestedReferenceList testPayload = new ClassForNestedReferenceList();
+        testPayload.randomize();
+
+        ClassForNestedReferenceList deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.words, deserialized.words);
+        assertEquals(testPayload.listOfArrayLists, deserialized.listOfArrayLists);
     }
 
 

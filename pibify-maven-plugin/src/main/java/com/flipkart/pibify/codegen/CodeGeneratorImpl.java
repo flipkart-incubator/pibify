@@ -319,7 +319,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .addStatement("int tag = deserializer.getNextTag()");
 
             if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
-                builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), fieldSpec.getCollectionType().getImplementationClass());
+                builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), fieldSpec.getNewInstanceType());
             } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
                 builder.addStatement("$T object = new $T()", fieldSpec.getjPTypeName(), HashMap.class);
             } else {

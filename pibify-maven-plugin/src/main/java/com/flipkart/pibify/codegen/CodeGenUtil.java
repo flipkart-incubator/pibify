@@ -114,19 +114,23 @@ public class CodeGenUtil {
     private static String getClassNameFromType(CodeGenSpec.Type type) {
         String result;
         if (type.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
-            switch (type.getCollectionType()) {
-                case SET:
-                    result = "java.util.Set<";
-                    break;
-                case DEQUE:
-                    result = "java.util.Dequeue<";
-                    break;
-                case QUEUE:
-                    result = "java.util.Stack<";
-                    break;
-                case LIST:
-                default:
-                    result = "java.util.List<";
+            if (type.getReferenceType() != null) {
+                result = type.getReferenceType().getPackageName() + "." + type.getReferenceType().getClassName() + "<";
+            } else {
+                switch (type.getCollectionType()) {
+                    case SET:
+                        result = "java.util.Set<";
+                        break;
+                    case DEQUE:
+                        result = "java.util.Dequeue<";
+                        break;
+                    case QUEUE:
+                        result = "java.util.Stack<";
+                        break;
+                    case LIST:
+                    default:
+                        result = "java.util.List<";
+                }
             }
             result += getGenericTypeStringForField(type.getContainerTypes().get(0));
             return result + ">";
