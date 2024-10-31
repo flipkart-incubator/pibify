@@ -30,6 +30,7 @@ import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange1;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange2;
 import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
+import com.flipkart.pibify.test.data.ConcreteClassBWithNativeFields;
 import com.flipkart.pibify.test.data.ConcreteClassWithNativeFields;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
@@ -45,6 +46,7 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel3;
 import com.flipkart.pibify.test.data.generics.MapClassLevel4;
 import com.flipkart.pibify.test.data.generics.MapClassLevel5;
 import com.flipkart.pibify.test.data.generics.MapClassLevel6;
+import com.flipkart.pibify.test.util.CodePrinterWithLineNumbers;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
@@ -289,7 +291,7 @@ public class CodeGeneratorImplTest {
 
         SimpleCompiler compiler = new SimpleCompiler();
         // load dependent class upfront
-        Class[] dependent = new Class[]{ClassWithNativeFields.class, ClassWithAutoboxFields.class, AnotherClassWithNativeFields.class, ConcreteClassWithNativeFields.class};
+        Class[] dependent = new Class[]{ClassWithNativeFields.class, ClassWithAutoboxFields.class, AnotherClassWithNativeFields.class, ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
 
         for (Class clazz : dependent) {
             compiler.compile(impl.generate(creator.create(clazz)).getJavaFile().toJavaFileObject());
@@ -305,7 +307,7 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.getBigDecimalList(), deserialized.getBigDecimalList());
         assertEquals(testPayload.getBigDecimalMap(), deserialized.getBigDecimalMap());
         assertEquals(testPayload.listOfAbstractClass, deserialized.listOfAbstractClass);
-        //assertEquals(testPayload.mapOfAbstractValues, deserialized.mapOfAbstractValues);
+        assertEquals(testPayload.mapOfAbstractValues, deserialized.mapOfAbstractValues);
     }
 
     @Test
@@ -524,7 +526,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithInnerClasses testPayload = new ClassWithInnerClasses();
         testPayload.randomize();
 

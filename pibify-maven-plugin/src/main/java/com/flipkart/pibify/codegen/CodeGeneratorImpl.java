@@ -281,6 +281,16 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         return fieldSpec.hasBeanMethods() ? "()" : "";
     }
 
+    private static ClassName getAbstractOrConcreteJPClassName(CodeGenSpec codeGenSpec) {
+        return codeGenSpec.isAbstract() ? ClassName.OBJECT : codeGenSpec.getJpClassName();
+    }
+
+    private static TypeName getAbstractOrConcreteJPTypeName(CodeGenSpec.Type containerType) {
+        return (containerType.getReferenceType() != null && containerType.getReferenceType().isAbstract())
+                ? TypeName.OBJECT
+                : containerType.getjPTypeName();
+    }
+
     private void addHandlerForObjectReference(String name, MethodSpec.Builder builder, CodeGenSpec codeGenSpec) {
         ClassName reference;
 
@@ -296,9 +306,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             reference = ClassName.get(packageName, handlerClassName);
         }
 
-        ClassName referenceTypeClassName = codeGenSpec.isAbstract()
-                ? ClassName.OBJECT
-                : ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
+        ClassName referenceTypeClassName = getAbstractOrConcreteJPClassName(codeGenSpec);
         builder.addStatement("$T $LHandler = $L($T.class).get()",
                 ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), referenceTypeClassName),
                 name, handlerCacheClassName, referenceTypeClassName);
@@ -332,9 +340,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
             if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
                 CodeGenSpec.Type containerType = fieldSpec.getContainerTypes().get(0);
-                TypeName jpTypeName = (containerType.getReferenceType() != null && containerType.getReferenceType().isAbstract())
-                        ? TypeName.OBJECT
-                        : containerType.getjPTypeName();
+                TypeName jpTypeName = getAbstractOrConcreteJPTypeName(containerType);
                 builder.addStatement("$T value", jpTypeName);
                 builder.beginControlFlow("while (tag != 0) ");
 
@@ -360,54 +366,69 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 // refType will be null for native types
                 if (containerType.getReferenceType() != null && containerType.getReferenceType().isAbstract()) {
                     // need a typecast from object
-                    builder.addStatement("object.add(($T)value)", ClassName.get(containerType.getReferenceType().getPackageName()
-                            , containerType.getReferenceType().getClassName()));
+                    builder.addStatement("object.add(($T)value)", containerType.getReferenceType().getJpClassName());
                 } else {
                     builder.addStatement("object.add(value)");
                 }
 
             } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
                 // TODO The key and value blocks are identical and can be simplified
-                builder.addStatement("$T key", fieldSpec.getContainerTypes().get(0).getjPTypeName());
-                builder.addStatement("$T value", fieldSpec.getContainerTypes().get(1).getjPTypeName());
+                CodeGenSpec.Type keyContainerType = fieldSpec.getContainerTypes().get(0);
+                CodeGenSpec.Type valueContainerType = fieldSpec.getContainerTypes().get(1);
+                TypeName keyJpTypeName = getAbstractOrConcreteJPTypeName(keyContainerType);
+                TypeName valueJpTypeName = getAbstractOrConcreteJPTypeName(valueContainerType);
+
+                builder.addStatement("$T key", keyJpTypeName);
+                builder.addStatement("$T value", valueJpTypeName);
                 builder.beginControlFlow("while (tag != 0) ");
 
-                if (isNotNative(fieldSpec.getContainerTypes().get(0).getNativeType())) {
+                if (isNotNative(keyContainerType.getNativeType())) {
                     builder.addStatement("key = keyHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
-                            getClassTypeForObjectMapperHandler(fieldSpec.getContainerTypes().get(0)));
+                            getClassTypeForObjectMapperHandler(keyContainerType, keyJpTypeName));
                     // If we are processing an Object reference, get the MapEntry and use the value
-                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(0).getjPTypeName())) {
+                    if (isJavaLangObject(keyJpTypeName)) {
                         builder.addStatement("key = ((Map.Entry<String,Object>)(key)).getValue()");
                     }
                 } else {
-                    if (fieldSpec.getContainerTypes().get(0).getNativeType() == CodeGenSpec.DataType.ENUM) {
+                    if (keyContainerType.getNativeType() == CodeGenSpec.DataType.ENUM) {
                         builder.addStatement("key = $T.values()[deserializer.readEnum()]",
-                                fieldSpec.getContainerTypes().get(0).getjPTypeName());
+                                keyContainerType.getjPTypeName());
                     } else {
                         builder.addStatement("key = deserializer.read$L()",
-                                fieldSpec.getContainerTypes().get(0).getNativeType().getReadWriteMethodName());
+                                keyContainerType.getNativeType().getReadWriteMethodName());
                     }
                 }
                 builder.addStatement("tag = deserializer.getNextTag()");
 
-                if (isNotNative(fieldSpec.getContainerTypes().get(1).getNativeType())) {
+                if (isNotNative(valueContainerType.getNativeType())) {
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
-                            getClassTypeForObjectMapperHandler(fieldSpec.getContainerTypes().get(1)));
+                            getClassTypeForObjectMapperHandler(valueContainerType, valueJpTypeName));
                     // If we are processing an Object reference, get the MapEntry and use the value
-                    if (isJavaLangObject(fieldSpec.getContainerTypes().get(1).getjPTypeName())) {
+                    if (isJavaLangObject(valueJpTypeName)) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
                     }
                 } else {
-                    if (fieldSpec.getContainerTypes().get(1).getNativeType() == CodeGenSpec.DataType.ENUM) {
+                    if (valueContainerType.getNativeType() == CodeGenSpec.DataType.ENUM) {
                         builder.addStatement("value = $T.values()[deserializer.readEnum()]",
-                                fieldSpec.getContainerTypes().get(1).getjPTypeName());
+                                valueContainerType.getjPTypeName());
                     } else {
                         builder.addStatement("value = deserializer.read$L()",
-                                fieldSpec.getContainerTypes().get(1).getNativeType().getReadWriteMethodName());
+                                valueContainerType.getNativeType().getReadWriteMethodName());
                     }
                 }
+
+                String keyTypecast = "";
+                String valueTypeCast = "";
+                if (keyContainerType.getReferenceType() != null && keyContainerType.getReferenceType().isAbstract()) {
+                    keyTypecast = "(" + keyContainerType.getjPTypeName() + ")";
+                }
+
+                if (valueContainerType.getReferenceType() != null && valueContainerType.getReferenceType().isAbstract()) {
+                    valueTypeCast = "(" + valueContainerType.getjPTypeName() + ")";
+                }
+
                 //object.put(key, value);
-                builder.addStatement("object.put(key, value)");
+                builder.addStatement("object.put($Lkey, $Lvalue)", keyTypecast, valueTypeCast);
             } else {
                 throw new UnsupportedOperationException();
             }

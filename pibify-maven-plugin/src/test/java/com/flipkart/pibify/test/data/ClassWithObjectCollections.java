@@ -41,7 +41,7 @@ public class ClassWithObjectCollections {
     @Pibify(7)
     public List<AbstractClassWithNativeFields> listOfAbstractClass;
 
-    //@Pibify(8)
+    @Pibify(8)
     public Map<AbstractClassWithNativeFields, AbstractClassWithNativeFields> mapOfAbstractValues;
 
     /*
