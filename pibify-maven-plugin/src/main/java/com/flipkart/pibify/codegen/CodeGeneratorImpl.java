@@ -18,12 +18,12 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.flipkart.pibify.codegen.CodeGenUtil.isArray;
@@ -106,7 +106,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         AtomicInteger counter = new AtomicInteger(1);
         Map<String, String> mapOfGenericSignatureToHandlerName = new HashMap<>();
 
-        List<CodeGenSpec> innerClassReferences = new ArrayList<>();
+        Set<CodeGenSpec> innerClassReferences = new HashSet<>();
 
         for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
             if (isCollectionOrMap(fieldSpec.getType().getNativeType())) {

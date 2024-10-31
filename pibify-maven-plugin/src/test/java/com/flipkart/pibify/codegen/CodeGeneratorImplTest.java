@@ -519,15 +519,15 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithInnerClasses testPayload = new ClassWithInnerClasses();
         testPayload.randomize();
 
         ClassWithInnerClasses deserialized = invokeGeneratedCode(javaFile, testPayload);
 
         assertEquals(testPayload.getStr1(), deserialized.getStr1());
-        assertEquals(testPayload.getStaticInnerClass().getStr3(), deserialized.getStaticInnerClass().getStr3());
-        assertEquals(testPayload.getStaticInnerClass().getStaticInnerInnerClass().getStr33(), deserialized.getStaticInnerClass().getStaticInnerInnerClass().getStr33());
+        assertEquals(testPayload.getStaticInnerClass(), deserialized.getStaticInnerClass());
+        assertEquals(testPayload.getStaticInnerClass2(), deserialized.getStaticInnerClass2());
     }
 
 

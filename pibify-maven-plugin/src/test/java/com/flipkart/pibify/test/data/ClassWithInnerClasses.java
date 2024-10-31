@@ -2,6 +2,8 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.Objects;
+
 /**
  * This class is used for
  * Author bageshwar.pn
@@ -15,11 +17,14 @@ public class ClassWithInnerClasses {
     @Pibify(3)
     private StaticInnerClass staticInnerClass;
 
-    public void randomize() {
-        str1 = "str" + Math.random();
+    @Pibify(4)
+    private StaticInnerClass staticInnerClass2;
 
-        staticInnerClass = new StaticInnerClass();
-        staticInnerClass.randomize();
+    public ClassWithInnerClasses randomize() {
+        str1 = "str" + Math.random();
+        staticInnerClass = new StaticInnerClass().randomize();
+        staticInnerClass2 = new StaticInnerClass().randomize();
+        return this;
     }
 
     public String getStr1() {
@@ -36,6 +41,14 @@ public class ClassWithInnerClasses {
 
     public void setStaticInnerClass(StaticInnerClass staticInnerClass) {
         this.staticInnerClass = staticInnerClass;
+    }
+
+    public StaticInnerClass getStaticInnerClass2() {
+        return staticInnerClass2;
+    }
+
+    public void setStaticInnerClass2(StaticInnerClass staticInnerClass2) {
+        this.staticInnerClass2 = staticInnerClass2;
     }
 
     public static class StaticInnerClass {
@@ -61,10 +74,24 @@ public class ClassWithInnerClasses {
             this.staticInnerInnerClass = staticInnerInnerClass;
         }
 
-        public void randomize() {
+        public StaticInnerClass randomize() {
             str3 = "str" + Math.random();
             staticInnerInnerClass = new StaticInnerInnerClass();
             staticInnerInnerClass.str33 = "str" + Math.random();
+            return this;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof StaticInnerClass)) return false;
+            StaticInnerClass that = (StaticInnerClass) o;
+            return Objects.equals(str3, that.str3) && Objects.equals(staticInnerInnerClass, that.staticInnerInnerClass);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(str3, staticInnerInnerClass);
         }
 
         public static class StaticInnerInnerClass {
@@ -77,6 +104,19 @@ public class ClassWithInnerClasses {
 
             public void setStr33(String str33) {
                 this.str33 = str33;
+            }
+
+            @Override
+            public boolean equals(Object o) {
+                if (this == o) return true;
+                if (!(o instanceof StaticInnerInnerClass)) return false;
+                StaticInnerInnerClass that = (StaticInnerInnerClass) o;
+                return Objects.equals(str33, that.str33);
+            }
+
+            @Override
+            public int hashCode() {
+                return Objects.hashCode(str33);
             }
         }
     }

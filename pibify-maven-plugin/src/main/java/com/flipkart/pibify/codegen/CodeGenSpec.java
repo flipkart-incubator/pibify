@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Set;
@@ -81,16 +82,14 @@ public class CodeGenSpec {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof CodeGenSpec)) return false;
         CodeGenSpec that = (CodeGenSpec) o;
-
-        return packageName.equals(that.packageName);
+        return Objects.equals(packageName, that.packageName) && Objects.equals(className, that.className);
     }
 
     @Override
     public int hashCode() {
-        return packageName.hashCode();
+        return Objects.hash(packageName, className);
     }
 
     public enum DataType {
