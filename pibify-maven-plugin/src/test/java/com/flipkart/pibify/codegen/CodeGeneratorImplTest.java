@@ -38,6 +38,7 @@ import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.data.generics.AGenericClass;
 import com.flipkart.pibify.test.data.generics.ClassWithReferenceToGenericClass;
+import com.flipkart.pibify.test.data.generics.GenericClassWithMultipleParameters;
 import com.flipkart.pibify.test.data.generics.GenericMapFields;
 import com.flipkart.pibify.test.data.generics.ListClassLevel1;
 import com.flipkart.pibify.test.data.generics.ListClassLevel2;
@@ -1079,7 +1080,7 @@ public class CodeGeneratorImplTest {
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
 
-        Class[] dependent = new Class[]{AGenericClass.class};
+        Class[] dependent = new Class[]{AGenericClass.class, GenericClassWithMultipleParameters.class};
         SimpleCompiler compiler = SimpleCompiler.INSTANCE;
 
         for (Class clazz : dependent) {
@@ -1094,7 +1095,11 @@ public class CodeGeneratorImplTest {
         testPayload.randomize();
 
         ClassWithReferenceToGenericClass deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
-        assertEquals(testPayload.referenceList, deserialized.referenceList);
         assertEquals(testPayload.reference, deserialized.reference);
+        assertEquals(testPayload.referenceList, deserialized.referenceList);
+        assertEquals(testPayload.aMap, deserialized.aMap);
+        assertEquals(testPayload.multiParamObject, deserialized.multiParamObject);
+        assertEquals(testPayload.multiList, deserialized.multiList);
+        assertEquals(testPayload.multiMap, deserialized.multiMap);
     }
 }

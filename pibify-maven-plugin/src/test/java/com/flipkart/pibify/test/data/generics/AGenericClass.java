@@ -14,6 +14,12 @@ public class AGenericClass<T> {
     @Pibify(1)
     public T value;
 
+    public static <E> AGenericClass<E> randomize(E value) {
+        AGenericClass<E> result = new AGenericClass<>();
+        result.value = value;
+        return result;
+    }
+
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;

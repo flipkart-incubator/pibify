@@ -628,9 +628,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
         if (type.getTypeParameters().length != 0) {
             // the object has type parameters that need to reflect in the jp signature
-            Field field = underProcessing.getReflectedField();
-            Class<?> determinedParameterType = CodeGenUtil.resolveGenericFieldType(field, type);
-            TypeName parameterizedTypeName = ParameterizedTypeName.get(type, determinedParameterType);
+            List<Type> determinedParameterType = CodeGenUtil.resolveTargetTypes(fieldGenericType, type);
+            TypeName parameterizedTypeName = ParameterizedTypeName.get(type, determinedParameterType.toArray(new Type[0]));
             specType.setjPTypeName(parameterizedTypeName);
         } else {
             specType.setjPTypeName(getNativeClassName(specType));

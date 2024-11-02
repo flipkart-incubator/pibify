@@ -2,14 +2,14 @@ package com.flipkart.pibify.test.data.generics;
 
 import com.flipkart.pibify.core.Pibify;
 
-import java.util.TreeMap;
+import java.util.HashMap;
 
 /**
  * This class is used for
  * Author bageshwar.pn
  * Date 12/10/24
  */
-public class MapClassLevel1<K, V> extends TreeMap<K, V> {
+public class MapClassLevel1<K, V> extends HashMap<K, V> {
 
     @Pibify(1)
     private String str;
