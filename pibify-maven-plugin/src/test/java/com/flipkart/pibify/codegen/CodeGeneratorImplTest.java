@@ -36,6 +36,8 @@ import com.flipkart.pibify.test.data.ConcreteClassWithNativeFields;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
+import com.flipkart.pibify.test.data.generics.AGenericClass;
+import com.flipkart.pibify.test.data.generics.ClassWithReferenceToGenericClass;
 import com.flipkart.pibify.test.data.generics.GenericMapFields;
 import com.flipkart.pibify.test.data.generics.ListClassLevel1;
 import com.flipkart.pibify.test.data.generics.ListClassLevel2;
@@ -1064,5 +1066,35 @@ public class CodeGeneratorImplTest {
 
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         assertThrows(CodeGenException.class, () -> impl.generate(codeGenSpec), "Cannot generate handlers for abstract class: com.flipkart.pibify.test.data.AbstractClassWithNativeFields");
+    }
+
+    @Test
+    public void testClassWithReferenceToGenericClass() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithReferenceToGenericClass.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+
+        Class[] dependent = new Class[]{AGenericClass.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            compiler.compile(javaFile1.toJavaFileObject());
+            //javaFile1.writeTo(System.out);
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
+        ClassWithReferenceToGenericClass testPayload = new ClassWithReferenceToGenericClass();
+        testPayload.randomize();
+
+        ClassWithReferenceToGenericClass deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload.referenceList, deserialized.referenceList);
+        assertEquals(testPayload.reference, deserialized.reference);
     }
 }

@@ -495,20 +495,15 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         specType.setjPTypeName(jpTypeName);
     }
 
-    private void typeForObjectType(Type fieldGenericType, Class<?> type, CodeGenSpec.Type specType) throws CodeGenException {
-        specType.setNativeType(CodeGenSpec.DataType.OBJECT);
-        // release the object, since it's not needed
-        specType.setContainerTypes(null);
-        if (fieldGenericType instanceof TypeVariable) {
-            // if this is generic type reference, try and extract its actual type
-            Field field = underProcessing.getReflectedField();
-            Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
-            specType.setReferenceType(create(determinedType));
+    private static ClassName getNativeClassName(CodeGenSpec.Type specType) {
+        // if specType is native, get the auto-boxed class, else get the class from reference
+        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT
+                || specType.getNativeType() == CodeGenSpec.DataType.ENUM) {
+            // return pre-computed value
+            return specType.getReferenceType().getJpClassName();
         } else {
-            specType.setReferenceType(create(type));
+            return ClassName.get(specType.getNativeType().getAutoboxedClass());
         }
-
-        specType.setjPTypeName(getNativeClassName(specType));
     }
 
     private CodeGenSpec.DataType getNativeArrayType(Class<?> arrayType) {
@@ -609,13 +604,36 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         return type;
     }
 
-    private ClassName getNativeClassName(CodeGenSpec.Type specType) {
+    private static ClassName getNativeClassName(CodeGenSpec.Type specType, Field field) {
         // if specType is native, get the auto-boxed class, else get the class from reference
-        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT
-                || specType.getNativeType() == CodeGenSpec.DataType.ENUM) {
-            return ClassName.get(specType.getReferenceType().getPackageName(), specType.getReferenceType().getClassName());
+        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+            return ClassName.get(field.getType());
         } else {
             return ClassName.get(specType.getNativeType().getAutoboxedClass());
+        }
+    }
+
+    private void typeForObjectType(Type fieldGenericType, Class<?> type, CodeGenSpec.Type specType) throws CodeGenException {
+        specType.setNativeType(CodeGenSpec.DataType.OBJECT);
+        // release the object, since it's not needed
+        specType.setContainerTypes(null);
+        if (fieldGenericType instanceof TypeVariable) {
+            // if this is generic type reference, try and extract its actual type
+            Field field = underProcessing.getReflectedField();
+            Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
+            specType.setReferenceType(create(determinedType));
+        } else {
+            specType.setReferenceType(create(type));
+        }
+
+        if (type.getTypeParameters().length != 0) {
+            // the object has type parameters that need to reflect in the jp signature
+            Field field = underProcessing.getReflectedField();
+            Class<?> determinedParameterType = CodeGenUtil.resolveGenericFieldType(field, type);
+            TypeName parameterizedTypeName = ParameterizedTypeName.get(type, determinedParameterType);
+            specType.setjPTypeName(parameterizedTypeName);
+        } else {
+            specType.setjPTypeName(getNativeClassName(specType));
         }
     }
 }

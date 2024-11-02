@@ -294,7 +294,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private static ClassName getAbstractOrConcreteJPClassName(CodeGenSpec codeGenSpec) {
-        return codeGenSpec.isAbstract() ? ClassName.OBJECT : codeGenSpec.getJpClassName();
+        return (codeGenSpec == null || codeGenSpec.isAbstract())
+                ? ClassName.OBJECT
+                : codeGenSpec.getJpClassName();
     }
 
     private static TypeName getAbstractOrConcreteJPTypeName(CodeGenSpec.Type containerType) {
@@ -359,7 +361,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 if (isNotNative(containerType.getNativeType())) {
                     //value = refHandler.deserialize(deserializer.readObjectAsBytes(), Class.class);
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
-                            getClassTypeForObjectMapperHandler(containerType, jpTypeName));
+                            getClassTypeForObjectMapperHandler(containerType, getAbstractOrConcreteJPClassName(containerType.getReferenceType())));
+                    //getClassTypeForObjectMapperHandler(containerType, jpTypeName));
 
                     // If we are processing an Object reference, get the MapEntry and use the value
                     if (isJavaLangObject(jpTypeName)) {
@@ -396,7 +399,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 if (isNotNative(keyContainerType.getNativeType())) {
                     builder.addStatement("key = keyHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
-                            getClassTypeForObjectMapperHandler(keyContainerType, keyJpTypeName));
+                            getClassTypeForObjectMapperHandler(keyContainerType, getAbstractOrConcreteJPClassName(keyContainerType.getReferenceType())));
                     // If we are processing an Object reference, get the MapEntry and use the value
                     if (isJavaLangObject(keyJpTypeName)) {
                         builder.addStatement("key = ((Map.Entry<String,Object>)(key)).getValue()");
@@ -414,7 +417,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 if (isNotNative(valueContainerType.getNativeType())) {
                     builder.addStatement("value = valueHandler.deserialize(deserializer.readObjectAsBytes(), $L)",
-                            getClassTypeForObjectMapperHandler(valueContainerType, valueJpTypeName));
+                            getClassTypeForObjectMapperHandler(valueContainerType, getAbstractOrConcreteJPClassName(valueContainerType.getReferenceType())));
                     // If we are processing an Object reference, get the MapEntry and use the value
                     if (isJavaLangObject(valueJpTypeName)) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");

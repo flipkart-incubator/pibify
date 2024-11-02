@@ -3,6 +3,7 @@ package com.flipkart.pibify.codegen;
 import com.flipkart.pibify.core.Pibify;
 import com.squareup.javapoet.TypeName;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -143,6 +144,60 @@ public class CodeGenUtil {
         } else {
             throw new UnsupportedOperationException();
         }
+    }
+
+    /**
+     * Resolves the concrete `type` of a generic field in a class, given the context of how it's used in another class.
+     *
+     * @param containingClass    The class that contains the reference (e.g., ClassWithReferenceToGenericClass)
+     * @param referenceFieldName The field name in the containing class (e.g., "referenceList")
+     * @param targetClass        The generic class whose type we want to resolve (e.g., AGenericClass)
+     * @param targetFieldName    The field in the generic class whose type we want to determine (e.g., "value")
+     * @return The resolved concrete type of the target field
+     */
+    public static Class<?> resolveGenericFieldType(Field referenceField, Class<?> targetClass) throws CodeGenException {
+        try {
+            // Get the field from the containing class
+            //Field referenceField = containingClass.getField(referenceFieldName);
+            Type genericFieldType = referenceField.getGenericType();
+
+            // Navigate through the type hierarchy to find the target class's type parameter
+            Type resolvedType = resolveTargetType(genericFieldType, targetClass);
+
+            if (resolvedType instanceof Class) {
+                return (Class<?>) resolvedType;
+            } else {
+                throw new CodeGenException("Could not resolve to a concrete type: " + resolvedType);
+            }
+
+        } catch (Exception e) {
+            throw new CodeGenException("Failed to resolve generic type", e);
+        }
+    }
+
+    /**
+     * Recursively resolves the target type by navigating through the type hierarchy.
+     */
+    private static Type resolveTargetType(Type type, Class<?> targetClass) {
+        if (type instanceof ParameterizedType) {
+            ParameterizedType paramType = (ParameterizedType) type;
+            Type rawType = paramType.getRawType();
+
+            // If we found our target class, return its type argument
+            if (rawType.equals(targetClass)) {
+                return paramType.getActualTypeArguments()[0];
+            }
+
+            // If it's a nested generic type (like List<AGenericClass<String>>), recurse into it
+            for (Type typeArg : paramType.getActualTypeArguments()) {
+                Type resolved = resolveTargetType(typeArg, targetClass);
+                if (resolved != null) {
+                    return resolved;
+                }
+            }
+        }
+        // Handle arrays, wildcards, and other type scenarios if needed
+        return Object.class;
     }
 
     // Credits to https://stackoverflow.com/a/19363555
