@@ -4,6 +4,7 @@ import com.flipkart.pibify.codegen.log.SpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.core.PibifyConfiguration;
+import com.flipkart.pibify.test.data.AbstractClassWithNativeFields;
 import com.flipkart.pibify.test.data.ClassForNestedReferenceList;
 import com.flipkart.pibify.test.data.ClassForTestingNullValues;
 import com.flipkart.pibify.test.data.ClassHierarchy2A;
@@ -69,6 +70,7 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("all")
@@ -1050,5 +1052,17 @@ public class CodeGeneratorImplTest {
         ClassWithJsonCreator deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.getBigDecimal(), deserialized.getBigDecimal());*/
+    }
+
+    @Test
+    public void testAbstractClassWithNativeFields() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator(null, new JsonCreatorFactory());
+        CodeGenSpec codeGenSpec = creator.create(AbstractClassWithNativeFields.class);
+        assertNotNull(codeGenSpec);
+        List<SpecGenLog> logsForCurrentEntity = creator.getLogsForCurrentEntity().stream().collect(Collectors.toList());
+        assertTrue(logsForCurrentEntity.isEmpty());
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        assertThrows(CodeGenException.class, () -> impl.generate(codeGenSpec), "Cannot generate handlers for abstract class: com.flipkart.pibify.test.data.AbstractClassWithNativeFields");
     }
 }

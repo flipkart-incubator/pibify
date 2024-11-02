@@ -46,12 +46,24 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         this.handlerCacheClassName = handlerCacheClassName + ".getInstance().getHandler";
     }
 
-    @Override
-    public JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
-
+    private static void validate(CodeGenSpec codeGenSpec) throws CodeGenException {
         if (codeGenSpec.getFields().isEmpty()) {
             throw new CodeGenException(codeGenSpec.getPackageName() + "." + codeGenSpec.getClassName() + " does not contain any pibify fields");
         }
+
+        /*
+         * Not generating handlers for abstract classes because we cannot create instances of those classes.
+         * The subclasses of such abstract classes will take care of super class fields
+         */
+        if (codeGenSpec.isAbstract()) {
+            throw new CodeGenException("Cannot generate handlers for abstract class: " + codeGenSpec.getJpClassName());
+        }
+    }
+
+    @Override
+    public JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
+
+        validate(codeGenSpec);
 
         TypeSpec.Builder typeSpecBuilder = getTypeSpecBuilder(codeGenSpec);
         typeSpecBuilder.addModifiers(Modifier.PUBLIC, Modifier.FINAL);
