@@ -37,6 +37,7 @@ import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.data.generics.AGenericClass;
+import com.flipkart.pibify.test.data.generics.ATertiaryGenericClass;
 import com.flipkart.pibify.test.data.generics.ClassWithReferenceToGenericClass;
 import com.flipkart.pibify.test.data.generics.GenericClassWithMultipleParameters;
 import com.flipkart.pibify.test.data.generics.GenericMapFields;
@@ -1080,13 +1081,13 @@ public class CodeGeneratorImplTest {
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
 
-        Class[] dependent = new Class[]{AGenericClass.class, GenericClassWithMultipleParameters.class};
+        Class[] dependent = new Class[]{AGenericClass.class, ATertiaryGenericClass.class, GenericClassWithMultipleParameters.class};
         SimpleCompiler compiler = SimpleCompiler.INSTANCE;
 
         for (Class clazz : dependent) {
             JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(false));
             compiler.compile(javaFile1.toJavaFileObject());
-            //javaFile1.writeTo(System.out);
             Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
             assertNotNull(handlerClazz);
         }
@@ -1101,5 +1102,7 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.multiParamObject, deserialized.multiParamObject);
         assertEquals(testPayload.multiList, deserialized.multiList);
         assertEquals(testPayload.multiMap, deserialized.multiMap);
+        assertEquals(testPayload.tertiary, deserialized.tertiary);
+        assertEquals(testPayload.tertiaryList, deserialized.tertiaryList);
     }
 }

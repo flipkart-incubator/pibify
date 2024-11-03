@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * This class is used for holding common util methods
@@ -158,7 +159,9 @@ public class CodeGenUtil {
 
             // If we found our target class, return all its type arguments
             if (rawType.equals(targetClass)) {
-                return Arrays.asList(paramType.getActualTypeArguments());
+                return Arrays.stream(paramType.getActualTypeArguments())
+                        .filter(t -> !(t instanceof TypeVariable)) /*Type variables are unresolvable*/
+                        .collect(Collectors.toList());
             }
 
             // Search in nested types

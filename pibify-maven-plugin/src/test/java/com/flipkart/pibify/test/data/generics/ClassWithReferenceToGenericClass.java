@@ -36,6 +36,12 @@ public class ClassWithReferenceToGenericClass {
             GenericClassWithMultipleParameters<BigDecimal, String, AGenericClass<Double>>
             > multiMap;
 
+    @Pibify(7)
+    public ATertiaryGenericClass<Double> tertiary;
+
+    @Pibify(8)
+    public List<ATertiaryGenericClass<BigDecimal>> tertiaryList;
+
     public void randomize() {
         reference = AGenericClass.randomize("str" + Math.random());
 
@@ -67,6 +73,20 @@ public class ClassWithReferenceToGenericClass {
                 GenericClassWithMultipleParameters.randomize(BigDecimal.valueOf(Math.random()), "str" + Math.random(), AGenericClass.randomize(Math.random())));
         multiMap.put(GenericClassWithMultipleParameters.randomize("str" + Math.random(), BigDecimal.valueOf(Math.random()), AGenericClass.randomize("str" + Math.random())),
                 GenericClassWithMultipleParameters.randomize(BigDecimal.valueOf(Math.random()), "str" + Math.random(), AGenericClass.randomize(Math.random())));
+
+        tertiary = new ATertiaryGenericClass<>();
+        tertiary.randomize(Math.random(), Math.random(), Math.random());
+        tertiaryList = new ArrayList<>();
+
+        ATertiaryGenericClass<BigDecimal> temp = new ATertiaryGenericClass<>();
+        temp.randomize(BigDecimal.valueOf(Math.random()), BigDecimal.valueOf(Math.random()), BigDecimal.valueOf(Math.random()));
+        tertiaryList.add(temp);
+        temp = new ATertiaryGenericClass<>();
+        temp.randomize(BigDecimal.valueOf(Math.random()), BigDecimal.valueOf(Math.random()), BigDecimal.valueOf(Math.random()));
+        tertiaryList.add(temp);
+        temp = new ATertiaryGenericClass<>();
+        temp.randomize(BigDecimal.valueOf(Math.random()), BigDecimal.valueOf(Math.random()), BigDecimal.valueOf(Math.random()));
+        tertiaryList.add(temp);
 
     }
 }
