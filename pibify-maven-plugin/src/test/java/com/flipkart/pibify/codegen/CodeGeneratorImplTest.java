@@ -52,6 +52,7 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel3;
 import com.flipkart.pibify.test.data.generics.MapClassLevel4;
 import com.flipkart.pibify.test.data.generics.MapClassLevel5;
 import com.flipkart.pibify.test.data.generics.MapClassLevel6;
+import com.flipkart.pibify.test.data.generics.TertiaryGenericClassForList;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
@@ -298,7 +299,14 @@ public class CodeGeneratorImplTest {
 
         SimpleCompiler compiler = new SimpleCompiler();
         // load dependent class upfront
-        Class[] dependent = new Class[]{ClassWithNativeFields.class, ClassWithAutoboxFields.class, AnotherClassWithNativeFields.class, ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
+        Class[] dependent = new Class[]{
+                ClassWithNativeFields.class,
+                ClassWithAutoboxFields.class,
+                AnotherClassWithNativeFields.class,
+                ConcreteClassWithNativeFields.class,
+                ConcreteClassBWithNativeFields.class,
+                TertiaryGenericClassForList.class
+        };
 
         for (Class clazz : dependent) {
             compiler.compile(impl.generate(creator.create(clazz)).getJavaFile().toJavaFileObject());
@@ -315,6 +323,7 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.getBigDecimalMap(), deserialized.getBigDecimalMap());
         assertEquals(testPayload.listOfAbstractClass, deserialized.listOfAbstractClass);
         assertEquals(testPayload.mapOfAbstractValues, deserialized.mapOfAbstractValues);
+        assertEquals(testPayload.tertiaryGenericList, deserialized.tertiaryGenericList);
     }
 
     @Test

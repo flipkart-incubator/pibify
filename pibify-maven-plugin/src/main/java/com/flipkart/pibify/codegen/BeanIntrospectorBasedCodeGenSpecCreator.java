@@ -338,11 +338,6 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         return getTypeFromJavaType(fieldName, fieldGenericType, type, false);
     }
 
-    @Override
-    public CodeGenSpec create(Class<?> type) throws CodeGenException {
-        return create(type, null);
-    }
-
     private void setJavaPoetMetaObjects(Class<?> type, CodeGenSpec.Type specType, ClassName interfaceClass,
                                         ClassName defaultImplementationType, Type fieldGenericType, TypeName... parameterizedTypeParams) {
         TypeName jpTypeName;
@@ -375,17 +370,14 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         specType.setjPTypeName(jpTypeName);
     }
 
-    private CodeGenSpec create(Class<?> type, Field reflectedField) throws CodeGenException {
+    @Override
+    public CodeGenSpec create(Class<?> type) throws CodeGenException {
 
         try {
             if (underProcessing != null) {
                 stackOfUnderProcessing.push(underProcessing);
             }
             underProcessing = new EntityUnderProcessing(type);
-            // This is helpful when we are recursively calling create, to preserve the field signature
-            // to help with resolving generic parameters.
-            underProcessing.setReflectedField(reflectedField);
-
             // cannot use computeIfAbsent because of checked exception being thrown
             if (!cache.containsKey(type)) {
                 CodeGenSpec codeGenSpec = createImpl(type);
@@ -502,9 +494,9 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                         // if this is generic type reference, try and extract its actual type
                         Field field = underProcessing.getReflectedField();
                         Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
-                        specType.setReferenceType(create(determinedType, underProcessing.getReflectedField()));
+                        specType.setReferenceType(create(determinedType));
                     } else {
-                        specType.setReferenceType(create(type, underProcessing.getReflectedField()));
+                        specType.setReferenceType(create(type));
                     }
                 }
 

@@ -2,6 +2,7 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
+import com.flipkart.pibify.test.data.generics.TertiaryGenericClassForList;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -44,6 +45,9 @@ public class ClassWithObjectCollections {
     @Pibify(8)
     public Map<AbstractClassWithNativeFields, AbstractClassWithNativeFields> mapOfAbstractValues;
 
+    @Pibify(9)
+    public TertiaryGenericClassForList<String> tertiaryGenericList;
+
     /*
     @Pibify(4)
     private Collection<?> aCollection;
@@ -74,6 +78,9 @@ public class ClassWithObjectCollections {
         mapOfAbstractValues.put(new ConcreteClassWithNativeFields().randomize(), new ConcreteClassBWithNativeFields().randomize());
         mapOfAbstractValues.put(new ConcreteClassWithNativeFields().randomize(), new ConcreteClassBWithNativeFields().randomize());
         mapOfAbstractValues.put(new ConcreteClassWithNativeFields().randomize(), new ConcreteClassBWithNativeFields().randomize());
+
+        tertiaryGenericList = new TertiaryGenericClassForList<>();
+        tertiaryGenericList.randomize(Math.random() + "", Math.random() + "", Math.random() + "");
     }
 
     public List<ClassWithNativeFields> getNativeFields() {
