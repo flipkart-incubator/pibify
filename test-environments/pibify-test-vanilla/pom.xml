@@ -29,6 +29,13 @@
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-maven-plugin</artifactId>
             <version>1.0-SNAPSHOT</version>
+            <configuration>
+                <excludes>
+                    <exclude>com/flipkart/pibify/toskip/**</exclude>
+                    <exclude>com/flipkart/pibify/toskip2/**</exclude>
+                    <exclude>com/flipkart/pibify/toscan/ClassToSkip.java</exclude>
+                </excludes>
+            </configuration>
             <executions>
                 <execution>
                     <id>generate-sources</id>

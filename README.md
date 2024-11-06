@@ -64,6 +64,12 @@ This is the class that the clients use to get an instance of Handler for the sup
 <plugin>
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-maven-plugin</artifactId>
+   <configuration>
+      <excludes>
+         <exclude>com/flipkart/pibify/toskip/**</exclude>
+         <exclude>com/flipkart/pibify/toskip2/**</exclude>
+      </excludes>
+   </configuration>
     <executions>
         <execution>
             <id>generate-sources</id>
@@ -97,7 +103,8 @@ This is the class that the clients use to get an instance of Handler for the sup
 
 3. Either manually tag fields with the `@Pibify` annotation or run the mvn goal
    `mvn com.flipkart.pibify:pibify-maven-plugin:annotate` to scan through all pojos in the module and add the `@Pibify`
-   annotation
+   annotation. Make use of the `exclude` config. Refer
+   to [docs](https://maven.apache.org/plugins/maven-resources-plugin/examples/include-exclude.html) for more details.
 4. As part of the `package` mvn goal, the handler code will be generated
 
 # Integration with application containers

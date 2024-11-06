@@ -15,14 +15,16 @@ import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
+import org.codehaus.plexus.util.DirectoryScanner;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Stream;
 
 /**
  * This class is used for adding the pibify annotation on the configured source
@@ -37,6 +39,9 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
     private static final String JSON_IGNORE = "JsonIgnore";
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
+
+    @Parameter()
+    private List<String> excludes;
 
     public PibifyAddAnnotationMojo() {
         super.setLog(new PrefixLog(new SystemStreamLog(), "[Pibify] "));
@@ -62,17 +67,23 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        processDirectory(project.getCompileSourceRoots().get(0).toString());
+        processDirectory(project.getCompileSourceRoots().get(0));
     }
 
     private void processDirectory(String directoryPath) {
         getLog().debug("Starting to process directory: " + directoryPath);
-        try (Stream<Path> paths = Files.walk(Paths.get(directoryPath))) {
-            paths.filter(Files::isRegularFile)
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .forEach(this::processFile);
-        } catch (IOException e) {
-            getLog().error("Error walking through directory: " + directoryPath, e);
+
+        DirectoryScanner scanner = new DirectoryScanner();
+        scanner.setBasedir(directoryPath);
+        String[] excludePatterns = excludes.toArray(new String[0]);
+        scanner.setExcludes(excludePatterns);
+        scanner.addDefaultExcludes();
+        scanner.scan();
+
+        getLog().info("Excluded files: " + Arrays.asList(scanner.getExcludedFiles()));
+
+        for (String path : scanner.getIncludedFiles()) {
+            processFile(Paths.get(directoryPath, path));
         }
         getLog().info("Finished processing directory: " + directoryPath);
     }
