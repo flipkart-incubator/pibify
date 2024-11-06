@@ -3,7 +3,8 @@ package com.flipkart.pibify.test.data;
 import com.flipkart.pibify.core.Pibify;
 
 import java.util.HashMap;
-import java.util.Objects;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
 
 /**
  * This class is used for
@@ -12,34 +13,29 @@ import java.util.Objects;
  */
 public class ClassWithMapReference {
 
+    @Pibify(2)
+    public Object treeMapReference;
+    @Pibify(3)
+    public Object linkedHashMapReference;
     @Pibify(1)
-    Object collectionReference;
+    Object hashMapReference;
 
     public void randomize() {
         HashMap<Object, Object> map = new HashMap<>();
         map.put(Math.random() * 10, "str" + Math.random() * 10);
-        collectionReference = map;
+        map.put(Math.random() * 10, "str" + Math.random() * 10);
+        map.put(Math.random() * 10, "str" + Math.random() * 10);
+        hashMapReference = map;
+
+        treeMapReference = new TreeMap<>(map);
+        linkedHashMapReference = new LinkedHashMap<>(map);
     }
 
-    public Object getCollectionReference() {
-        return collectionReference;
+    public Object getHashMapReference() {
+        return hashMapReference;
     }
 
-    public void setCollectionReference(Object collectionReference) {
-        this.collectionReference = collectionReference;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ClassWithMapReference that = (ClassWithMapReference) o;
-        return Objects.equals(collectionReference, that.collectionReference);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(collectionReference);
+    public void setHashMapReference(Object hashMapReference) {
+        this.hashMapReference = hashMapReference;
     }
 }

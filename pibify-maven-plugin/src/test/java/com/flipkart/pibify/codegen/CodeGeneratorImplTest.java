@@ -38,6 +38,7 @@ import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.data.generics.AGenericClass;
 import com.flipkart.pibify.test.data.generics.ATertiaryGenericClass;
+import com.flipkart.pibify.test.data.generics.AnotherTertiaryGenericClass;
 import com.flipkart.pibify.test.data.generics.ClassWithReferenceToGenericClass;
 import com.flipkart.pibify.test.data.generics.GenericClassWithMultipleParameters;
 import com.flipkart.pibify.test.data.generics.GenericMapFields;
@@ -54,6 +55,7 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel6;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
+import com.google.common.collect.Iterables;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -64,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.LogManager;
 import java.util.stream.Collectors;
@@ -75,7 +78,6 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.fail;
 
 @SuppressWarnings("all")
 public class CodeGeneratorImplTest {
@@ -580,7 +582,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
         ClassWithUnresolvedGenericType<Double> testPayload = new ClassWithUnresolvedGenericType<>();
         testPayload.randomize(Math.random());
 
@@ -634,7 +636,6 @@ public class CodeGeneratorImplTest {
 
     @Test
     public void testClassWithCollectionReference() throws Exception {
-        PibifyObjectHandler.forTest = true;
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithCollectionReference.class);
 
@@ -645,35 +646,40 @@ public class CodeGeneratorImplTest {
         ClassWithCollectionReference testPayload = new ClassWithCollectionReference();
         testPayload.randomize();
 
-        try {
-            invokeGeneratedCode(javaFile, testPayload);
-            fail();
-        } catch (Exception e) {
-            assertEquals("com.flipkart.pibify.codegen.PibifyCodeExecException: java.lang.UnsupportedOperationException: Arrays, maps and collections not supported on object references",
-                    e.getCause().getMessage());
-        }
+        ClassWithCollectionReference deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.arrayListReference, deserialized.arrayListReference);
+        assertEquals(testPayload.stackReference, deserialized.stackReference);
+        assertTrue(Iterables.elementsEqual((Iterable<?>) testPayload.queueReference, (Iterable<?>) deserialized.queueReference));
+        assertEquals(testPayload.vectorReference, deserialized.vectorReference);
+        assertEquals(testPayload.hashSetReference, deserialized.hashSetReference);
+        assertEquals(testPayload.treeSetReference, deserialized.treeSetReference);
+        assertEquals(testPayload.linkedHashSetReference, deserialized.linkedHashSetReference);
     }
 
     @Test
     public void testClassWithMapReference() throws Exception {
-        PibifyObjectHandler.forTest = true;
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithMapReference.class);
 
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithMapReference testPayload = new ClassWithMapReference();
         testPayload.randomize();
 
-        try {
-            invokeGeneratedCode(javaFile, testPayload);
-            fail();
-        } catch (Exception e) {
-            assertEquals("com.flipkart.pibify.codegen.PibifyCodeExecException: java.lang.UnsupportedOperationException: Arrays, maps and collections not supported on object references",
-                    e.getCause().getMessage());
-        }
+        ClassWithMapReference deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getHashMapReference(), deserialized.getHashMapReference());
+
+        assertTrue(Iterables.elementsEqual(((Map) testPayload.treeMapReference).keySet(),
+                ((Map) deserialized.treeMapReference).keySet()));
+        assertTrue(Iterables.elementsEqual(((Map) testPayload.treeMapReference).values(),
+                ((Map) deserialized.treeMapReference).values()));
+
+        assertTrue(Iterables.elementsEqual(((Map) testPayload.linkedHashMapReference).keySet(),
+                ((Map) deserialized.linkedHashMapReference).keySet()));
+        assertTrue(Iterables.elementsEqual(((Map) testPayload.linkedHashMapReference).values(),
+                ((Map) deserialized.linkedHashMapReference).values()));
     }
 
     @Test
@@ -980,17 +986,17 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         GenericMapFields testPayload = new GenericMapFields();
         testPayload.randomize();
 
-        Class[] dependent = new Class[]{MapClassLevel3.class, MapClassLevel2.class};
+        Class[] dependent = new Class[]{MapClassLevel3.class, MapClassLevel2.class, AnotherTertiaryGenericClass.class};
         SimpleCompiler compiler = SimpleCompiler.INSTANCE;
 
         for (Class clazz : dependent) {
             JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
             compiler.compile(javaFile1.toJavaFileObject());
-            //javaFile1.writeTo(System.out);
             Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
             assertNotNull(handlerClazz);
         }
@@ -1006,6 +1012,7 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.inheritedHashMap, deserialized.inheritedHashMap);
         assertEquals(testPayload.inheritedSet, deserialized.inheritedSet);
         assertEquals(testPayload.inheritedMap2, deserialized.inheritedMap2);
+        assertEquals(testPayload.l7MapOfReferences, deserialized.l7MapOfReferences);
 
         assertEquals(testPayload.bigDecimalToString.getStr(), deserialized.bigDecimalToString.getStr());
         assertEquals(testPayload.doubleToString.getStr(), deserialized.doubleToString.getStr());

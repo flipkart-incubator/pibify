@@ -10,8 +10,6 @@ import com.flipkart.pibify.serde.PibifySerializer;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.AbstractMap;
-import java.util.Collection;
-import java.util.Map;
 
 /**
  * This class is used for handling Object references. Since we don't have enough reflected information in some cases,
@@ -32,7 +30,6 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
         this.pibifyHandlerCache = pibifyHandlerCache;
     }
 
-
     private PibifyGenerated<?> getRefClassForTest(String refType, Class<?> objectClass) throws Exception {
 
         if (forTest) {
@@ -49,12 +46,6 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
         }
     }
 
-    private boolean isUnsupportedCase(Class<?> objectClass) {
-        return objectClass.isArray()
-                || Collection.class.isAssignableFrom(objectClass)
-                || Map.class.isAssignableFrom(objectClass);
-    }
-
     @Override
     public byte[] serialize(Object object) throws PibifyCodeExecException {
         ISerializer serializer = new PibifySerializer();
@@ -63,10 +54,6 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
             Class<?> objectClass = object.getClass();
             String refType = objectClass.getName();
             serializer.writeString(1, refType);
-
-            if (isUnsupportedCase(objectClass)) {
-                throw new UnsupportedOperationException("Arrays, maps and collections not supported on object references");
-            }
 
             if (objectClass.equals(String.class)) {
                 serializer.writeString(2, (String) object);
@@ -120,10 +107,6 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
                         }
 
                         Class<?> objectClass = Class.forName(refType);
-
-                        if (isUnsupportedCase(objectClass)) {
-                            throw new UnsupportedOperationException("Arrays, maps and collections not supported on object references");
-                        }
 
                         if (objectClass.equals(String.class)) {
                             object = deserializer.readString();

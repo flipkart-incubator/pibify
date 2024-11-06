@@ -66,37 +66,23 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         this(null);
     }
 
-    @Override
-    public CodeGenSpec create(Class<?> type) throws CodeGenException {
+    private static ClassName getNativeClassName(CodeGenSpec.Type specType) {
+        // if specType is native, get the auto-boxed class, else get the class from reference
+        if (specType.getNativeType() == com.flipkart.pibify.codegen.CodeGenSpec.DataType.OBJECT
+                || specType.getNativeType() == com.flipkart.pibify.codegen.CodeGenSpec.DataType.ENUM) {
+            // return pre-computed value
+            return specType.getReferenceType().getJpClassName();
+        } else {
+            return ClassName.get(specType.getNativeType().getAutoboxedClass());
+        }
+    }
 
-        try {
-            if (underProcessing != null) {
-                stackOfUnderProcessing.push(underProcessing);
-            }
-            underProcessing = new EntityUnderProcessing(type);
-
-            // cannot use computeIfAbsent because of checked exception being thrown
-            if (!cache.containsKey(type)) {
-                CodeGenSpec codeGenSpec = createImpl(type);
-                handleSuperTypes(codeGenSpec, type);
-                handleCollectionOrMap(codeGenSpec, type);
-
-                for (ThirdPartyProcessor thirdPartyProcessor : thirdPartyProcessors) {
-                    ThirdPartyProcessorResult processorResult = thirdPartyProcessor.process(codeGenSpec, type);
-                    if (processorResult.getData().isPresent()) {
-                        codeGenSpec.addThirdPartyData(thirdPartyProcessor.getId(), processorResult.getData().get());
-                    }
-
-                    processorResult.getLogs().forEach(this::log);
-                }
-                cache.put(type, codeGenSpec);
-            }
-
-            return cache.get(type);
-        } finally {
-            if (!stackOfUnderProcessing.empty()) {
-                underProcessing = stackOfUnderProcessing.pop();
-            }
+    private static ClassName getNativeClassName(CodeGenSpec.Type specType, Field field) {
+        // if specType is native, get the auto-boxed class, else get the class from reference
+        if (specType.getNativeType() == com.flipkart.pibify.codegen.CodeGenSpec.DataType.OBJECT) {
+            return ClassName.get(field.getType());
+        } else {
+            return ClassName.get(specType.getNativeType().getAutoboxedClass());
         }
     }
 
@@ -352,6 +338,106 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         return getTypeFromJavaType(fieldName, fieldGenericType, type, false);
     }
 
+    @Override
+    public CodeGenSpec create(Class<?> type) throws CodeGenException {
+        return create(type, null);
+    }
+
+    private void setJavaPoetMetaObjects(Class<?> type, CodeGenSpec.Type specType, ClassName interfaceClass,
+                                        ClassName defaultImplementationType, Type fieldGenericType, TypeName... parameterizedTypeParams) {
+        TypeName jpTypeName;
+        if (specType.getReferenceType() != null) {
+            if (type.getTypeParameters().length != 0) {
+                // since jpTypes are used to create field/method signatures
+                // picking the type params of containers from the fieldGenericType of the reference.
+                TypeName[] types = Arrays.stream(((ParameterizedType) fieldGenericType).getActualTypeArguments()).map(TypeName::get).toArray(TypeName[]::new);
+                jpTypeName = ParameterizedTypeName.get(specType.getReferenceType().getJpClassName(), types);
+            } else {
+                jpTypeName = specType.getReferenceType().getJpClassName();
+            }
+
+            // if there is a different reference type for this collection
+            // use that to create new instances if possible
+            if (specType.getReferenceType().isAbstract()) {
+                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Abstract subclasses of Collection not supported"));
+                // Still go ahead and set dummy implementation
+                specType.setNewInstanceType(defaultImplementationType);
+            } else {
+                specType.setNewInstanceType(specType.getReferenceType().getJpClassName());
+            }
+        } else {
+            jpTypeName = ParameterizedTypeName.get(interfaceClass, parameterizedTypeParams);
+            // If we don't have a different reference type, use the default implementation types of collections.
+            // i.e. if reference type is a List/Set etc., use new ArrayList() or new HashSet() when creating instances.
+            specType.setNewInstanceType(defaultImplementationType);
+        }
+
+        specType.setjPTypeName(jpTypeName);
+    }
+
+    private CodeGenSpec create(Class<?> type, Field reflectedField) throws CodeGenException {
+
+        try {
+            if (underProcessing != null) {
+                stackOfUnderProcessing.push(underProcessing);
+            }
+            underProcessing = new EntityUnderProcessing(type);
+            // This is helpful when we are recursively calling create, to preserve the field signature
+            // to help with resolving generic parameters.
+            underProcessing.setReflectedField(reflectedField);
+
+            // cannot use computeIfAbsent because of checked exception being thrown
+            if (!cache.containsKey(type)) {
+                CodeGenSpec codeGenSpec = createImpl(type);
+                handleSuperTypes(codeGenSpec, type);
+                handleCollectionOrMap(codeGenSpec, type);
+
+                for (ThirdPartyProcessor thirdPartyProcessor : thirdPartyProcessors) {
+                    ThirdPartyProcessorResult processorResult = thirdPartyProcessor.process(codeGenSpec, type);
+                    if (processorResult.getData().isPresent()) {
+                        codeGenSpec.addThirdPartyData(thirdPartyProcessor.getId(), processorResult.getData().get());
+                    }
+
+                    processorResult.getLogs().forEach(this::log);
+                }
+                cache.put(type, codeGenSpec);
+            }
+
+            return cache.get(type);
+        } finally {
+            if (!stackOfUnderProcessing.empty()) {
+                underProcessing = stackOfUnderProcessing.pop();
+            }
+        }
+    }
+
+    private CodeGenSpec.DataType getNativeArrayType(Class<?> arrayType) {
+        if (byte.class.equals(arrayType)) {
+            return CodeGenSpec.DataType.BYTE_ARRAY;
+        } else {
+            return CodeGenSpec.DataType.ARRAY;
+        }
+    }
+
+    private CodeGenSpec.CollectionType getCollectionType(Class<?> type) {
+        if (List.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.LIST;
+        } else if (Set.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.SET;
+        } else if (Queue.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.QUEUE;
+        } else if (Deque.class.isAssignableFrom(type)) {
+            return CodeGenSpec.CollectionType.DEQUE;
+        } else {
+            // Default collections to List!
+            return CodeGenSpec.CollectionType.LIST;
+        }
+    }
+
+    private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type) throws CodeGenException {
+        return getContainerType(fieldName, fieldGenericType, type, 0);
+    }
+
     private CodeGenSpec.Type getTypeFromJavaType(String fieldName, Type fieldGenericType, Class<?> type, boolean noPibify) throws CodeGenException {
         CodeGenSpec.Type specType = new CodeGenSpec.Type();
         CodeGenSpec.DataType nativeType = CodeSpecMeta.CLASS_TO_TYPE_MAP.get(type);
@@ -416,9 +502,9 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                         // if this is generic type reference, try and extract its actual type
                         Field field = underProcessing.getReflectedField();
                         Class<?> determinedType = CodeGenUtil.determineType(field.getGenericType(), field.getDeclaringClass(), underProcessing.getType());
-                        specType.setReferenceType(create(determinedType));
+                        specType.setReferenceType(create(determinedType, underProcessing.getReflectedField()));
                     } else {
-                        specType.setReferenceType(create(type));
+                        specType.setReferenceType(create(type, underProcessing.getReflectedField()));
                     }
                 }
 
@@ -463,74 +549,10 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         return specType;
     }
 
-    private void setJavaPoetMetaObjects(Class<?> type, CodeGenSpec.Type specType, ClassName interfaceClass,
-                                        ClassName defaultImplementationType, Type fieldGenericType, TypeName... parameterizedTypeParams) {
-        TypeName jpTypeName;
-        if (specType.getReferenceType() != null) {
-            if (type.getTypeParameters().length != 0) {
-                // since jpTypes are used to create field/method signatures
-                // picking the type params of containers from the fieldGenericType of the reference.
-                TypeName[] types = Arrays.stream(((ParameterizedType) fieldGenericType).getActualTypeArguments()).map(TypeName::get).toArray(TypeName[]::new);
-                jpTypeName = ParameterizedTypeName.get(specType.getReferenceType().getJpClassName(), types);
-            } else {
-                jpTypeName = specType.getReferenceType().getJpClassName();
-            }
-
-            // if there is a different reference type for this collection
-            // use that to create new instances if possible
-            if (specType.getReferenceType().isAbstract()) {
-                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Abstract subclasses of Collection not supported"));
-                // Still go ahead and set dummy implementation
-                specType.setNewInstanceType(defaultImplementationType);
-            } else {
-                specType.setNewInstanceType(specType.getReferenceType().getJpClassName());
-            }
-        } else {
-            jpTypeName = ParameterizedTypeName.get(interfaceClass, parameterizedTypeParams);
-            // If we don't have a different reference type, use the default implementation types of collections.
-            // i.e. if reference type is a List/Set etc., use new ArrayList() or new HashSet() when creating instances.
-            specType.setNewInstanceType(defaultImplementationType);
-        }
-
-        specType.setjPTypeName(jpTypeName);
-    }
-
-    private static ClassName getNativeClassName(CodeGenSpec.Type specType) {
-        // if specType is native, get the auto-boxed class, else get the class from reference
-        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT
-                || specType.getNativeType() == CodeGenSpec.DataType.ENUM) {
-            // return pre-computed value
-            return specType.getReferenceType().getJpClassName();
-        } else {
-            return ClassName.get(specType.getNativeType().getAutoboxedClass());
-        }
-    }
-
-    private CodeGenSpec.DataType getNativeArrayType(Class<?> arrayType) {
-        if (byte.class.equals(arrayType)) {
-            return CodeGenSpec.DataType.BYTE_ARRAY;
-        } else {
-            return CodeGenSpec.DataType.ARRAY;
-        }
-    }
-
-    private CodeGenSpec.CollectionType getCollectionType(Class<?> type) {
-        if (List.class.isAssignableFrom(type)) {
-            return CodeGenSpec.CollectionType.LIST;
-        } else if (Set.class.isAssignableFrom(type)) {
-            return CodeGenSpec.CollectionType.SET;
-        } else if (Queue.class.isAssignableFrom(type)) {
-            return CodeGenSpec.CollectionType.QUEUE;
-        } else if (Deque.class.isAssignableFrom(type)) {
-            return CodeGenSpec.CollectionType.DEQUE;
-        } else {
-            // Default collections to List!
-            return CodeGenSpec.CollectionType.LIST;
-        }
-    }
-
-    private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type) throws CodeGenException {
-        return getContainerType(fieldName, fieldGenericType, type, 0);
+    private CodeGenSpec.Type getUnknownType() {
+        CodeGenSpec.Type type = new CodeGenSpec.Type();
+        type.setNativeType(CodeGenSpec.DataType.UNKNOWN);
+        return type;
     }
 
     private CodeGenSpec.Type getContainerType(String fieldName, Type fieldGenericType, Class<?> type, int index) throws CodeGenException {
@@ -591,25 +613,24 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 // passing the generic type as null because it has been resolved at this level.
                 return getTypeFromJavaType(fieldName, null, (Class<?>) resolvedType);
             } else {
+
+                // Try and resolve type from field signature
+                // can uncover more potential bugs!
+                if (underProcessing.getReflectedField().getGenericType() instanceof ParameterizedType) {
+                    ParameterizedType signatureGenericType = (ParameterizedType) underProcessing.getReflectedField().getGenericType();
+                    Type actualTypeArg = signatureGenericType.getActualTypeArguments()[0];
+                    // prevent stack-overflow by checking if we are not processing the same params
+                    if (resolvedType == null && actualTypeArg instanceof ParameterizedType) {
+                        ParameterizedType parameterizedFieldSignature = (ParameterizedType) actualTypeArg;
+                        return getTypeFromJavaType(fieldName, parameterizedFieldSignature, (Class<?>) parameterizedFieldSignature.getRawType());
+                    }
+                }
+
+
                 // return Object as the type if we cannot resolve the actual type
                 // then the PibifyObjectHandler takes care of marshalling
                 return getTypeFromJavaType(fieldName, null, Object.class);
             }
-        }
-    }
-
-    private CodeGenSpec.Type getUnknownType() {
-        CodeGenSpec.Type type = new CodeGenSpec.Type();
-        type.setNativeType(CodeGenSpec.DataType.UNKNOWN);
-        return type;
-    }
-
-    private static ClassName getNativeClassName(CodeGenSpec.Type specType, Field field) {
-        // if specType is native, get the auto-boxed class, else get the class from reference
-        if (specType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
-            return ClassName.get(field.getType());
-        } else {
-            return ClassName.get(specType.getNativeType().getAutoboxedClass());
         }
     }
 

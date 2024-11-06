@@ -3,8 +3,18 @@ package com.flipkart.pibify.codegen.stub;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Stack;
+import java.util.TreeMap;
+import java.util.TreeSet;
+import java.util.Vector;
 
 /**
  * This class serves as a base class for PibifyHandlerCache.
@@ -28,6 +38,22 @@ public abstract class AbstractPibifyHandlerCache {
 
     protected AbstractPibifyHandlerCache() {
         mapBuilder.put(Object.class, new PibifyObjectHandler(this));
+
+        PibifyMapHandler mapHandler = new PibifyMapHandler(this);
+        mapBuilder.put(Map.class, mapHandler);
+        mapBuilder.put(HashMap.class, mapHandler);
+        mapBuilder.put(TreeMap.class, mapHandler);
+        mapBuilder.put(LinkedHashMap.class, mapHandler);
+
+        PibifyCollectionHandler collectionHandler = new PibifyCollectionHandler(this);
+        mapBuilder.put(ArrayList.class, collectionHandler);
+        mapBuilder.put(Vector.class, collectionHandler);
+        mapBuilder.put(ArrayDeque.class, collectionHandler);
+        mapBuilder.put(Stack.class, collectionHandler);
+
+        mapBuilder.put(HashSet.class, collectionHandler);
+        mapBuilder.put(TreeSet.class, collectionHandler);
+        mapBuilder.put(LinkedHashSet.class, collectionHandler);
     }
 
     protected void packMap() {
