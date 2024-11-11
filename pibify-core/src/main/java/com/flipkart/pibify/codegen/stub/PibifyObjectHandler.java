@@ -48,6 +48,10 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
 
     @Override
     public byte[] serialize(Object object) throws PibifyCodeExecException {
+        if (object == null) {
+            return null;
+        }
+
         ISerializer serializer = new PibifySerializer();
         try {
             // Write the name of the class as the first param

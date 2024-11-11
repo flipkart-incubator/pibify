@@ -47,6 +47,10 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
 
     @Override
     public byte[] serialize(Object object) throws PibifyCodeExecException {
+        if (object == null) {
+            return null;
+        }
+
         logger.fine("Serializing via ObjectMapper " + object.getClass().getName());
         return pibifyObjectMapper.writeValueAsBytes(object);
     }

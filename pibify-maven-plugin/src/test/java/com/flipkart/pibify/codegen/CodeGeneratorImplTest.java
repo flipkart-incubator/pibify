@@ -640,6 +640,13 @@ public class CodeGeneratorImplTest {
 
         ClassWithObjectReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
         assertEquals(testPayload, deserialized);
+
+        // test for nulls
+        testPayload.setaBoolean(null);
+        testPayload.setObjectReference(null);
+        deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+
         PibifyObjectHandler.forTest = false;
     }
 
@@ -983,6 +990,10 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.enumB, deserialized.enumB);
         assertEquals(testPayload.aMap, deserialized.aMap);
         assertArrayEquals(testPayload.intArray, deserialized.intArray);
+        assertEquals(testPayload.bigDecimal, deserialized.bigDecimal);
+
+        testPayload.bigDecimal = null;
+        deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload.bigDecimal, deserialized.bigDecimal);
     }
 
