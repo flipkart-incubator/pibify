@@ -4,8 +4,6 @@ import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.core.Constants;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
-import com.flipkart.pibify.serde.PibifyDeserializer;
-import com.flipkart.pibify.serde.PibifySerializer;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -47,12 +45,11 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
     }
 
     @Override
-    public byte[] serialize(Object object) throws PibifyCodeExecException {
+    public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
         if (object == null) {
-            return null;
+            return;
         }
 
-        ISerializer serializer = new PibifySerializer();
         try {
             // Write the name of the class as the first param
             Class<?> objectClass = object.getClass();
@@ -82,23 +79,21 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
             } else {
                 PibifyGenerated refHandler = getRefClassForTest(refType, objectClass);
                 // Write the object binary as the second attribute.
-                serializer.writeObjectAsBytes(2, refHandler.serialize(object));
+                //serializer.writeObjectAsBytes(2, refHandler.serialize(object, serializer));
+                serializer.writeObject(2, refHandler, object);
             }
-
-            return serializer.serialize();
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
     }
 
     @Override
-    public Object deserialize(byte[] bytes, Class clazzType) throws PibifyCodeExecException {
+    public Object deserialize(IDeserializer deserializer, Class clazzType) throws PibifyCodeExecException {
         try {
             Object object = null;
-            IDeserializer deserializer = new PibifyDeserializer(bytes);
             int tag = deserializer.getNextTag();
             String refType = null;
-            while (tag != 0) {
+            while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
                 switch (tag) {
                     case 10:
                         refType = deserializer.readString();
@@ -134,7 +129,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
                             object = deserializer.readEnum();
                         } else {
                             PibifyGenerated refHandler = getRefClassForTest(refType, objectClass);
-                            object = refHandler.deserialize(deserializer.readObjectAsBytes(), objectClass);
+                            object = refHandler.deserialize(deserializer, objectClass);
                         }
 
                         break;

@@ -3,6 +3,8 @@ package com.flipkart.pibify.codegen.stub;
 import com.flipkart.pibify.TestUtils;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.core.PibifyConfiguration;
+import com.flipkart.pibify.serde.IDeserializer;
+import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.test.data.EnumB;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,12 +24,11 @@ public class PibifyGeneratedTest {
                 .build();
         PibifyGenerated<?> underTest = new PibifyGenerated<Object>() {
             @Override
-            public byte[] serialize(Object object) throws PibifyCodeExecException {
-                return new byte[0];
+            public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
             }
 
             @Override
-            public Object deserialize(byte[] bytes, Class clazz) throws PibifyCodeExecException {
+            public Object deserialize(IDeserializer deserializer, Class clazz) throws PibifyCodeExecException {
                 return null;
             }
         };
@@ -47,12 +48,11 @@ public class PibifyGeneratedTest {
                 .build();
         PibifyGenerated<?> underTest = new PibifyGenerated<Object>() {
             @Override
-            public byte[] serialize(Object object) throws PibifyCodeExecException {
-                return new byte[0];
+            public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
             }
 
             @Override
-            public Object deserialize(byte[] bytes, Class clazz) throws PibifyCodeExecException {
+            public Object deserialize(IDeserializer deserializer, Class clazz) throws PibifyCodeExecException {
                 return null;
             }
         };

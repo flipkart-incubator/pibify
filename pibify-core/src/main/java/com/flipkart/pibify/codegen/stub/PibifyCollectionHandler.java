@@ -3,8 +3,6 @@ package com.flipkart.pibify.codegen.stub;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
-import com.flipkart.pibify.serde.PibifyDeserializer;
-import com.flipkart.pibify.serde.PibifySerializer;
 
 import java.util.Collection;
 import java.util.Map;
@@ -30,36 +28,33 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
     }
 
     @Override
-    public byte[] serialize(Collection object) throws PibifyCodeExecException {
+    public void serialize(Collection object, ISerializer serializer) throws PibifyCodeExecException {
         if (object == null) {
-            return null;
+            return;
         }
 
         logger.fine("Serializing via PibifyCollectionHandler, consider moving away from Object References for Collections");
 
-        ISerializer serializer = new PibifySerializer();
         PibifyGenerated<Object> valueHandler = pibifyHandlerCache.getHandler(Object.class).get();
         try {
             for (java.lang.Object value : object) {
-                serializer.writeObjectAsBytes(1, valueHandler.serialize(value));
+                serializer.writeObject(1, valueHandler, value);
             }
-            return serializer.serialize();
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
     }
 
     @Override
-    public Collection deserialize(byte[] bytes, Class<Collection> clazz) throws PibifyCodeExecException {
+    public Collection deserialize(IDeserializer deserializer, Class<Collection> clazz) throws PibifyCodeExecException {
         try {
             logger.fine("Deserializing via PibifyCollectionHandler, consider moving away from Object References for Collections");
-            IDeserializer deserializer = new PibifyDeserializer(bytes);
             int tag = deserializer.getNextTag();
             Collection object = clazz.getDeclaredConstructor().newInstance();
             PibifyGenerated<Object> valueHandler = pibifyHandlerCache.getHandler(Object.class).get();
             Object value;
-            while (tag != 0) {
-                value = valueHandler.deserialize(deserializer.readObjectAsBytes(), java.lang.Object.class);
+            while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
+                value = valueHandler.deserialize(deserializer, java.lang.Object.class);
                 value = ((Map.Entry<String, Object>) (value)).getValue();
                 object.add(value);
                 tag = deserializer.getNextTag();

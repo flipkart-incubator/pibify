@@ -1,5 +1,8 @@
 package com.flipkart.pibify.serde;
 
+import com.flipkart.pibify.codegen.PibifyCodeExecException;
+import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+
 import java.io.IOException;
 
 /**
@@ -47,4 +50,6 @@ public interface ISerializer {
     void writeEnum(int index, Enum<?> value) throws IOException;
 
     void writeObjectAsBytes(int index, byte[] value) throws IOException;
+
+    void writeObject(int index, PibifyGenerated handler, Object object) throws PibifyCodeExecException, IOException;
 }

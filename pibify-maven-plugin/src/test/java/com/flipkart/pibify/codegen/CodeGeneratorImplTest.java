@@ -11,6 +11,7 @@ import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
 import com.flipkart.pibify.test.data.ClassHierarchy3A;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
+import com.flipkart.pibify.test.data.ClassWithBasicList;
 import com.flipkart.pibify.test.data.ClassWithCollectionReference;
 import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
 import com.flipkart.pibify.test.data.ClassWithEnums;
@@ -100,10 +101,10 @@ public class CodeGeneratorImplTest {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
-        Method serialize = handlerClazz.getDeclaredMethod("serialize", data.getClass());
+        Method serialize = handlerClazz.getMethod("serialize", Object.class);
         byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
 
-        Method deserialize = handlerClazz.getDeclaredMethod("deserialize", byte[].class, Class.class);
+        Method deserialize = handlerClazz.getMethod("deserialize", byte[].class, Class.class);
         return (T) deserialize.invoke(handlerInstance, result, data.getClass());
     }
 
@@ -111,7 +112,7 @@ public class CodeGeneratorImplTest {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
-        Method deserialize = handlerClazz.getDeclaredMethod("deserialize", byte[].class, Class.class);
+        Method deserialize = handlerClazz.getMethod("deserialize", byte[].class, Class.class);
         return (T) deserialize.invoke(handlerInstance, result, data.getClass());
     }
 
@@ -124,7 +125,7 @@ public class CodeGeneratorImplTest {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
-        Method serialize = handlerClazz.getDeclaredMethod("serialize", data.getClass());
+        Method serialize = handlerClazz.getMethod("serialize", Object.class);
         byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
         return result;
     }
@@ -242,7 +243,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithNativeCollections testPayload = new ClassWithNativeCollections();
         testPayload.randomize();
 
@@ -265,7 +266,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
         ClassWithReferences testPayload = new ClassWithReferences();
         testPayload.randomize();
 
@@ -293,7 +294,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
         ClassWithObjectCollections testPayload = new ClassWithObjectCollections();
         testPayload.randomize();
 
@@ -625,7 +626,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithObjectReference testPayload = new ClassWithObjectReference();
         testPayload.randomize();
 
@@ -633,7 +634,7 @@ public class CodeGeneratorImplTest {
         SimpleCompiler compiler = SimpleCompiler.INSTANCE;
         for (Class clazz : dependent) {
             JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
-            //javaFile1.writeTo(System.out);
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(false));
             compiler.compile(javaFile1.toJavaFileObject());
             Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
         }
@@ -1015,7 +1016,7 @@ public class CodeGeneratorImplTest {
 
         for (Class clazz : dependent) {
             JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
-            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(false));
             compiler.compile(javaFile1.toJavaFileObject());
             Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
             assertNotNull(handlerClazz);
@@ -1131,5 +1132,22 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.multiMap, deserialized.multiMap);
         assertEquals(testPayload.tertiary, deserialized.tertiary);
         assertEquals(testPayload.tertiaryList, deserialized.tertiaryList);
+    }
+
+    @Test
+    public void testClassWithBasicList() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithBasicList.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
+        ClassWithBasicList testPayload = new ClassWithBasicList();
+        testPayload.randomize();
+
+        ClassWithBasicList deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.list, deserialized.list);
     }
 }

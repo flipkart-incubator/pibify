@@ -1,10 +1,6 @@
 package com.flipkart.pibify;
 
-import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
-import com.flipkart.pibify.codegen.stub.PibifyGenerated;
-
-import java.util.ArrayList;
 
 /**
  * This class is used for
@@ -20,18 +16,6 @@ public class PibifyHandlerCacheImpl extends AbstractPibifyHandlerCache {
     }
 
     public PibifyHandlerCacheImpl() {
-        mapBuilder.put(ArrayList.class, new PibifyGenerated<ArrayList>() {
-            @Override
-            public byte[] serialize(ArrayList object) throws PibifyCodeExecException {
-                return "hello".getBytes();
-            }
-
-            @Override
-            public ArrayList deserialize(byte[] bytes, Class<ArrayList> type) throws PibifyCodeExecException {
-                return null;
-            }
-        });
-
     }
 
     public static PibifyHandlerCacheImpl getInstance() {

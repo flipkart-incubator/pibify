@@ -3,6 +3,8 @@ package com.flipkart.pibify.codegen.stub;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
+import com.flipkart.pibify.serde.IDeserializer;
+import com.flipkart.pibify.serde.ISerializer;
 
 import java.io.IOException;
 import java.util.logging.Logger;
@@ -46,17 +48,35 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
     }
 
     @Override
-    public byte[] serialize(Object object) throws PibifyCodeExecException {
+    public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
+
         if (object == null) {
-            return null;
+            return;
         }
 
-        logger.fine("Serializing via ObjectMapper " + object.getClass().getName());
-        return pibifyObjectMapper.writeValueAsBytes(object);
+        try {
+            logger.fine("Serializing via ObjectMapper " + object.getClass().getName());
+            serializer.writeObjectAsBytes(1, pibifyObjectMapper.writeValueAsBytes(object));
+
+        } catch (IOException e) {
+            throw new PibifyCodeExecException(e);
+        }
     }
 
     @Override
-    public Object deserialize(byte[] bytes, Class type) throws PibifyCodeExecException {
+    public Object deserialize(IDeserializer deserializer, Class<Object> type) throws PibifyCodeExecException {
+        try {
+            int nextTag = deserializer.getNextTag(); // consume start object tag
+            Object deserialized = this.deserialize(deserializer.readObjectAsBytes(), type);
+            nextTag = deserializer.getNextTag(); // consume end object tag
+            return deserialized;
+        } catch (IOException e) {
+            throw new PibifyCodeExecException(e);
+        }
+    }
+
+    @Override
+    public Object deserialize(byte[] bytes, Class<Object> type) throws PibifyCodeExecException {
         if (type == null) {
             throw new PibifyCodeExecException("Class Type cannot be null");
         }

@@ -3,8 +3,6 @@ package com.flipkart.pibify.codegen.stub;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
-import com.flipkart.pibify.serde.PibifyDeserializer;
-import com.flipkart.pibify.serde.PibifySerializer;
 
 import java.io.IOException;
 import java.util.Map;
@@ -30,46 +28,42 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
     }
 
     @Override
-    public byte[] serialize(Map object) throws PibifyCodeExecException {
+    public void serialize(Map object, ISerializer serializer) throws PibifyCodeExecException {
         if (object == null) {
-            return null;
+            return;
         }
 
         logger.fine("Serializing via PibifyMapHandler, consider moving away from Object References for Maps");
-        ISerializer serializer = new PibifySerializer();
         PibifyGenerated<Object> handler = pibifyHandlerCache.getHandler(Object.class).get();
         try {
             object.forEach((k, v) -> {
                 try {
-                    serializer.writeObjectAsBytes(1, handler.serialize(k));
-                    serializer.writeObjectAsBytes(2, handler.serialize(v));
+                    serializer.writeObject(1, handler, k);
+                    serializer.writeObject(2, handler, v);
                 } catch (IOException | PibifyCodeExecException e) {
                     throw new RuntimeException(e);
                 }
             });
-
-            return serializer.serialize();
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
     }
 
     @Override
-    public Map deserialize(byte[] bytes, Class<Map> clazz) throws
+    public Map deserialize(IDeserializer deserializer, Class<Map> clazz) throws
             PibifyCodeExecException {
         try {
             logger.fine("Deserializing via PibifyMapHandler, consider moving away from Object References for Maps");
-            IDeserializer deserializer = new PibifyDeserializer(bytes);
             int tag = deserializer.getNextTag();
             Map object = clazz.getDeclaredConstructor().newInstance();
             PibifyGenerated<Object> handler = pibifyHandlerCache.getHandler(Object.class).get();
             Object key;
             Object value;
-            while (tag != 0) {
-                key = handler.deserialize(deserializer.readObjectAsBytes(), java.lang.Object.class);
+            while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
+                key = handler.deserialize(deserializer, java.lang.Object.class);
                 key = ((Map.Entry<String, Object>) (key)).getValue();
                 tag = deserializer.getNextTag();
-                value = handler.deserialize(deserializer.readObjectAsBytes(), java.lang.Object.class);
+                value = handler.deserialize(deserializer, java.lang.Object.class);
                 value = ((Map.Entry<String, Object>) (value)).getValue();
                 object.put(key, value);
                 tag = deserializer.getNextTag();

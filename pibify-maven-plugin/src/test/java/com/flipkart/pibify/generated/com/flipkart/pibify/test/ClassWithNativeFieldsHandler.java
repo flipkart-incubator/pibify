@@ -4,8 +4,6 @@ import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
-import com.flipkart.pibify.serde.PibifyDeserializer;
-import com.flipkart.pibify.serde.PibifySerializer;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 
 import java.util.HashMap;
@@ -19,11 +17,11 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
     }
 
     @Override
-    public byte[] serialize(ClassWithNativeFields object) throws PibifyCodeExecException {
+    public void serialize(ClassWithNativeFields object, ISerializer serializer) throws PibifyCodeExecException {
         if (object == null) {
-            return null;
+            return;
         }
-        ISerializer serializer = new PibifySerializer();
+
         try {
             serializer.writeString(1, object.getaString());
             serializer.writeInt(2, object.getAnInt());
@@ -34,18 +32,16 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
             serializer.writeChar(7, object.getaChar());
             serializer.writeByte(8, object.getaByte());
             serializer.writeShort(9, object.getaShort());
-            return serializer.serialize();
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
     }
 
     @Override
-    public ClassWithNativeFields deserialize(byte[] bytes, Class<ClassWithNativeFields> clazz) throws
+    public ClassWithNativeFields deserialize(IDeserializer deserializer, Class<ClassWithNativeFields> clazz) throws
             PibifyCodeExecException {
         try {
             ClassWithNativeFields object = new ClassWithNativeFields();
-            IDeserializer deserializer = new PibifyDeserializer(bytes);
             int tag = deserializer.getNextTag();
             while (tag != 0) {
                 switch (tag) {

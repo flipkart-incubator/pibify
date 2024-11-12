@@ -1,6 +1,9 @@
 package com.flipkart.pibify.serde;
 
+import com.flipkart.pibify.codegen.PibifyCodeExecException;
+import com.flipkart.pibify.codegen.stub.PibifyGenerated;
 import com.google.protobuf.CodedOutputStream;
+import com.google.protobuf.WireFormat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,9 +18,9 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     private final CodedOutputStream codedOutputStream;
     private final ByteArrayOutputStream outputStream;
 
-    public PibifySerializer() {
+    public PibifySerializer(int size) {
         // TODO use pre-computed estimates on the size of the buffer
-        outputStream = new ByteArrayOutputStream(256);
+        outputStream = new ByteArrayOutputStream(size);
         codedOutputStream = CodedOutputStream.newInstance(outputStream);
     }
 
@@ -141,6 +144,16 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     public void writeObjectAsBytes(int index, byte[] value) throws IOException {
         if (value != null) {
             codedOutputStream.writeByteArray(index, value);
+        }
+    }
+
+    @Override
+    public void writeObject(int index, PibifyGenerated handler, Object value) throws PibifyCodeExecException, IOException {
+        if (value != null) {
+            codedOutputStream.writeTag(index, WireFormat.WIRETYPE_LENGTH_DELIMITED);
+            ;
+            handler.serialize(value, this);
+            codedOutputStream.writeTag(1, WireFormat.WIRETYPE_END_GROUP);
         }
     }
 }

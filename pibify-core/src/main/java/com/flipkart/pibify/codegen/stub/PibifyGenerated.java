@@ -2,6 +2,11 @@ package com.flipkart.pibify.codegen.stub;
 
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.core.PibifyConfiguration;
+import com.flipkart.pibify.serde.IDeserializer;
+import com.flipkart.pibify.serde.ISerializer;
+import com.flipkart.pibify.serde.PibifyDeserializer;
+import com.flipkart.pibify.serde.PibifySerializer;
+import com.google.protobuf.WireFormat;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
@@ -15,13 +20,38 @@ import java.util.function.Supplier;
  * Date 10/08/24
  */
 public abstract class PibifyGenerated<T> {
-    public abstract byte[] serialize(T object) throws PibifyCodeExecException;
+
+    protected static final int DEFAULT_OBJECT_SIZE = 256;
+
+    protected static int getEndObjectTag() {
+        return (1 << 3) | WireFormat.WIRETYPE_END_GROUP;
+    }
+
+    public abstract void serialize(T object, ISerializer serializer) throws PibifyCodeExecException;
+
+    public byte[] serialize(T object) throws PibifyCodeExecException {
+        ISerializer serializer = new PibifySerializer(getEstimatedObjectSize());
+        try {
+            this.serialize(object, serializer);
+            return serializer.serialize();
+        } catch (Exception e) {
+            throw new PibifyCodeExecException(e);
+        }
+    }
 
     public T deserialize(byte[] bytes) throws PibifyCodeExecException {
         return deserialize(bytes, null);
     }
 
-    public abstract T deserialize(byte[] bytes, Class<T> type) throws PibifyCodeExecException;
+    public int getEstimatedObjectSize() {
+        return DEFAULT_OBJECT_SIZE;
+    }
+
+    public abstract T deserialize(IDeserializer deserializer, Class<T> type) throws PibifyCodeExecException;
+
+    public T deserialize(IDeserializer deserializer) throws PibifyCodeExecException {
+        return this.deserialize(deserializer, null);
+    }
 
     @SuppressWarnings("unchecked")
     protected <A> void handleArrayDeserialization(Class<A> type, Supplier<A[]> objectGetter,
@@ -65,5 +95,9 @@ public abstract class PibifyGenerated<T> {
         } else {
             return enums[index];
         }
+    }
+
+    public T deserialize(byte[] bytes, Class<T> type) throws PibifyCodeExecException {
+        return deserialize(new PibifyDeserializer(bytes), type);
     }
 }
