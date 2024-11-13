@@ -538,7 +538,27 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             specType.setGenericTypeSignature(specType.getjPTypeName().toString());
         }
 
+        resetNativeTypeIfNeeded(specType);
+
         return specType;
+    }
+
+    private void resetNativeTypeIfNeeded(CodeGenSpec.Type specType) {
+        // This method is needed for cases where generic types are involved and the
+        // type of the field was resolved via alt strategies.
+        // In those cases, if the type is native, try and reset it.
+        if (specType.getjPTypeName() instanceof ClassName) {
+            String reflectionName = ((ClassName) specType.getjPTypeName()).reflectionName();
+            try {
+                Class<?> clazz = Class.forName(reflectionName);
+                CodeGenSpec.DataType nativeType = CodeSpecMeta.CLASS_TO_TYPE_MAP.get(clazz);
+                if (nativeType != null) {
+                    specType.setNativeType(nativeType);
+                }
+            } catch (ClassNotFoundException e) {
+                // consume e
+            }
+        }
     }
 
     private CodeGenSpec.Type getUnknownType() {

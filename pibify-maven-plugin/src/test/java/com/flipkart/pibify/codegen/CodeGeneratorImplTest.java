@@ -35,6 +35,7 @@ import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
 import com.flipkart.pibify.test.data.ConcreteClassBWithNativeFields;
 import com.flipkart.pibify.test.data.ConcreteClassWithNativeFields;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
+import com.flipkart.pibify.test.data.SubClassStringOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.data.generics.AGenericClass;
@@ -580,6 +581,23 @@ public class CodeGeneratorImplTest {
         }
 
         SubClassOfClassWithTypeParameterReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testSubClassOfClassWithTypeParameterReference2() throws Exception {
+
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(SubClassStringOfClassWithTypeParameterReference.class);
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        SubClassStringOfClassWithTypeParameterReference testPayload = new SubClassStringOfClassWithTypeParameterReference();
+        testPayload.randomize();
+
+        SubClassStringOfClassWithTypeParameterReference deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
     }
 
