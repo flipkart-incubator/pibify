@@ -76,6 +76,7 @@ public class PibifyHandlerCacheGenerator {
     private CodeBlock getStaticBlock() {
         CodeBlock.Builder staticBlock = CodeBlock.builder();
         staticBlock.addStatement("INSTANCE = new PibifyHandlerCache()");
+        staticBlock.addStatement("INSTANCE.initializeHandlers()");
         return staticBlock.build();
     }
 

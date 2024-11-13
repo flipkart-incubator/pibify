@@ -23,11 +23,11 @@ public abstract class PibifyGenerated<T> {
 
     protected static final int DEFAULT_OBJECT_SIZE = 256;
 
+    public abstract void serialize(T object, ISerializer serializer) throws PibifyCodeExecException;
+
     protected static int getEndObjectTag() {
         return (1 << 3) | WireFormat.WIRETYPE_END_GROUP;
     }
-
-    public abstract void serialize(T object, ISerializer serializer) throws PibifyCodeExecException;
 
     public byte[] serialize(T object) throws PibifyCodeExecException {
         ISerializer serializer = new PibifySerializer(getEstimatedObjectSize());
@@ -99,5 +99,12 @@ public abstract class PibifyGenerated<T> {
 
     public T deserialize(byte[] bytes, Class<T> type) throws PibifyCodeExecException {
         return deserialize(new PibifyDeserializer(bytes), type);
+    }
+
+    /**
+     * This method to be implemented by generated code to initialize fields (references to handlers)
+     */
+    public void initialize() {
+
     }
 }

@@ -8,6 +8,7 @@ import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.validation.InvalidPibifyAnnotation;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -40,8 +41,15 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
     private final String handlerCacheClassName;
 
+    /*
+    Internal State
+     */
+    private TypeSpec.Builder classBuilder;
+    private Map<TypeName, String> fields;
+
     public CodeGeneratorImpl(String handlerCacheClassName) {
         this.handlerCacheClassName = handlerCacheClassName + ".getInstance().getHandler";
+        fields = new HashMap<>();
     }
 
     private static void validate(CodeGenSpec codeGenSpec) throws CodeGenException {
@@ -58,9 +66,17 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
     }
 
+    /**
+     * This method is not thread-safe
+     *
+     * @param codeGenSpec
+     * @return
+     * @throws IOException
+     * @throws CodeGenException
+     */
     @Override
-    public JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
-
+    public synchronized JavaFileWrapper generate(CodeGenSpec codeGenSpec) throws IOException, CodeGenException {
+        clearState();
         validate(codeGenSpec);
 
         TypeSpec.Builder typeSpecBuilder = getTypeSpecBuilder(codeGenSpec);
@@ -81,10 +97,18 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
     private TypeSpec.Builder getTypeSpecBuilder(CodeGenSpec codeGenSpec) throws CodeGenException {
         ClassName thePojo = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
-        return TypeSpec.classBuilder(codeGenSpec.getClassName() + "Handler")
-                .addMethod(getSerializer(thePojo, codeGenSpec))
+        TypeSpec.Builder previousClassBuilder = this.classBuilder;
+        Map<TypeName, String> previousFields = this.fields;
+        this.classBuilder = TypeSpec.classBuilder(codeGenSpec.getClassName() + "Handler");
+        this.fields = new HashMap<>();
+        TypeSpec.Builder builder = classBuilder.addMethod(getSerializer(thePojo, codeGenSpec))
                 .addMethod(getDeserializer(thePojo, codeGenSpec))
-                .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo));
+                .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), thePojo))
+                .addMethod(getInitializeMethod(true));
+
+        this.classBuilder = previousClassBuilder;
+        this.fields = previousFields;
+        return builder;
     }
 
     private void addHandlerBasedOnDatatype(CodeGenSpec.Type fieldSpec, MethodSpec.Builder builder) {
@@ -151,12 +175,18 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                                                           AtomicInteger counter, Map<String, String> mapOfGenericSignatureToHandlerName) throws CodeGenException {
         // pass the field name and use fieldName + Handler + (counter++) to have names of the handlers
         String className = "InternalHandler" + counter.incrementAndGet();
-        //TODO: In inner handlers, pass byte start/end instead of new byte array with the intention of re-using the same byte buffer.
+        TypeSpec.Builder innerClassBuilder = TypeSpec.classBuilder(className);
+
+        TypeSpec.Builder previousClassBuilder = this.classBuilder;
+        Map<TypeName, String> previousFields = this.fields;
+        this.classBuilder = innerClassBuilder;
+        this.fields = new HashMap<>();
+
         typeSpecBuilder.addType(
-                TypeSpec.classBuilder(className)
-                        .addModifiers(Modifier.STATIC)
+                innerClassBuilder.addModifiers(Modifier.STATIC)
                         .addMethod(getSerializerForCollectionHandler(fieldSpec))
                         .addMethod(getDeserializerForCollectionHandler(fieldSpec))
+                        .addMethod(getInitializeMethod(false))
                         .superclass(ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), fieldSpec.getjPTypeName()))
                         .build()
         );
@@ -178,6 +208,29 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         fieldSpec.getContainerTypes().get(1), counter, mapOfGenericSignatureToHandlerName);
             }
         }
+
+        this.classBuilder = previousClassBuilder;
+        this.fields = previousFields;
+    }
+
+    private MethodSpec getInitializeMethod(boolean initializeInternals) {
+        MethodSpec.Builder builder = MethodSpec.methodBuilder("initialize")
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(Override.class);
+
+        for (Map.Entry<TypeName, String> entry : fields.entrySet()) {
+            builder.addStatement("$L = $L($T.class).get()", entry.getValue(), handlerCacheClassName, entry.getKey());
+        }
+
+        if (initializeInternals) {
+            builder.beginControlFlow("for (PibifyGenerated internalHandler : HANDLER_MAP.values())")
+                    .addStatement("internalHandler.initialize()")
+                    .endControlFlow();
+        }
+
+
+        return builder.build();
+
     }
 
     private void addHandlerForObjectReference(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder, CodeGenSpec codeGenSpec) {
@@ -314,10 +367,20 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             reference = ClassName.get(packageName, handlerClassName);
         }
 
+        String variableName = name + "Handler";
         ClassName referenceTypeClassName = getAbstractOrConcreteJPClassName(codeGenSpec);
-        builder.addStatement("$T $LHandler = $L($T.class).get()",
-                ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), referenceTypeClassName),
-                name, handlerCacheClassName, referenceTypeClassName);
+        ParameterizedTypeName type = ParameterizedTypeName.get(ClassName.get(PibifyGenerated.class), referenceTypeClassName);
+        // At a new field for this handler.
+        if (!fields.containsKey(referenceTypeClassName)) {
+            FieldSpec.Builder fieldBuilder = FieldSpec.builder(type, variableName, Modifier.PRIVATE);
+            classBuilder.addField(fieldBuilder.build());
+            fields.put(referenceTypeClassName, variableName);
+        }
+
+        // If the variable name in context is not the same as the field added, assign it.
+        if (!variableName.equals(fields.get(referenceTypeClassName))) {
+            builder.addStatement("$T $L = $L", type, variableName, fields.get(referenceTypeClassName));
+        }
     }
 
     private MethodSpec getDeserializerForCollectionHandler(CodeGenSpec.Type fieldSpec) throws CodeGenException {
@@ -777,5 +840,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             default:
                 return "";
         }
+    }
+
+    private void clearState() {
+        classBuilder = null;
+        fields.clear();
     }
 }

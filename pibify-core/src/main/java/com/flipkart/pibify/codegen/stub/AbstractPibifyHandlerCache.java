@@ -1,6 +1,5 @@
 package com.flipkart.pibify.codegen.stub;
 
-import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.google.common.collect.ImmutableMap;
 
 import java.math.BigDecimal;
@@ -63,7 +62,11 @@ public abstract class AbstractPibifyHandlerCache {
         cache = mapBuilder.build();
     }
 
-    public <T> Optional<PibifyGenerated<T>> getHandler(Class<T> clazz) throws PibifyCodeExecException {
+    protected void initializeHandlers() {
+        cache.values().forEach(PibifyGenerated::initialize);
+    }
+
+    public <T> Optional<PibifyGenerated<T>> getHandler(Class<T> clazz) {
 
         if (clazz == null) {
             return Optional.empty();

@@ -102,6 +102,7 @@ public class CodeGeneratorImplTest {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
+        handlerClazz.getMethod("initialize").invoke(handlerInstance);
         Method serialize = handlerClazz.getMethod("serialize", Object.class);
         byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
 
@@ -126,6 +127,7 @@ public class CodeGeneratorImplTest {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
+        handlerClazz.getMethod("initialize").invoke(handlerInstance);
         Method serialize = handlerClazz.getMethod("serialize", Object.class);
         byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
         return result;
@@ -544,7 +546,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
         ClassWithInnerClasses testPayload = new ClassWithInnerClasses();
         testPayload.randomize();
 
@@ -1034,7 +1036,7 @@ public class CodeGeneratorImplTest {
 
         for (Class clazz : dependent) {
             JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
-            //javaFile1.writeTo(new CodePrinterWithLineNumbers(false));
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
             compiler.compile(javaFile1.toJavaFileObject());
             Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
             assertNotNull(handlerClazz);
@@ -1132,7 +1134,7 @@ public class CodeGeneratorImplTest {
 
         for (Class clazz : dependent) {
             JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
-            //javaFile1.writeTo(new CodePrinterWithLineNumbers(false));
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
             compiler.compile(javaFile1.toJavaFileObject());
             Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
             assertNotNull(handlerClazz);
