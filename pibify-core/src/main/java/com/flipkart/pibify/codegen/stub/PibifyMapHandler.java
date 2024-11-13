@@ -4,7 +4,6 @@ import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Logger;
 
@@ -22,6 +21,7 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
 
     // Cache to look-up for the handler at runtime
     private final AbstractPibifyHandlerCache pibifyHandlerCache;
+    private PibifyGenerated<Object> objectHandler;
 
     public PibifyMapHandler(AbstractPibifyHandlerCache pibifyHandlerCache) {
         this.pibifyHandlerCache = pibifyHandlerCache;
@@ -34,16 +34,17 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
         }
 
         logger.fine("Serializing via PibifyMapHandler, consider moving away from Object References for Maps");
-        PibifyGenerated<Object> handler = pibifyHandlerCache.getHandler(Object.class).get();
         try {
-            object.forEach((k, v) -> {
-                try {
-                    serializer.writeObject(1, handler, k);
-                    serializer.writeObject(2, handler, v);
-                } catch (IOException | PibifyCodeExecException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+
+            if (objectHandler == null) {
+                objectHandler = this.pibifyHandlerCache.getHandler(Object.class).get();
+            }
+
+            for (Object entryObj : object.entrySet()) {
+                Map.Entry entry = (Map.Entry) entryObj;
+                serializer.writeObject(1, objectHandler, entry.getKey());
+                serializer.writeObject(2, objectHandler, entry.getValue());
+            }
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
