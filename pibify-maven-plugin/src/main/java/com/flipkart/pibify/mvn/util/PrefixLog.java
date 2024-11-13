@@ -13,6 +13,7 @@ public class PrefixLog implements Log {
     String RESET = "\u001B[0m";
     String RED = "\u001B[31m";
     String GREEN = "\u001B[32m";
+    String BLUE = "\u001B[34m";
     String YELLOW = "\u001B[33m";
 
     private final Log underlying;
@@ -51,12 +52,12 @@ public class PrefixLog implements Log {
 
     @Override
     public void info(CharSequence charSequence) {
-        underlying.info(GREEN + prefix + RESET + charSequence);
+        underlying.info(BLUE + prefix + RESET + charSequence);
     }
 
     @Override
     public void info(CharSequence charSequence, Throwable throwable) {
-        underlying.info(GREEN + prefix + RESET + charSequence, throwable);
+        underlying.info(BLUE + prefix + RESET + charSequence, throwable);
     }
 
     @Override

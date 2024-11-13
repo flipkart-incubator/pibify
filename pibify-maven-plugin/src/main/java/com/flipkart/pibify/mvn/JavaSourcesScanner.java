@@ -58,9 +58,9 @@ public class JavaSourcesScanner extends SourcesScanner {
                     Class<?> aClass = classLoader.loadClass(className);
                     if (!CodeGenUtil.isNonPibifyClass(aClass)) {
                         classes.add(aClass);
-                        getLog().info("  - " + aClass.getName());
+                        getLog().debug("  - " + aClass.getName());
                     } else {
-                        getLog().info("Ignoring non-pibify class " + aClass.getName());
+                        getLog().debug("Ignoring non-pibify class " + aClass.getName());
                     }
                 } catch (Exception e) {
                     getLog().error("Failed to load class: " + className, e);

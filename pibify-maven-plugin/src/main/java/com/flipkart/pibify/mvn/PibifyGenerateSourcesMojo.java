@@ -19,7 +19,6 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
@@ -28,6 +27,7 @@ import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
@@ -64,13 +64,12 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
     private List<String> exclude;
 
     public PibifyGenerateSourcesMojo() {
-        super.setLog(new PrefixLog(new SystemStreamLog(), "[Pibify] "));
         getLog().info("Initiated PibifyGenerateSourcesMojo ");
     }
 
     @Override
     public void setLog(Log log) {
-        //no-op
+        super.setLog(new PrefixLog(log, "[Pibify] "));
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
@@ -116,6 +115,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         ICodeGenerator codeGenerator = new CodeGeneratorImpl(handlerCacheGenerator.getClassName());
         Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory());
         List<String> classesWithErrors = new ArrayList<>();
+        List<String> skippedClasses = new ArrayList<>();
 
         for (Class<?> pibifyAnnotatedClass : pibifyAnnotatedClasses) {
             try {
@@ -123,10 +123,15 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
                 CodeGenSpec codeGenSpec = codeGenSpecCreator.create(pibifyAnnotatedClass);
                 printCodeSpecGenLogs(codeGenSpecCreator);
                 if (SpecGenLogLevel.INFO.equals(codeGenSpecCreator.status(pibifyAnnotatedClass))) {
-                    JavaFileWrapper javaFile = codeGenerator.generate(codeGenSpec);
-                    getLog().info("Writing Java File " + javaFile.getPackageName().replaceAll("\\.", "/") + "/" + codeGenSpec.getClassName() + ".java");
-                    javaFile.getJavaFile().writeTo(outputDirectory);
-                    handlerCacheGenerator.add(pibifyAnnotatedClass, javaFile.getClassName());
+                    if (generateHandler(pibifyAnnotatedClass)) {
+                        JavaFileWrapper javaFile = codeGenerator.generate(codeGenSpec);
+                        getLog().debug("Writing Java File " + javaFile.getPackageName().replaceAll("\\.", "/") + "/" + codeGenSpec.getClassName() + ".java");
+                        javaFile.getJavaFile().writeTo(outputDirectory);
+                        handlerCacheGenerator.add(pibifyAnnotatedClass, javaFile.getClassName());
+                    } else {
+                        skippedClasses.add(pibifyAnnotatedClass.getName());
+                        getLog().info("Skipping " + pibifyAnnotatedClass.getName());
+                    }
                 } else {
                     getLog().error("Unable to generate CodeGenSpec for " + pibifyAnnotatedClass.getName());
                     for (SpecGenLog specGenLog : codeGenSpecCreator.getLogsForCurrentEntity(pibifyAnnotatedClass)) {
@@ -146,7 +151,10 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         getLog().info("\t #Processed\t" + (pibifyAnnotatedClasses.size()));
         getLog().info("\t #Success\t" + (pibifyAnnotatedClasses.size() - classesWithErrors.size()));
         getLog().info("\t #Failed\t" + (classesWithErrors.size()));
-        getLog().warn("Classes with issues: " + classesWithErrors);
+        getLog().info("\t #Skipped\t" + (skippedClasses.size()));
+        String delimiter = "\n\t\t\t\t";
+        getLog().warn("Classes with issues: " + delimiter + String.join(delimiter, classesWithErrors));
+        getLog().warn("Skipped Classes: " + delimiter + String.join(delimiter, skippedClasses));
 
         try {
             handlerCacheGenerator.generateCacheClass().getJavaFile().writeTo(outputDirectory);
@@ -159,11 +167,17 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         }
     }
 
+    private boolean generateHandler(Class<?> pibifyAnnotatedClass) {
+        return !(pibifyAnnotatedClass.isInterface() ||
+                Modifier.isAbstract(pibifyAnnotatedClass.getModifiers()));
+
+    }
+
     private void printCodeSpecGenLogs(ICodeGenSpecCreator codeGenSpecCreator) {
         for (SpecGenLog specGenLog : codeGenSpecCreator.getLogsForCurrentEntity()) {
             switch (specGenLog.getLogLevel()) {
                 case INFO:
-                    getLog().info(specGenLog.getLogMessage());
+                    getLog().debug(specGenLog.getLogMessage());
                     break;
                 case WARN:
                     getLog().warn(specGenLog.getLogMessage());
