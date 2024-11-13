@@ -17,29 +17,51 @@ import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
+import org.apache.maven.plugin.descriptor.PluginDescriptor;
 import org.apache.maven.plugin.logging.Log;
 import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 /**
  * This class is used for being the entry point to the code gen module
  * Author bageshwar.pn
  * Date 26/09/24
+ *
  */
-@Mojo(name = "generate", defaultPhase = LifecyclePhase.PROCESS_CLASSES)
+@Mojo(name = "generate",
+        defaultPhase = LifecyclePhase.PROCESS_CLASSES,
+        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
+        //configurator = "include-project-dependencies"
+)
 public class PibifyGenerateSourcesMojo extends AbstractMojo {
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
 
     @Parameter(defaultValue = "${project.build.directory}/generated-sources", required = true)
     private File outputDirectory;
+
+    /**
+     * The plugin descriptor
+     *
+     * @parameter default-value="${descriptor}"
+     */
+    @Parameter(defaultValue = "${descriptor}")
+    private PluginDescriptor descriptor;
+
+    @Parameter()
+    private List<String> exclude;
 
     public PibifyGenerateSourcesMojo() {
         super.setLog(new PrefixLog(new SystemStreamLog(), "[Pibify] "));
@@ -52,6 +74,29 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
     }
 
     public void execute() throws MojoExecutionException, MojoFailureException {
+        // To be able to get module's dependencies be available to the plugin's classpath
+        ClassLoader oldCL = Thread.currentThread().getContextClassLoader();
+
+        try {
+            Thread.currentThread().setContextClassLoader(getClassLoader());
+            // TODO fix the classloader issue
+            /*List runtimeClasspathElements = project.getRuntimeClasspathElements();
+            ClassRealm realm = descriptor.getClassRealm();
+
+            for (Object element : runtimeClasspathElements)
+            {
+                File elementFile = new File(element.toString());
+                realm.addURL(elementFile.toURI().toURL());
+            }*/
+            executeImpl();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        } finally {
+            Thread.currentThread().setContextClassLoader(oldCL);
+        }
+    }
+
+    private void executeImpl() throws MojoExecutionException, MojoFailureException {
         if (!outputDirectory.exists()) {
             getLog().info("Creating directory " + outputDirectory.getAbsolutePath());
             boolean mkdir = outputDirectory.mkdir();
@@ -67,12 +112,10 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
                 new JsonCreatorFactory());
         // TODO consume config from pom
         PibifyConfiguration.builder().build();
-        ICodeGenerator codeGenerator = new CodeGeneratorImpl();
         PibifyHandlerCacheGenerator handlerCacheGenerator = new PibifyHandlerCacheGenerator(project.getGroupId(), project.getArtifactId());
         ICodeGenerator codeGenerator = new CodeGeneratorImpl(handlerCacheGenerator.getClassName());
         Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory());
         List<String> classesWithErrors = new ArrayList<>();
-
 
         for (Class<?> pibifyAnnotatedClass : pibifyAnnotatedClasses) {
             try {
@@ -86,9 +129,16 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
                     handlerCacheGenerator.add(pibifyAnnotatedClass, javaFile.getClassName());
                 } else {
                     getLog().error("Unable to generate CodeGenSpec for " + pibifyAnnotatedClass.getName());
+                    for (SpecGenLog specGenLog : codeGenSpecCreator.getLogsForCurrentEntity(pibifyAnnotatedClass)) {
+                        getLog().error(" - " + specGenLog.getLogMessage());
+                    }
+                    classesWithErrors.add(pibifyAnnotatedClass.getName());
                 }
-            } catch (IOException | CodeGenException e) {
-                throw new RuntimeException(e);
+            } catch (IOException e) {
+                throw new RuntimeException("Fatal error while generating CodeGenSpec " + pibifyAnnotatedClass.getName(), e);
+            } catch (CodeGenException e) {
+                classesWithErrors.add(pibifyAnnotatedClass.getName());
+                getLog().error("Exception while generating CodeGenSpec " + pibifyAnnotatedClass.getName(), e);
             }
         }
 
@@ -124,6 +174,20 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
                 default:
                     throw new UnsupportedOperationException("Unknown log level " + specGenLog.getLogLevel());
             }
+        }
+    }
+
+    private ClassLoader getClassLoader() throws MojoExecutionException {
+        try {
+            List<String> classpathElements = project.getRuntimeClasspathElements();
+            URL urls[] = new URL[classpathElements.size()];
+
+            for (int i = 0; i < urls.length; i++) {
+                urls[i] = new File(classpathElements.get(i)).toURI().toURL();
+            }
+            return new URLClassLoader(urls, getClass().getClassLoader());
+        } catch (Exception e) {
+            throw new MojoExecutionException("Couldn't create a classloader.", e);
         }
     }
 }
