@@ -3,6 +3,7 @@ package com.flipkart.pibify.codegen.stub;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.google.common.collect.ImmutableMap;
 
+import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,6 +55,8 @@ public abstract class AbstractPibifyHandlerCache {
         mapBuilder.put(HashSet.class, collectionHandler);
         mapBuilder.put(TreeSet.class, collectionHandler);
         mapBuilder.put(LinkedHashSet.class, collectionHandler);
+
+        mapBuilder.put(BigDecimal.class, new BigDecimalHandler());
     }
 
     protected void packMap() {
