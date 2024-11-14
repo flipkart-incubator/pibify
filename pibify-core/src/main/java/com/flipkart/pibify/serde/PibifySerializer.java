@@ -7,6 +7,7 @@ import com.google.protobuf.WireFormat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 /**
  * This class serves as the base serializer that the generated code uses.
@@ -129,7 +130,7 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     @Override
     public void writeString(int index, String value) throws IOException {
         if (value != null) {
-            codedOutputStream.writeString(index, value);
+            codedOutputStream.writeByteArray(index, value.getBytes(StandardCharsets.UTF_8));
         }
     }
 
