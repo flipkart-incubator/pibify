@@ -4,14 +4,15 @@ import com.flipkart.pibify.mvn.util.PrefixLog;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumConstantDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.TypeDeclaration;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
@@ -44,7 +45,6 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
     private List<String> excludes;
 
     public PibifyAddAnnotationMojo() {
-        super.setLog(new PrefixLog(new SystemStreamLog(), "[Pibify] "));
         getLog().info("Initiated PibifyAddAnnotationMojo ");
     }
 
@@ -62,7 +62,7 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
 
     @Override
     public void setLog(Log log) {
-        //no-op
+        super.setLog(new PrefixLog(log, "[Pibify] "));
     }
 
     @Override
@@ -89,19 +89,33 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
     }
 
     private void processFile(Path filePath) {
-        getLog().info("Processing file: " + filePath);
+        getLog().debug("Processing file: " + filePath);
         try {
             CompilationUnit cu = StaticJavaParser.parse(filePath);
+
+            // Skip interfaces
+            if (cu.getTypes().size() == 1) {
+                TypeDeclaration<?> type = cu.getType(0);
+                if (type instanceof ClassOrInterfaceDeclaration) {
+                    if (((ClassOrInterfaceDeclaration) type).isInterface()) {
+                        getLog().debug("Skipping interface " + filePath);
+                        return;
+                    }
+
+                }
+            }
+
+
             AtomicInteger counter = new AtomicInteger(1);
-            boolean updated = addPibifyImport(cu);
-            updated = updated | processFields(cu, counter);
+            boolean importAdded = addPibifyImport(cu);
+            boolean updated = processFields(cu, counter);
             updated = updated | processEnumConstants(cu, counter);
 
             if (updated) {
                 Files.write(filePath, cu.toString().getBytes());
                 getLog().info("File updated: " + filePath);
             } else {
-                getLog().info("No changes made to file: " + filePath);
+                getLog().debug("No changes made to file: " + filePath);
             }
         } catch (FileNotFoundException e) {
             getLog().error("File not found: " + filePath, e);
@@ -147,7 +161,7 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
 
         String fieldName = field.getVariables().get(0).toString();
 
-        getLog().info("Processing field: " + fieldName);
+        getLog().debug("Processing field: " + fieldName);
         if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent() ||
                 field.getAnnotationByName(JSON_IGNORE).isPresent()) {
             getLog().info("Skipping field: " + fieldName);
@@ -157,13 +171,13 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
             // TODO Support deprecated fields by understanding the last seen index
             field.addAndGetAnnotation(PIBIFY_ANNOTATION)
                     .addPair("value", new IntegerLiteralExpr(String.valueOf(counter.getAndIncrement())));
-            getLog().info("Added @Pibify annotation to field: " + fieldName);
+            getLog().debug("Added @Pibify annotation to field: " + fieldName);
             return true;
         }
     }
 
     private boolean addPibifyAnnotation(EnumConstantDeclaration enumConstant, AtomicInteger counter) {
-        getLog().info("Processing enum constant: " + enumConstant);
+        getLog().debug("Processing enum constant: " + enumConstant);
         if (enumConstant.getAnnotationByName(PIBIFY_ANNOTATION).isPresent()) {
             counter.incrementAndGet();
             return false;
@@ -171,7 +185,7 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
             // TODO Support deprecated fields by understanding the last seen index
             enumConstant.addAndGetAnnotation(PIBIFY_ANNOTATION)
                     .addPair("value", new IntegerLiteralExpr(String.valueOf(counter.getAndIncrement())));
-            getLog().info("Added @Pibify annotation to enum constant: " + enumConstant);
+            getLog().debug("Added @Pibify annotation to enum constant: " + enumConstant);
             return true;
         }
     }

@@ -19,7 +19,7 @@
         <auto-service.version>1.1.1</auto-service.version>
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <javapoet.version>1.13.0</javapoet.version>
-        <maven.version>3.9.9</maven.version>
+        <maven.version>3.8.4</maven.version>
     </properties>
 
     <build>
@@ -172,6 +172,19 @@
             <version>3.25.10</version>
         </dependency>
     </dependencies>
+
+    <repositories>
+        <repository>
+            <id>fk-jfrog-snapshot</id>
+            <name>Flipkart-Artifactory</name>
+            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
+        </repository>
+        <repository>
+            <id>fk-jfrog-release</id>
+            <name>Flipkart-Artifactory</name>
+            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
+        </repository>
+    </repositories>
 
     <distributionManagement>
         <repository>
