@@ -1,5 +1,7 @@
 package com.flipkart.pibify.resources;
 
+import com.flipkart.pibify.core.Pibify;
+
 /**
  * This class is used for test
  * Author bageshwar.pn
@@ -7,7 +9,10 @@ package com.flipkart.pibify.resources;
  */
 public class SampleResponse {
 
+    @Pibify(1)
     private long at;
+
+    @Pibify(2)
     private String content;
 
     public SampleResponse() {
