@@ -48,7 +48,7 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
     }
 
     @Override
-    public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
+    public void serialize(Object object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
 
         if (object == null) {
             return;
@@ -64,7 +64,7 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
     }
 
     @Override
-    public Object deserialize(IDeserializer deserializer, Class<Object> type) throws PibifyCodeExecException {
+    public Object deserialize(IDeserializer deserializer, Class<Object> type, SerializationContext context) throws PibifyCodeExecException {
         try {
             int nextTag = deserializer.getNextTag(); // consume start object tag
             Object deserialized = this.deserialize(deserializer.readObjectAsBytes(), type);

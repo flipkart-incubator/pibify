@@ -45,7 +45,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
     }
 
     @Override
-    public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
+    public void serialize(Object object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
         if (object == null) {
             return;
         }
@@ -54,7 +54,8 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
             // Write the name of the class as the first param
             Class<?> objectClass = object.getClass();
             String refType = objectClass.getName();
-            serializer.writeString(1, refType);
+            int index = context.addStringToDictionary(refType);
+            serializer.writeInt(1, index);
 
             if (objectClass.equals(String.class)) {
                 serializer.writeString(2, (String) object);
@@ -80,7 +81,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
                 PibifyGenerated refHandler = getRefClassForTest(refType, objectClass);
                 // Write the object binary as the second attribute.
                 //serializer.writeObjectAsBytes(2, refHandler.serialize(object, serializer));
-                serializer.writeObject(2, refHandler, object);
+                serializer.writeObject(2, refHandler, object, context);
             }
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
@@ -88,15 +89,16 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
     }
 
     @Override
-    public Object deserialize(IDeserializer deserializer, Class clazzType) throws PibifyCodeExecException {
+    public Object deserialize(IDeserializer deserializer, Class clazzType, SerializationContext context) throws PibifyCodeExecException {
         try {
             Object object = null;
             int tag = deserializer.getNextTag();
             String refType = null;
             while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
                 switch (tag) {
-                    case 10:
-                        refType = deserializer.readString();
+                    case 8:
+                        int index = deserializer.readInt();
+                        refType = context.getWord(index);
                         break;
                     // WARN: This operation is unsafe. We are attempting to read from the stream without
                     // caring for the tag.
@@ -129,7 +131,7 @@ public class PibifyObjectHandler extends PibifyGenerated<Object> {
                             object = deserializer.readEnum();
                         } else {
                             PibifyGenerated refHandler = getRefClassForTest(refType, objectClass);
-                            object = refHandler.deserialize(deserializer, objectClass);
+                            object = refHandler.deserialize(deserializer, objectClass, context);
                         }
 
                         break;

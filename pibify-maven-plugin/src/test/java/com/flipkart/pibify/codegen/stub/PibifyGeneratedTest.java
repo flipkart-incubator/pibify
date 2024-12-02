@@ -24,11 +24,11 @@ public class PibifyGeneratedTest {
                 .build();
         PibifyGenerated<?> underTest = new PibifyGenerated<Object>() {
             @Override
-            public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
+            public void serialize(Object object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
             }
 
             @Override
-            public Object deserialize(IDeserializer deserializer, Class clazz) throws PibifyCodeExecException {
+            public Object deserialize(IDeserializer deserializer, Class clazz, SerializationContext context) throws PibifyCodeExecException {
                 return null;
             }
         };
@@ -48,11 +48,11 @@ public class PibifyGeneratedTest {
                 .build();
         PibifyGenerated<?> underTest = new PibifyGenerated<Object>() {
             @Override
-            public void serialize(Object object, ISerializer serializer) throws PibifyCodeExecException {
+            public void serialize(Object object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
             }
 
             @Override
-            public Object deserialize(IDeserializer deserializer, Class clazz) throws PibifyCodeExecException {
+            public Object deserialize(IDeserializer deserializer, Class clazz, SerializationContext context) throws PibifyCodeExecException {
                 return null;
             }
         };

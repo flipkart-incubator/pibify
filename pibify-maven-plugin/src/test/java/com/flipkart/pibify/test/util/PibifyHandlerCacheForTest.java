@@ -18,6 +18,7 @@ public class PibifyHandlerCacheForTest extends AbstractPibifyHandlerCache {
     public static PibifyHandlerCacheForTest getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new PibifyHandlerCacheForTest();
+            INSTANCE.initializeHandlers();
         }
         return INSTANCE;
     }

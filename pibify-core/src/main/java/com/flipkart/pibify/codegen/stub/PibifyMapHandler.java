@@ -28,22 +28,17 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
     }
 
     @Override
-    public void serialize(Map object, ISerializer serializer) throws PibifyCodeExecException {
+    public void serialize(Map object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
         if (object == null) {
             return;
         }
 
         logger.fine("Serializing via PibifyMapHandler, consider moving away from Object References for Maps");
         try {
-
-            if (objectHandler == null) {
-                objectHandler = this.pibifyHandlerCache.getHandler(Object.class).get();
-            }
-
             for (Object entryObj : object.entrySet()) {
                 Map.Entry entry = (Map.Entry) entryObj;
-                serializer.writeObject(1, objectHandler, entry.getKey());
-                serializer.writeObject(2, objectHandler, entry.getValue());
+                serializer.writeObject(1, objectHandler, entry.getKey(), context);
+                serializer.writeObject(2, objectHandler, entry.getValue(), context);
             }
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
@@ -51,20 +46,19 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
     }
 
     @Override
-    public Map deserialize(IDeserializer deserializer, Class<Map> clazz) throws
+    public Map deserialize(IDeserializer deserializer, Class<Map> clazz, SerializationContext context) throws
             PibifyCodeExecException {
         try {
             logger.fine("Deserializing via PibifyMapHandler, consider moving away from Object References for Maps");
             int tag = deserializer.getNextTag();
             Map object = clazz.getDeclaredConstructor().newInstance();
-            PibifyGenerated<Object> handler = pibifyHandlerCache.getHandler(Object.class).get();
             Object key;
             Object value;
             while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
-                key = handler.deserialize(deserializer, java.lang.Object.class);
+                key = objectHandler.deserialize(deserializer, java.lang.Object.class, context);
                 key = ((Map.Entry<String, Object>) (key)).getValue();
                 tag = deserializer.getNextTag();
-                value = handler.deserialize(deserializer, java.lang.Object.class);
+                value = objectHandler.deserialize(deserializer, java.lang.Object.class, context);
                 value = ((Map.Entry<String, Object>) (value)).getValue();
                 object.put(key, value);
                 tag = deserializer.getNextTag();
@@ -73,5 +67,11 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
+    }
+
+    @Override
+    public void initialize() {
+        super.initialize();
+        objectHandler = this.pibifyHandlerCache.getHandler(Object.class).get();
     }
 }

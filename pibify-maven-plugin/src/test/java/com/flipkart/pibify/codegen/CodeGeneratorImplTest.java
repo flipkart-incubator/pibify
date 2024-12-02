@@ -142,7 +142,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
-        //javaFile.getJavaFile().writeTo(System.out);
+        //javaFile.getJavaFile().writeTo(new CodePrinterWithLineNumbers(false));
         ClassWithNativeFields testPayload = new ClassWithNativeFields();
         testPayload.randomize();
         ClassWithNativeFields deserialized = invokeGeneratedCode(javaFile.getJavaFile(), testPayload);
@@ -402,7 +402,7 @@ public class CodeGeneratorImplTest {
 
         for (Class clazz : dependent) {
             JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
-            //javaFile1.writeTo(System.out);
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
             compiler.compile(javaFile1.toJavaFileObject());
             Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
         }

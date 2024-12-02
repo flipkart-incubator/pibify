@@ -16,7 +16,7 @@ import java.math.BigInteger;
 public class BigDecimalHandler extends PibifyGenerated<BigDecimal> {
 
     @Override
-    public void serialize(BigDecimal object, ISerializer serializer) throws PibifyCodeExecException {
+    public void serialize(BigDecimal object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
         if (object != null) {
             try {
                 serializer.writeObjectAsBytes(1, object.unscaledValue().toByteArray());
@@ -28,7 +28,7 @@ public class BigDecimalHandler extends PibifyGenerated<BigDecimal> {
     }
 
     @Override
-    public BigDecimal deserialize(IDeserializer deserializer, Class<BigDecimal> type) throws PibifyCodeExecException {
+    public BigDecimal deserialize(IDeserializer deserializer, Class<BigDecimal> type, SerializationContext context) throws PibifyCodeExecException {
         try {
             BigDecimal bigDecimal;
             int tag = deserializer.getNextTag();

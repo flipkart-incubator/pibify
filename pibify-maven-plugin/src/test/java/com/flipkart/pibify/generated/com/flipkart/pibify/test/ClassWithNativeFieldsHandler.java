@@ -2,6 +2,7 @@ package com.flipkart.pibify.generated.com.flipkart.pibify.test;
 
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+import com.flipkart.pibify.codegen.stub.SerializationContext;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
@@ -17,11 +18,11 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
     }
 
     @Override
-    public void serialize(ClassWithNativeFields object, ISerializer serializer) throws PibifyCodeExecException {
+    public void serialize(ClassWithNativeFields object, ISerializer serializer,
+                          SerializationContext context) throws PibifyCodeExecException {
         if (object == null) {
             return;
         }
-
         try {
             serializer.writeString(1, object.getaString());
             serializer.writeInt(2, object.getAnInt());
@@ -38,12 +39,13 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
     }
 
     @Override
-    public ClassWithNativeFields deserialize(IDeserializer deserializer, Class<ClassWithNativeFields> clazz) throws
+    public ClassWithNativeFields deserialize(IDeserializer deserializer,
+                                             Class<ClassWithNativeFields> clazz, SerializationContext context) throws
             PibifyCodeExecException {
         try {
             ClassWithNativeFields object = new ClassWithNativeFields();
             int tag = deserializer.getNextTag();
-            while (tag != 0) {
+            while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
                 switch (tag) {
                     case 10:
                         object.setaString(deserializer.readString());
@@ -80,6 +82,13 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
             return object;
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
+        }
+    }
+
+    @Override
+    public void initialize() {
+        for (PibifyGenerated internalHandler : HANDLER_MAP.values()) {
+            internalHandler.initialize();
         }
     }
 }

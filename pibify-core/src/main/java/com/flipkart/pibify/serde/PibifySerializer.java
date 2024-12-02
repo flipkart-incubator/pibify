@@ -2,6 +2,7 @@ package com.flipkart.pibify.serde;
 
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+import com.flipkart.pibify.codegen.stub.SerializationContext;
 import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.WireFormat;
 
@@ -31,7 +32,6 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
         } catch (Exception e) {
             // cheap logging, since this is platform level.
             // --add-opens java.base/java.lang=ALL-UNNAMED
-            e.printStackTrace();
             // might revisit later
             System.err.println("[Pibify] Won't be using Unsafe String operations");
             return false;
@@ -189,10 +189,10 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
     }
 
     @Override
-    public void writeObject(int index, PibifyGenerated handler, Object value) throws PibifyCodeExecException, IOException {
+    public void writeObject(int index, PibifyGenerated handler, Object value, SerializationContext context) throws PibifyCodeExecException, IOException {
         if (value != null) {
             codedOutputStream.writeTag(index, WireFormat.WIRETYPE_LENGTH_DELIMITED);
-            handler.serialize(value, this);
+            handler.serialize(value, this, context);
             codedOutputStream.writeTag(1, WireFormat.WIRETYPE_END_GROUP);
         }
     }

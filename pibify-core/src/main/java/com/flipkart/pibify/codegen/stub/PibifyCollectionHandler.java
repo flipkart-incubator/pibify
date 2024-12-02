@@ -28,7 +28,7 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
     }
 
     @Override
-    public void serialize(Collection object, ISerializer serializer) throws PibifyCodeExecException {
+    public void serialize(Collection object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
         if (object == null) {
             return;
         }
@@ -38,7 +38,7 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
         PibifyGenerated<Object> valueHandler = pibifyHandlerCache.getHandler(Object.class).get();
         try {
             for (java.lang.Object value : object) {
-                serializer.writeObject(1, valueHandler, value);
+                serializer.writeObject(1, valueHandler, value, context);
             }
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
@@ -46,7 +46,7 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
     }
 
     @Override
-    public Collection deserialize(IDeserializer deserializer, Class<Collection> clazz) throws PibifyCodeExecException {
+    public Collection deserialize(IDeserializer deserializer, Class<Collection> clazz, SerializationContext context) throws PibifyCodeExecException {
         try {
             logger.fine("Deserializing via PibifyCollectionHandler, consider moving away from Object References for Collections");
             int tag = deserializer.getNextTag();
@@ -54,7 +54,7 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
             PibifyGenerated<Object> valueHandler = pibifyHandlerCache.getHandler(Object.class).get();
             Object value;
             while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
-                value = valueHandler.deserialize(deserializer, java.lang.Object.class);
+                value = valueHandler.deserialize(deserializer, java.lang.Object.class, context);
                 value = ((Map.Entry<String, Object>) (value)).getValue();
                 object.add(value);
                 tag = deserializer.getNextTag();

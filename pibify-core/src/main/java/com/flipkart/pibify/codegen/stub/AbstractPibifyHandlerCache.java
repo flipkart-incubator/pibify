@@ -56,6 +56,7 @@ public abstract class AbstractPibifyHandlerCache {
         mapBuilder.put(LinkedHashSet.class, collectionHandler);
 
         mapBuilder.put(BigDecimal.class, new BigDecimalHandler());
+        mapBuilder.put(SerializationContext.class, new SerializationContextHandler());
     }
 
     protected void packMap() {

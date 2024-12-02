@@ -6,8 +6,11 @@ import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
 import com.flipkart.pibify.serde.PibifyDeserializer;
 import com.flipkart.pibify.serde.PibifySerializer;
+import com.google.common.primitives.Bytes;
+import com.google.common.primitives.Ints;
 import com.google.protobuf.WireFormat;
 
+import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,21 +26,40 @@ public abstract class PibifyGenerated<T> {
 
     protected static final int DEFAULT_OBJECT_SIZE = 256;
 
-    public abstract void serialize(T object, ISerializer serializer) throws PibifyCodeExecException;
+    public abstract void serialize(T object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException;
+
+    public byte[] serialize(T object) throws PibifyCodeExecException {
+        ISerializer serializer = new PibifySerializer(getEstimatedObjectSize());
+        try {
+            serializer.writeObjectAsBytes(1, Ints.toByteArray(Integer.MAX_VALUE));
+            SerializationContext context = new SerializationContext();
+            this.serialize(object, serializer, context);
+            byte[] bytes = serializer.serialize();
+
+            // Get the bytes for context, and add them to the end
+            PibifySerializer contextSerializer = new PibifySerializer(getEstimatedObjectSize());
+            SerializationContextHandlerHolder.serializationContextHandler
+                    .serialize(context, contextSerializer, null);
+
+            byte[] contextBytes = contextSerializer.serialize();
+            byte[] concatenated = Bytes.concat(bytes, contextBytes);
+            // Tag at idx=0, and size of byte array(4) at idx=1, hence starting from 2
+            int i = 2;
+            for (byte aByte : Ints.toByteArray(bytes.length)) {
+                concatenated[i++] = aByte;
+            }
+
+            return concatenated;
+        } catch (Exception e) {
+            throw new PibifyCodeExecException(e);
+        }
+    }
 
     protected static int getEndObjectTag() {
         return (1 << 3) | WireFormat.WIRETYPE_END_GROUP;
     }
 
-    public byte[] serialize(T object) throws PibifyCodeExecException {
-        ISerializer serializer = new PibifySerializer(getEstimatedObjectSize());
-        try {
-            this.serialize(object, serializer);
-            return serializer.serialize();
-        } catch (Exception e) {
-            throw new PibifyCodeExecException(e);
-        }
-    }
+    public abstract T deserialize(IDeserializer deserializer, Class<T> type, SerializationContext context) throws PibifyCodeExecException;
 
     public T deserialize(byte[] bytes) throws PibifyCodeExecException {
         return deserialize(bytes, null);
@@ -47,10 +69,33 @@ public abstract class PibifyGenerated<T> {
         return DEFAULT_OBJECT_SIZE;
     }
 
-    public abstract T deserialize(IDeserializer deserializer, Class<T> type) throws PibifyCodeExecException;
-
     public T deserialize(IDeserializer deserializer) throws PibifyCodeExecException {
-        return this.deserialize(deserializer, null);
+        return this.deserialize(deserializer, null, new SerializationContext());
+    }
+
+    public T deserialize(IDeserializer deserializer, SerializationContext context) throws PibifyCodeExecException {
+        return this.deserialize(deserializer, null, context);
+    }
+
+    public T deserialize(byte[] bytes, Class<T> type) throws PibifyCodeExecException {
+        IDeserializer pibifyDeserializer = new PibifyDeserializer(bytes);
+        try {
+
+            int tag = pibifyDeserializer.getNextTag();
+            int idx = Ints.fromByteArray(pibifyDeserializer.readObjectAsBytes());
+            byte[] subArray = Arrays.copyOfRange(bytes, idx, bytes.length);
+            SerializationContext serializationContext = SerializationContextHandlerHolder.serializationContextHandler
+                    .deserialize(new PibifyDeserializer(subArray), null, null);
+
+            // Create a serializer that excludes
+            //  1) the context meta at the start (tag+idx) and
+            //  2) the context object towards the end
+            pibifyDeserializer = new PibifyDeserializer(Arrays.copyOfRange(bytes, 6, idx));
+
+            return deserialize(pibifyDeserializer, type, serializationContext);
+        } catch (IOException e) {
+            throw new PibifyCodeExecException(e);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -97,8 +142,9 @@ public abstract class PibifyGenerated<T> {
         }
     }
 
-    public T deserialize(byte[] bytes, Class<T> type) throws PibifyCodeExecException {
-        return deserialize(new PibifyDeserializer(bytes), type);
+    private static final class SerializationContextHandlerHolder {
+        // Lazy load to avoid class loading deadlock
+        static final PibifyGenerated<SerializationContext> serializationContextHandler = new SerializationContextHandler();
     }
 
     /**

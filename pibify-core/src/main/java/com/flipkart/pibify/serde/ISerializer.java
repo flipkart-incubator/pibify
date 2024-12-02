@@ -2,6 +2,7 @@ package com.flipkart.pibify.serde;
 
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+import com.flipkart.pibify.codegen.stub.SerializationContext;
 
 import java.io.IOException;
 
@@ -51,5 +52,5 @@ public interface ISerializer {
 
     void writeObjectAsBytes(int index, byte[] value) throws IOException;
 
-    void writeObject(int index, PibifyGenerated handler, Object object) throws PibifyCodeExecException, IOException;
+    void writeObject(int index, PibifyGenerated handler, Object object, SerializationContext context) throws PibifyCodeExecException, IOException;
 }
