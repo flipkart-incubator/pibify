@@ -1,9 +1,11 @@
 package com.flipkart.pibify;
 
+import com.flipkart.pibify.dropwizard.PibifyMessageBodyWriter;
 import com.flipkart.pibify.resources.SampleResource;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
+import pibify.generated.pibify.PibifyHandlerCache;
 
 public class PibifyDemoApplication extends Application<PibifyDemoConfiguration> {
 
@@ -24,7 +26,7 @@ public class PibifyDemoApplication extends Application<PibifyDemoConfiguration> 
     @Override
     public void run(final PibifyDemoConfiguration configuration,
                     final Environment environment) {
-
+        environment.jersey().register(new PibifyMessageBodyWriter(PibifyHandlerCache.getInstance()));
         environment.jersey().register(new SampleResource());
     }
 

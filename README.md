@@ -110,4 +110,5 @@ This is the class that the clients use to get an instance of Handler for the sup
 # Integration with application containers
 
 1. [vert.x](vertx.md)
+2. [dropwizard](dropwizard.md)
 

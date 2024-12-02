@@ -13,10 +13,10 @@ import jakarta.ws.rs.core.MediaType;
 
 
 @Path("/")
+@Produces({MediaType.APPLICATION_JSON, "application/proto"})
 public class SampleResource {
 
     @Path("/sample")
-    @Produces(MediaType.APPLICATION_JSON)
     @GET
     public SampleResponse getSampleResponse() {
         return new SampleResponse(System.currentTimeMillis(), "Hello World");
