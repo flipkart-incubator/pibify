@@ -265,6 +265,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     }
 
                     fieldSpec.setIndex(annotation.value());
+                    fieldSpec.setDictionary(annotation.dictionary());
                     fieldSpec.setName(name.getString());
                     this.underProcessing.setReflectedField(reflectedField);
                     fieldSpec.setType(getTypeFromJavaType(reflectedField.getName(), reflectedField.getGenericType(),

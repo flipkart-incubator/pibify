@@ -156,6 +156,9 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.getaShort(), deserialized.getaShort());
         assertEquals(testPayload.getaString(), deserialized.getaString());
         assertEquals(testPayload.isaBoolean(), deserialized.isaBoolean());
+        assertEquals(testPayload.getdString1(), deserialized.getdString1());
+        assertEquals(testPayload.getdString2(), deserialized.getdString2());
+        assertEquals(testPayload.dString3, deserialized.dString3);
     }
 
     @Test

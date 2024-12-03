@@ -1,4 +1,4 @@
-package com.flipkart.pibify.generated.com.flipkart.pibify.test;
+package com.flipkart.pibify.generated.com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
@@ -33,6 +33,9 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
             serializer.writeChar(7, object.getaChar());
             serializer.writeByte(8, object.getaByte());
             serializer.writeShort(9, object.getaShort());
+            serializer.writeInt(10, context.addStringToDictionary(object.getdString1()));
+            serializer.writeInt(11, context.addStringToDictionary(object.getdString2()));
+            serializer.writeInt(12, context.addStringToDictionary(object.dString3));
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
@@ -73,6 +76,15 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
                         break;
                     case 72:
                         object.setaShort((short) deserializer.readShort());
+                        break;
+                    case 80:
+                        object.setdString1(context.getWord(deserializer.readInt()));
+                        break;
+                    case 88:
+                        object.setdString2(context.getWord(deserializer.readInt()));
+                        break;
+                    case 96:
+                        object.dString3 = (context.getWord(deserializer.readInt()));
                         break;
                     default:
                         break;

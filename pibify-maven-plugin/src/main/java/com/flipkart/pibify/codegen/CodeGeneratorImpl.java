@@ -290,6 +290,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
     }
 
+    private static boolean isString(CodeGenSpec.FieldSpec fieldSpec) {
+        return fieldSpec.getType().getjPTypeName().equals(TypeName.get(String.class));
+    }
+
     private MethodSpec getSerializer(ClassName thePojo, CodeGenSpec codeGenSpec) throws CodeGenException {
 
         try {
@@ -321,10 +325,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                         builder.addStatement("serializer.writeEnum($L, object.$L$L)", fieldSpec.getIndex(), fieldSpec.getGetter(), handleGetterBean(fieldSpec));
                         break;
                     default:
-                        builder.addStatement("serializer.write$L($L, object.$L$L)",
-                                fieldSpec.getType().getNativeType().getReadWriteMethodName(),
-                                fieldSpec.getIndex(), fieldSpec.getGetter(),
-                                handleGetterBean(fieldSpec));
+                        addDefaultSerializationBlock(fieldSpec, builder);
                 }
             }
 
@@ -689,6 +690,21 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
     }
 
+    private void addDefaultSerializationBlock(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) {
+        // For strings, if it's configured to be a dictionary, write the string in the dictionary
+        // and reference to the stream
+        if (fieldSpec.isDictionary() &&
+                isString(fieldSpec)) {
+            builder.addStatement("serializer.writeInt($L, context.addStringToDictionary(object.$L$L))",
+                    fieldSpec.getIndex(), fieldSpec.getGetter(), handleGetterBean(fieldSpec));
+        } else {
+            builder.addStatement("serializer.write$L($L, object.$L$L)",
+                    fieldSpec.getType().getNativeType().getReadWriteMethodName(),
+                    fieldSpec.getIndex(), fieldSpec.getGetter(),
+                    handleGetterBean(fieldSpec));
+        }
+    }
+
     private void addFieldDeserializerBlock(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
         switch (fieldSpec.getType().getNativeType()) {
             case ARRAY:
@@ -704,25 +720,39 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 addObjectDeserializer(fieldSpec, builder);
                 break;
             default:
-                String enumBlock = "", enumEndBlock = "";
-                if (fieldSpec.getType().getNativeType() == CodeGenSpec.DataType.ENUM) {
-                    enumBlock = "getEnumValue(" + fieldSpec.getType().getReferenceType().getPackageName() + "."
-                            + fieldSpec.getType().getReferenceType().getClassName() + ".values(),";
-                    enumEndBlock = ")";
-                }
-
-                builder.addStatement("case $L: \n $>" +
-                                "object.$L$L($L$L deserializer.read$L()$L)$<",
-                        TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)),
-                        fieldSpec.getSetter(),
-                        handleBeanSetter(fieldSpec),
-                        enumBlock,
-                        getCastIfRequired(fieldSpec.getType().getNativeType()),
-                        fieldSpec.getType().getNativeType().getReadWriteMethodName(),
-                        enumEndBlock
-                );
+                defaultDeserializationBlock(fieldSpec, builder);
 
                 break;
+        }
+    }
+
+    private void defaultDeserializationBlock(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
+        String enumBlock = "", enumEndBlock = "";
+        if (fieldSpec.getType().getNativeType() == CodeGenSpec.DataType.ENUM) {
+            enumBlock = "getEnumValue(" + fieldSpec.getType().getReferenceType().getPackageName() + "."
+                    + fieldSpec.getType().getReferenceType().getClassName() + ".values(),";
+            enumEndBlock = ")";
+        }
+
+        if (fieldSpec.isDictionary() && isString(fieldSpec)) {
+            builder.addStatement("case $L: \n $>" +
+                            "object.$L$L($L context.getWord(deserializer.readInt()))$<",
+                    TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), int.class),
+                    fieldSpec.getSetter(),
+                    handleBeanSetter(fieldSpec),
+                    getCastIfRequired(fieldSpec.getType().getNativeType())
+            );
+        } else {
+            builder.addStatement("case $L: \n $>" +
+                            "object.$L$L($L$L deserializer.read$L()$L)$<",
+                    TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)),
+                    fieldSpec.getSetter(),
+                    handleBeanSetter(fieldSpec),
+                    enumBlock,
+                    getCastIfRequired(fieldSpec.getType().getNativeType()),
+                    fieldSpec.getType().getNativeType().getReadWriteMethodName(),
+                    enumEndBlock
+            );
         }
     }
 

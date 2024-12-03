@@ -38,6 +38,13 @@ public class ClassWithNativeFields {
     @Pibify(9)
     private short aShort = 9;
 
+    @Pibify(value = 12, dictionary = true)
+    public String dString3;
+    @Pibify(value = 10, dictionary = true)
+    private String dString1;
+    @Pibify(value = 11, dictionary = true)
+    private String dString2;
+
     public ClassWithNativeFields randomize() {
         aString = "str" + Math.random();
         anInt = (int) (Math.random() * 1000);
@@ -48,6 +55,9 @@ public class ClassWithNativeFields {
         aChar = (char) (Math.random() * 100);
         aByte = (byte) (Math.random() * 100);
         aShort = (short) (Math.random() * 100);
+        dString1 = "str" + Math.random();
+        dString2 = dString1;
+        dString3 = dString1;
         return this;
     }
 
@@ -123,6 +133,22 @@ public class ClassWithNativeFields {
         this.aShort = aShort;
     }
 
+    public String getdString1() {
+        return dString1;
+    }
+
+    public void setdString1(String dString1) {
+        this.dString1 = dString1;
+    }
+
+    public String getdString2() {
+        return dString2;
+    }
+
+    public void setdString2(String dString2) {
+        this.dString2 = dString2;
+    }
+
     public void resetAll() {
         aString = "";
         anInt = -1;
@@ -133,28 +159,21 @@ public class ClassWithNativeFields {
         aLong = -1;
         aShort = -1;
         aByte = -1;
+        dString1 = "";
+        dString2 = "";
+        dString3 = "";
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ClassWithNativeFields that = (ClassWithNativeFields) o;
-        return anInt == that.anInt && aLong == that.aLong && Float.compare(aFloat, that.aFloat) == 0 && Double.compare(aDouble, that.aDouble) == 0 && aBoolean == that.aBoolean && aChar == that.aChar && aByte == that.aByte && aShort == that.aShort && Objects.equals(aString, that.aString);
+    public boolean equals(Object object) {
+        if (this == object) return true;
+        if (!(object instanceof ClassWithNativeFields)) return false;
+        ClassWithNativeFields that = (ClassWithNativeFields) object;
+        return anInt == that.anInt && aLong == that.aLong && Float.compare(aFloat, that.aFloat) == 0 && Double.compare(aDouble, that.aDouble) == 0 && aBoolean == that.aBoolean && aChar == that.aChar && aByte == that.aByte && aShort == that.aShort && Objects.equals(aString, that.aString) && Objects.equals(dString1, that.dString1) && Objects.equals(dString2, that.dString2) && Objects.equals(dString3, that.dString3);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(aString);
-        result = 31 * result + anInt;
-        result = 31 * result + Long.hashCode(aLong);
-        result = 31 * result + Float.hashCode(aFloat);
-        result = 31 * result + Double.hashCode(aDouble);
-        result = 31 * result + Boolean.hashCode(aBoolean);
-        result = 31 * result + aChar;
-        result = 31 * result + aByte;
-        result = 31 * result + aShort;
-        return result;
+        return Objects.hash(aString, anInt, aLong, aFloat, aDouble, aBoolean, aChar, aByte, aShort, dString1, dString2, dString3);
     }
 }

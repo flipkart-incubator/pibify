@@ -1,7 +1,7 @@
 package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
-import com.flipkart.pibify.generated.com.flipkart.pibify.test.ClassWithNativeFieldsHandler;
+import com.flipkart.pibify.generated.com.flipkart.pibify.test.data.ClassWithNativeFieldsHandler;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.squareup.javapoet.ClassName;

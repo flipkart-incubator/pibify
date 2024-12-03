@@ -16,4 +16,15 @@ public @interface Pibify {
     int value();
 
     boolean nullable() default true;
+
+    /**
+     * This flag, when true, causes the serializer to put the field in a dictionary
+     * and reference it back during deserialization.
+     * This is useful when the field is repeated and has a lot of repeated values.
+     * <p>
+     * The flag is only supported for Strings at the moment
+     *
+     * @return dictionary
+     */
+    boolean dictionary() default false;
 }

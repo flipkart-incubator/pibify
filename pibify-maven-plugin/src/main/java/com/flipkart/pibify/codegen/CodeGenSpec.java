@@ -179,6 +179,7 @@ public class CodeGenSpec {
         String setter;
         // set to false if getters and setters are not methods
         boolean hasBeanMethods = true;
+        private boolean dictionary;
 
         public String getName() {
             return name;
@@ -226,6 +227,14 @@ public class CodeGenSpec {
 
         public void setHasBeanMethods(boolean hasBeanMethods) {
             this.hasBeanMethods = hasBeanMethods;
+        }
+
+        public boolean isDictionary() {
+            return dictionary;
+        }
+
+        public void setDictionary(boolean dictionary) {
+            this.dictionary = dictionary;
         }
     }
 
