@@ -70,9 +70,17 @@ This is the class that the clients use to get an instance of Handler for the sup
          <exclude>com/flipkart/pibify/toskip2/**</exclude>
       </excludes>
    </configuration>
+   <dependencies>
+      <!-- 
+      Due to a current limitation in dependency management, the mvn plugin will not be able 
+      to resolve transition dependencies of the module. They need to be copied over explicitly, 
+      if they are needed to compile the models   
+      -->
+      <!-- Copy over all module dependencies here -->
+   </dependencies>
     <executions>
         <execution>
-            <id>generate-sources</id>
+           <id>generate-pibify-sources</id>
             <goals>
                 <goal>generate</goal>
             </goals>
@@ -86,7 +94,7 @@ This is the class that the clients use to get an instance of Handler for the sup
     <version>3.2.0</version>
     <executions>
         <execution>
-            <id>add-source</id>
+           <id>add-pibify-source</id>
             <phase>process-classes</phase>
             <goals>
                 <goal>add-source</goal>
@@ -98,6 +106,20 @@ This is the class that the clients use to get an instance of Handler for the sup
             </configuration>
         </execution>
     </executions>
+</plugin>
+<plugin>
+<groupId>org.apache.maven.plugins</groupId>
+<artifactId>maven-compiler-plugin</artifactId>
+<version>${maven-compiler-plugin.version}</version>
+<executions>
+   <execution>
+      <id>compile-generated-pibify-sources</id>
+      <phase>prepare-package</phase>
+      <goals>
+         <goal>compile</goal>
+      </goals>
+   </execution>
+</executions>
 </plugin>
 ```
 
