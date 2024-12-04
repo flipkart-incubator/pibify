@@ -1,6 +1,6 @@
 Follow the below steps to integrate `Pibify` with Dropwizard
 
-1. Update the model classes with the `@Pibify` annotation on all the required fields
+1. Update the model classes with the `@Pibify` annotation on all the required fields using the mvn goal `annotate`. Refer to #2. 
 2. Follow the `Usage` steps in the [Readme](README.md)
 3. Register the Provider `PibifyMessageBodyWriter`, just like any other Resource/Filter is registered.
 
