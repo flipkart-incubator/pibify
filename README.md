@@ -40,6 +40,8 @@ This is the class that the clients use to get an instance of Handler for the sup
 
 ## Flow
 
+![img.png](flow.png)
+
 1. Add the dependency on `pibify-core` library
 2. Add the `pibify-maven-plugin`
 2.
@@ -138,3 +140,8 @@ This is the class that the clients use to get an instance of Handler for the sup
 1. [vert.x](vertx.md)
 2. [dropwizard](dropwizard.md)
 
+# Low Level Design Details
+
+## Flow for CodeGenerator
+
+![img_1.png](codegenflow.png)
