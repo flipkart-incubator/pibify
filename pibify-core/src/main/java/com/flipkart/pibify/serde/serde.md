@@ -31,15 +31,15 @@ Support for
 15.
     - [x] Enums in maps (key/value)
 16.
-    - [x] null reference members
+    - [x] Null reference members
 17.
-    - [x] null containers (collection,map, array) members
+    - [x] Null containers (collection,map, array) members
 18.
-    - [x] empty containers
+    - [x] Empty containers
 19.
-    - [x] duplicate index in pibify annotation
+    - [x] Duplicate index in pibify annotation
 20.
-    - [x] inner classes
+    - [x] Inner classes
 21.
     - [x] Non container classes with generic type parameter
 
@@ -62,6 +62,10 @@ Additional Test cases
 
 1.
     - [ ] Changes in order of enum will cause mis-serde due to implicit change in ordinal
-    - [x] Parsing unknown fields
-    - [x] Parsing unknown enums
+2.
+     - [x] Parsing unknown fields
+3.
+     - [x] Parsing unknown enums
+4.
+    - [ ] Permutation of @JsonProperty, @JsonIgnore and Lombok
 

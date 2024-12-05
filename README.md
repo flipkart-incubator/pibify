@@ -6,6 +6,10 @@ Serve Java pojos as protobuf over the wire
 
 # Concept
 
+## Test cases
+
+Refer to the list of test cases [here](pibify-core/src/main/java/com/flipkart/pibify/serde/serde.md)
+
 ## Terminologies
 
 #### `@Pibify`
