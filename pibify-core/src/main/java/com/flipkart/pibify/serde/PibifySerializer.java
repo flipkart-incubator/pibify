@@ -10,12 +10,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 /**
  * This class serves as the base serializer that the generated code uses.
  * Author bageshwar.pn
  * Date 27/07/24
  */
 public class PibifySerializer extends BaseSerde implements ISerializer {
+
+    private static final Logger logger = Logger.getLogger(PibifySerializer.class.getName());
 
     private final CodedOutputStream codedOutputStream;
     private final ByteArrayOutputStream outputStream;
@@ -33,7 +38,7 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
             // cheap logging, since this is platform level.
             // --add-opens java.base/java.lang=ALL-UNNAMED
             // might revisit later
-            System.err.println("[Pibify] Won't be using Unsafe String operations");
+            logger.warning("Won't be using Unsafe String operations " + e.getMessage());
             return false;
         }
     }
@@ -165,7 +170,7 @@ public class PibifySerializer extends BaseSerde implements ISerializer {
                     codedOutputStream.writeByteArray(index, getUnsafeBytesFromString(value));
                     return;
                 } catch (Exception e) {
-                    // consume exception and try traditionally
+                    logger.log(Level.WARNING, e.getMessage(), e);
                     // TODO remember this error and maybe permanently revert to using safe operations
                 }
             }
