@@ -4,12 +4,14 @@ import com.flipkart.pibify.codegen.CodeGenUtil;
 import com.flipkart.pibify.mvn.interfaces.SourcesScanner;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
+import org.codehaus.plexus.util.DirectoryScanner;
 
 import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.Objects;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -25,7 +27,7 @@ public class JavaSourcesScanner extends SourcesScanner {
     }
 
     @Override
-    public Set<Class<?>> getPibifyAnnotatedClasses(String targetClassesDirName) throws MojoExecutionException {
+    public Set<Class<?>> getPibifyAnnotatedClasses(String targetClassesDirName, List<String> excludes) throws MojoExecutionException {
         File targetClassesDir = new File(targetClassesDirName);
         if (!targetClassesDir.exists()) {
             String err = "Target classes directory does not exist: " + targetClassesDir.getAbsolutePath();
@@ -37,7 +39,16 @@ public class JavaSourcesScanner extends SourcesScanner {
             URL[] urls = new URL[]{targetClassesDir.toURI().toURL()};
             URLClassLoader classLoader = new URLClassLoader(urls, getClass().getClassLoader());
 
-            Set<Class<?>> loadedClasses = scanAndLoadClasses(targetClassesDir, "", classLoader);
+            DirectoryScanner scanner = new DirectoryScanner();
+            scanner.setBasedir(targetClassesDirName);
+            String[] excludePatterns = excludes.toArray(new String[0]);
+            scanner.setExcludes(excludePatterns);
+            scanner.addDefaultExcludes();
+            scanner.scan();
+
+            getLog().info("Excluded files: " + Arrays.asList(scanner.getExcludedFiles()));
+
+            Set<Class<?>> loadedClasses = scanAndLoadClasses(targetClassesDirName, scanner.getIncludedFiles(), classLoader);
             getLog().info("Loaded " + loadedClasses.size() + " classes");
             return loadedClasses;
 
@@ -46,14 +57,13 @@ public class JavaSourcesScanner extends SourcesScanner {
         }
     }
 
-    private Set<Class<?>> scanAndLoadClasses(File dir, String packageName, ClassLoader classLoader) {
+    private Set<Class<?>> scanAndLoadClasses(String baseDir, String[] files, ClassLoader classLoader) {
         Set<Class<?>> classes = new LinkedHashSet<>();
 
-        for (File file : Objects.requireNonNull(dir.listFiles())) {
-            if (file.isDirectory()) {
-                classes.addAll(scanAndLoadClasses(file, packageName + file.getName() + ".", classLoader));
-            } else if (file.getName().endsWith(".class")) {
-                String className = packageName + file.getName().substring(0, file.getName().length() - 6);
+        for (String fileName : files) {
+            if (fileName.endsWith(".class")) {
+                // strip off the .class at the end of the filename and convert slash to dots for classloader to load the class
+                String className = fileName.substring(0, fileName.length() - 6).replaceAll("/", ".");
                 try {
                     Class<?> aClass = classLoader.loadClass(className);
                     if (!CodeGenUtil.isNonPibifyClass(aClass)) {

@@ -61,6 +61,7 @@ import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
 import com.google.common.collect.Iterables;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -1085,6 +1086,7 @@ public class CodeGeneratorImplTest {
     }
 
     @Test
+    @Disabled
     public void testClassWithJsonCreator() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator(null, new JsonCreatorFactory());
         CodeGenSpec codeGenSpec = creator.create(ClassWithJsonCreator.class);

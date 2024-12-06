@@ -3,6 +3,7 @@ package com.flipkart.pibify.mvn.interfaces;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.logging.Log;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,5 +28,5 @@ public abstract class SourcesScanner {
      *
      * @return
      */
-    public abstract Set<Class<?>> getPibifyAnnotatedClasses(String sourceDirectory) throws MojoExecutionException;
+    public abstract Set<Class<?>> getPibifyAnnotatedClasses(String sourceDirectory, List<String> excludes) throws MojoExecutionException;
 }

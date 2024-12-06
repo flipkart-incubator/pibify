@@ -13,7 +13,6 @@ import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.mvn.interfaces.SourcesScanner;
 import com.flipkart.pibify.mvn.util.PrefixLog;
-import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -61,7 +60,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
     private PluginDescriptor descriptor;
 
     @Parameter()
-    private List<String> exclude;
+    private List<String> excludes;
 
     public PibifyGenerateSourcesMojo() {
         getLog().info("Initiated PibifyGenerateSourcesMojo ");
@@ -107,13 +106,12 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
 
         SourcesScanner scanner = new JavaSourcesScanner(getLog());
         // TODO take third party processor config from pom
-        ICodeGenSpecCreator codeGenSpecCreator = new BeanIntrospectorBasedCodeGenSpecCreator(getLog(),
-                new JsonCreatorFactory());
+        ICodeGenSpecCreator codeGenSpecCreator = new BeanIntrospectorBasedCodeGenSpecCreator(getLog());
         // TODO consume config from pom
         PibifyConfiguration.builder().build();
         PibifyHandlerCacheGenerator handlerCacheGenerator = new PibifyHandlerCacheGenerator(project.getGroupId(), project.getArtifactId());
         ICodeGenerator codeGenerator = new CodeGeneratorImpl(handlerCacheGenerator.getClassName());
-        Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory());
+        Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory(), excludes);
         List<String> classesWithErrors = new ArrayList<>();
         List<String> skippedClasses = new ArrayList<>();
 
