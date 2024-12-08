@@ -19,6 +19,8 @@ import com.flipkart.pibify.test.data.ClassWithEnums;
 import com.flipkart.pibify.test.data.ClassWithInnerClasses;
 import com.flipkart.pibify.test.data.ClassWithInterestingFieldNames;
 import com.flipkart.pibify.test.data.ClassWithJsonCreator;
+import com.flipkart.pibify.test.data.ClassWithJsonCreatorWithSetters;
+import com.flipkart.pibify.test.data.ClassWithJsonCreatorWithSettersAndEmptyConstructor;
 import com.flipkart.pibify.test.data.ClassWithMapReference;
 import com.flipkart.pibify.test.data.ClassWithNativeArrays;
 import com.flipkart.pibify.test.data.ClassWithNativeCollections;
@@ -56,6 +58,7 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel4;
 import com.flipkart.pibify.test.data.generics.MapClassLevel5;
 import com.flipkart.pibify.test.data.generics.MapClassLevel6;
 import com.flipkart.pibify.test.data.generics.TertiaryGenericClassForList;
+import com.flipkart.pibify.test.data.jsoncreator.MismatchedTypes;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
@@ -1209,15 +1212,79 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload.abstractReference2, deserialized.abstractReference2);
     }
 
-    // TODO Test Cases for json creator
-    /*
-    1. both args and no-args constructor
-    2. all args constructor without full list of pibify annotation
-    3. all args constructor in a class which has non-pibify members
-    4. args constructor for some fields and setter for few other fields
-    6. mismatched name in constructor and actual field name
-    7. duplicate names in allArgs constructor
-    8. type mismatch in arg name in constructor vs actual field type
-    9. all args constructor containing more members than @Pibify fields in class
-     */
+    @Test
+    public void testClassWithJsonCreatorWithSetters() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator(null, new JsonCreatorFactory());
+        CodeGenSpec codeGenSpec = creator.create(ClassWithJsonCreatorWithSetters.class);
+        assertNotNull(codeGenSpec);
+        assertTrue(creator.getLogsForCurrentEntity().isEmpty());
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+
+        Class[] dependent = new Class[]{ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
+        ClassWithJsonCreatorWithSetters testPayload = ClassWithJsonCreatorWithSetters.randomize();
+
+        ClassWithJsonCreatorWithSetters deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testClassWithJsonCreatorWithSettersAndEmptyConstructor() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator(null, new JsonCreatorFactory());
+        CodeGenSpec codeGenSpec = creator.create(ClassWithJsonCreatorWithSettersAndEmptyConstructor.class);
+        assertNotNull(codeGenSpec);
+        assertTrue(creator.getLogsForCurrentEntity().isEmpty());
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+
+        Class[] dependent = new Class[]{ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
+        ClassWithJsonCreatorWithSettersAndEmptyConstructor testPayload = ClassWithJsonCreatorWithSettersAndEmptyConstructor.randomize();
+
+        ClassWithJsonCreatorWithSettersAndEmptyConstructor deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testMismatchedTypes() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(MismatchedTypes.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        MismatchedTypes testPayload = MismatchedTypes.randomize();
+        testPayload.randomize();
+
+        MismatchedTypes deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.aString, deserialized.aString);
+        assertEquals(testPayload.aDouble, deserialized.aDouble);
+    }
 }

@@ -96,7 +96,7 @@ public class CodeGenSpec {
         this.thirdPartyData.put(id, object);
     }
 
-    public boolean isHasAllArgsConstructor() {
+    public boolean hasAllArgsConstructor() {
         return hasAllArgsConstructor;
     }
 
@@ -196,6 +196,7 @@ public class CodeGenSpec {
         // set to false if getters and setters are not methods
         boolean hasBeanMethods = true;
         private boolean dictionary;
+        private boolean useAllArgsConstructor = false;
 
         public String getName() {
             return name;
@@ -251,6 +252,14 @@ public class CodeGenSpec {
 
         public void setDictionary(boolean dictionary) {
             this.dictionary = dictionary;
+        }
+
+        public boolean useAllArgsConstructor() {
+            return useAllArgsConstructor;
+        }
+
+        public void setUseAllArgsConstructor(boolean useAllArgsConstructor) {
+            this.useAllArgsConstructor = useAllArgsConstructor;
         }
     }
 

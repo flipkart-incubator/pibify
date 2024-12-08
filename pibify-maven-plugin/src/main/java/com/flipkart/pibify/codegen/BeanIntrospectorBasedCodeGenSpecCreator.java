@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 /**
  * This class generates the CodeGenSpec based on incoming Class via Reflection
@@ -104,7 +105,6 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 int hCount = index / MAX_FIELD_COUNT;
                 index = (hCount + 1) * MAX_FIELD_COUNT;
             }
-
 
             if (Collection.class.isAssignableFrom(type)) {
                 CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
@@ -259,6 +259,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     validatePibifyAnnotation(reflectedField, annotation);
 
                     CodeGenSpec.FieldSpec fieldSpec = new CodeGenSpec.FieldSpec();
+                    fieldSpec.setUseAllArgsConstructor(spec.hasAllArgsConstructor());
 
                     // Validating duplicate fields
                     if (mapOfFields.containsKey(annotation.value())) {
@@ -308,14 +309,18 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                                 continue;
                             }
 
-                            if (spec.isHasAllArgsConstructor()) {
+                            if (spec.hasAllArgsConstructor()) {
                                 fieldSpec.setGetter(readMethod.getName());
                                 // no setter
                             }
 
                         } else {
                             fieldSpec.setGetter(readMethod.getName());
-                            fieldSpec.setSetter(writeMethod.getName());
+
+                            // There is no need to set the setter if there is an AllArgsConstructor
+                            if (!spec.hasAllArgsConstructor()) {
+                                fieldSpec.setSetter(writeMethod.getName());
+                            }
                         }
                     }
 
@@ -327,9 +332,34 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 }
             }
 
+            if (spec.hasAllArgsConstructor()) {
+                validateAllArgsConstructor(spec);
+            }
+
             return spec;
         } catch (IntrospectionException e) {
             throw new CodeGenException(e.getMessage(), e);
+        }
+    }
+
+    private void validateAllArgsConstructor(CodeGenSpec spec) {
+        if (spec.getFieldsInAllArgsConstructor().size() != spec.getFields().size()) {
+            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "All fields must be present in the AllArgsConstructor"));
+        }
+
+        Map<String, CodeGenSpec.FieldSpec> fieldSpecMap = spec.getFields().stream()
+                .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
+
+        for (String fieldName : spec.getFieldsInAllArgsConstructor()) {
+            if (!fieldSpecMap.containsKey(fieldName)) {
+                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Additional Field " + fieldName + " in AllArgsConstructor"));
+            }
+        }
+
+        for (String key : fieldSpecMap.keySet()) {
+            if (spec.getFieldsInAllArgsConstructor().stream().noneMatch(f -> f.equals(key))) {
+                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Mismatch in Field " + key + " in AllArgsConstructor"));
+            }
         }
     }
 
