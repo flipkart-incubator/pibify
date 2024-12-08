@@ -11,6 +11,7 @@ import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
 import com.flipkart.pibify.test.data.ClassHierarchy3A;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
+import com.flipkart.pibify.test.data.ClassWithBaseClassAsReference;
 import com.flipkart.pibify.test.data.ClassWithBasicList;
 import com.flipkart.pibify.test.data.ClassWithCollectionReference;
 import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
@@ -1174,5 +1175,35 @@ public class CodeGeneratorImplTest {
 
         ClassWithBasicList deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload.list, deserialized.list);
+    }
+
+    @Test
+    public void testClassWithBaseClassAsReference() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithBaseClassAsReference.class);
+        assertNotNull(codeGenSpec);
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+
+        Class[] dependent = new Class[]{ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
+        ClassWithBaseClassAsReference testPayload = new ClassWithBaseClassAsReference();
+        testPayload.randomize();
+
+        ClassWithBaseClassAsReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload.abstractReference1, deserialized.abstractReference1);
+        assertEquals(testPayload.abstractReference2, deserialized.abstractReference2);
     }
 }

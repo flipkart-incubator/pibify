@@ -828,14 +828,20 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), byte[].class);
         builder.addStatement("case $L: \n$>", tag);
         addHandlerForObjectReference(fieldSpec.getName(), builder, refSpec);
-        if (CodeGenUtil.isJavaLangObject(refSpec)) {
-            builder.addStatement("$>$T<$T,$T> $LEntry = (Map.Entry<String,Object>)($LHandler.deserialize(deserializer, context))$<",
-                    Map.Entry.class, String.class, Object.class, fieldSpec.getName(), fieldSpec.getName());
+        /* If the ref type is abstract, we won't have top level handlers for it. In such cases
+         * it has to be treated as an object and let the PibifyObjectHandler resolve it
+         * to the right concrete handler based on the runtime type of the object
+         * */
+        if (CodeGenUtil.isJavaLangObject(refSpec) || refSpec.isAbstract()) {
+
+            ClassName referenceClass = refSpec.isAbstract() ? refSpec.getJpClassName() : ClassName.OBJECT;
+
+            builder.addStatement("$>$T<$T,$T> $LEntry = (Map.Entry<String,$T>)($LHandler.deserialize(deserializer, context))$<",
+                    Map.Entry.class, String.class, referenceClass, fieldSpec.getName(), referenceClass, fieldSpec.getName());
             builder.addStatement("$>object.$L$L($LEntry.getValue())$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
         } else {
             builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer, $T.class, context))$<",
-                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName(),
-                    ClassName.get(refSpec.getPackageName(), refSpec.getClassName()));
+                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName(), refSpec.getJpClassName());
         }
     }
 
