@@ -41,6 +41,9 @@ public class CodeGenSpec {
 
     private final Map<String, Object> thirdPartyData;
 
+    private final List<String> fieldsInAllArgsConstructor;
+    private boolean hasAllArgsConstructor = false;
+
     public CodeGenSpec(String packageName, String className, boolean isInnerClass) {
         // to ensure the package name in imports does not have $.
         // in case of inner classes, the enclosing class's package becomes a problem
@@ -50,6 +53,7 @@ public class CodeGenSpec {
         this.isInnerClass = isInnerClass;
         fieldSpecs = new ArrayList<>();
         thirdPartyData = new HashMap<>();
+        fieldsInAllArgsConstructor = new ArrayList<>();
     }
 
     public void addField(FieldSpec fieldSpec) {
@@ -90,6 +94,18 @@ public class CodeGenSpec {
 
     public void addThirdPartyData(String id, Object object) {
         this.thirdPartyData.put(id, object);
+    }
+
+    public boolean isHasAllArgsConstructor() {
+        return hasAllArgsConstructor;
+    }
+
+    public void setHasAllArgsConstructor(boolean hasAllArgsConstructor) {
+        this.hasAllArgsConstructor = hasAllArgsConstructor;
+    }
+
+    public List<String> getFieldsInAllArgsConstructor() {
+        return fieldsInAllArgsConstructor;
     }
 
     @Override

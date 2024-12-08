@@ -10,8 +10,8 @@ import com.flipkart.pibify.test.data.ClassForTestingNullValues;
 import com.flipkart.pibify.test.data.ClassHierarchy2A;
 import com.flipkart.pibify.test.data.ClassHierarchy2B;
 import com.flipkart.pibify.test.data.ClassHierarchy3A;
+import com.flipkart.pibify.test.data.ClassWithAbstractClassAsReference;
 import com.flipkart.pibify.test.data.ClassWithAutoboxFields;
-import com.flipkart.pibify.test.data.ClassWithBaseClassAsReference;
 import com.flipkart.pibify.test.data.ClassWithBasicList;
 import com.flipkart.pibify.test.data.ClassWithCollectionReference;
 import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
@@ -62,7 +62,6 @@ import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
 import com.google.common.collect.Iterables;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -1087,29 +1086,32 @@ public class CodeGeneratorImplTest {
     }
 
     @Test
-    @Disabled
     public void testClassWithJsonCreator() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator(null, new JsonCreatorFactory());
         CodeGenSpec codeGenSpec = creator.create(ClassWithJsonCreator.class);
         assertNotNull(codeGenSpec);
-        List<SpecGenLog> logsForCurrentEntity = creator.getLogsForCurrentEntity().stream().collect(Collectors.toList());
-        assertNotNull(logsForCurrentEntity);
-        assertEquals(SpecGenLogLevel.ERROR, creator.status(ClassWithJsonCreator.class));
-        assertEquals("com.flipkart.pibify.test.data.ClassWithJsonCreator NoArgs constructor is mandatory",
-                logsForCurrentEntity.get(0).getLogMessage());
+        assertTrue(creator.getLogsForCurrentEntity().isEmpty());
 
-        assertEquals("com.flipkart.pibify.test.data.ClassWithJsonCreator Cannot process a class with `@JsonCreator` annotated constructor",
-                logsForCurrentEntity.get(1).getLogMessage());
-
-        /*ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+
+        Class[] dependent = new Class[]{ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
         ClassWithJsonCreator testPayload = ClassWithJsonCreator.randomize();
 
-        ClassWithJsonCreator deserialized = invokeGeneratedCode(javaFile, testPayload);
-        assertEquals(testPayload.getaString(), deserialized.getaString());
-        assertEquals(testPayload.getBigDecimal(), deserialized.getBigDecimal());*/
+        ClassWithJsonCreator deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
     }
 
     @Test
@@ -1180,7 +1182,7 @@ public class CodeGeneratorImplTest {
     @Test
     public void testClassWithBaseClassAsReference() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
-        CodeGenSpec codeGenSpec = creator.create(ClassWithBaseClassAsReference.class);
+        CodeGenSpec codeGenSpec = creator.create(ClassWithAbstractClassAsReference.class);
         assertNotNull(codeGenSpec);
 
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
@@ -1199,11 +1201,23 @@ public class CodeGeneratorImplTest {
             assertNotNull(handlerClazz);
         }
 
-        ClassWithBaseClassAsReference testPayload = new ClassWithBaseClassAsReference();
+        ClassWithAbstractClassAsReference testPayload = new ClassWithAbstractClassAsReference();
         testPayload.randomize();
 
-        ClassWithBaseClassAsReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        ClassWithAbstractClassAsReference deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
         assertEquals(testPayload.abstractReference1, deserialized.abstractReference1);
         assertEquals(testPayload.abstractReference2, deserialized.abstractReference2);
     }
+
+    // TODO Test Cases for json creator
+    /*
+    1. both args and no-args constructor
+    2. all args constructor without full list of pibify annotation
+    3. all args constructor in a class which has non-pibify members
+    4. args constructor for some fields and setter for few other fields
+    6. mismatched name in constructor and actual field name
+    7. duplicate names in allArgs constructor
+    8. type mismatch in arg name in constructor vs actual field type
+    9. all args constructor containing more members than @Pibify fields in class
+     */
 }

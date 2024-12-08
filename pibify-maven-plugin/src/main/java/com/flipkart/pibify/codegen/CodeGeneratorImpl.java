@@ -25,6 +25,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static com.flipkart.pibify.codegen.CodeGenUtil.isArray;
 import static com.flipkart.pibify.codegen.CodeGenUtil.isCollection;
@@ -659,9 +661,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                     .addParameter(ParameterizedTypeName.get(ClassName.get(Class.class), thePojo), "clazz")
                     .addParameter(SerializationContext.class, "context")
                     .beginControlFlow("try")
-                    .addStatement("$T object = new $T()", thePojo, thePojo)
-                    .addStatement("int tag = deserializer.getNextTag()")
-                    .beginControlFlow("while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) ")
+                    .addStatement("int tag = deserializer.getNextTag()");
+
+            handleObjectCreation(builder, thePojo, codeGenSpec);
+
+            builder.beginControlFlow("while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) ")
                     .beginControlFlow("switch (tag) ");
 
             for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
@@ -678,15 +682,44 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
             builder.endControlFlow()
                     .addStatement("tag = deserializer.getNextTag()")
-                    .endControlFlow()
-                    .addStatement("return object")
-                    .nextControlFlow("catch ($T e)", Exception.class)
+                    .endControlFlow();
+
+            handleObjectReturn(builder, codeGenSpec);
+
+            builder.nextControlFlow("catch ($T e)", Exception.class)
                     .addStatement("throw new $T(e)", PibifyCodeExecException.class)
                     .endControlFlow();
 
             return builder.build();
         } catch (Exception e) {
             throw new CodeGenException(e.getMessage(), e);
+        }
+    }
+
+    private void handleObjectReturn(MethodSpec.Builder builder, CodeGenSpec codeGenSpec) {
+        if (!codeGenSpec.isHasAllArgsConstructor()) {
+            builder.addStatement("return object");
+        } else {
+            builder.addStatement("return new $T($L)", codeGenSpec.getJpClassName(),
+                    String.join(", ", codeGenSpec.getFieldsInAllArgsConstructor()));
+        }
+    }
+
+    private void handleObjectCreation(MethodSpec.Builder builder, ClassName thePojo, CodeGenSpec codeGenSpec) {
+        // This method ensures that either we can create the deserialized object from empty constructor
+        // or we add references for all fields, and use the allArgs constructor towards the end
+        if (!codeGenSpec.isHasAllArgsConstructor()) {
+            builder.addStatement("$T object = new $T()", thePojo, thePojo);
+        } else {
+            Map<String, CodeGenSpec.FieldSpec> fieldSpecMap = codeGenSpec.getFields().stream()
+                    .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, Function.identity()));
+            for (String fieldName : codeGenSpec.getFieldsInAllArgsConstructor()) {
+                CodeGenSpec.Type type = fieldSpecMap.get(fieldName).getType();
+                boolean toInitialize = true;//type.getNativeType().getClazz() == null
+                //|| !type.getNativeType().getClazz().isPrimitive();
+                builder.addStatement("$T $L = null", type.getjPTypeName(), fieldName
+                        /* Initialize non-primitive fields to null, ignore native ones*/);
+            }
         }
     }
 
@@ -734,24 +767,45 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         }
 
         if (fieldSpec.isDictionary() && isString(fieldSpec)) {
-            builder.addStatement("case $L: \n $>" +
-                            "object.$L$L($L context.getWord(deserializer.readInt()))$<",
-                    TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), int.class),
-                    fieldSpec.getSetter(),
-                    handleBeanSetter(fieldSpec),
-                    getCastIfRequired(fieldSpec.getType().getNativeType())
-            );
+            if (fieldSpec.getSetter() != null) {
+                builder.addStatement("case $L: \n $>" +
+                                "object.$L$L($L context.getWord(deserializer.readInt()))$<",
+                        TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), int.class),
+                        fieldSpec.getSetter(),
+                        handleBeanSetter(fieldSpec),
+                        getCastIfRequired(fieldSpec.getType().getNativeType()));
+            } else {
+                // case of all-args constructor
+                builder.addStatement("case $L: \n $>" +
+                                "$L = context.getWord(deserializer.readInt())$<",
+                        TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), int.class),
+                        fieldSpec.getName()
+                );
+            }
         } else {
-            builder.addStatement("case $L: \n $>" +
-                            "object.$L$L($L$L deserializer.read$L()$L)$<",
-                    TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)),
-                    fieldSpec.getSetter(),
-                    handleBeanSetter(fieldSpec),
-                    enumBlock,
-                    getCastIfRequired(fieldSpec.getType().getNativeType()),
-                    fieldSpec.getType().getNativeType().getReadWriteMethodName(),
-                    enumEndBlock
-            );
+            if (fieldSpec.getSetter() != null) {
+                builder.addStatement("case $L: \n $>" +
+                                "object.$L$L($L$L deserializer.read$L()$L)$<",
+                        TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)),
+                        fieldSpec.getSetter(),
+                        handleBeanSetter(fieldSpec),
+                        enumBlock,
+                        getCastIfRequired(fieldSpec.getType().getNativeType()),
+                        fieldSpec.getType().getNativeType().getReadWriteMethodName(),
+                        enumEndBlock
+                );
+            } else {
+                // case of all-args constructor
+                builder.addStatement("case $L: \n $>" +
+                                "$L = $L$L deserializer.read$L()$L$<",
+                        TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec)),
+                        fieldSpec.getName(),
+                        enumBlock,
+                        getCastIfRequired(fieldSpec.getType().getNativeType()),
+                        fieldSpec.getType().getNativeType().getReadWriteMethodName(),
+                        enumEndBlock
+                );
+            }
         }
     }
 
@@ -768,8 +822,15 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 fieldSpec.getName(), fieldSpec.getType().getGenericTypeSignature());
 
         //object.setaString(aStringHandler.deserialize(deserializer.readObjectAsBytes()));
-        builder.addStatement("object.$L$L($LHandler.deserialize(deserializer, context))",
-                fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+        if (fieldSpec.getSetter() != null) {
+            builder.addStatement("object.$L$L($LHandler.deserialize(deserializer, context))",
+                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+        } else {
+            // case of all-args constructor
+            builder.addStatement("$L = $LHandler.deserialize(deserializer, context)",
+                    fieldSpec.getName(), fieldSpec.getName());
+        }
+
     }
 
     private void addCollectionDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
@@ -783,8 +844,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 fieldSpec.getType().getGenericTypeSignature(),
                 fieldSpec.getName(), fieldSpec.getType().getGenericTypeSignature());
 
-        builder.addStatement("object.$L$L($LHandler.deserialize(deserializer, context))",
-                fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+        if (fieldSpec.getSetter() != null) {
+            builder.addStatement("$>$>object.$L$L($LHandler.deserialize(deserializer, context))$<$<",
+                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+        } else {
+            // case of all-args constructor
+            builder.addStatement("$>$>$L = $LHandler.deserialize(deserializer, context)$<$<",
+                    fieldSpec.getName(), fieldSpec.getName());
+        }
     }
 
     private void addArrayDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
@@ -818,8 +885,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 .beginControlFlow("$>else$<")
                 .addStatement("$>newArray$L = $T.copyOf(oldArray$L, oldArray$L.length + 1)$<", tag, Arrays.class, tag, tag)
                 .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
-                .endControlFlow()
-                .addStatement("$>object.$L$L(newArray$L)$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), tag);
+                .endControlFlow();
+
+        if (fieldSpec.getSetter() != null) {
+            builder.addStatement("$>object.$L$L(newArray$L)$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), tag);
+        } else {
+            // case of all-args constructor
+            builder.addStatement("$>$L = newArray$L$<", fieldSpec.getName(), tag);
+        }
     }
 
     private void addObjectDeserializer(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
@@ -837,10 +910,22 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
             builder.addStatement("$>$T<$T,$T> $LEntry = (Map.Entry<String,$T>)($LHandler.deserialize(deserializer, context))$<",
                     Map.Entry.class, String.class, referenceClass, fieldSpec.getName(), referenceClass, fieldSpec.getName());
-            builder.addStatement("$>object.$L$L($LEntry.getValue())$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+            if (fieldSpec.getSetter() != null) {
+                builder.addStatement("$>object.$L$L($LEntry.getValue())$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+            } else {
+                // case of all-args constructor
+                builder.addStatement("$>$L = $LEntry.getValue()$<", fieldSpec.getName(), fieldSpec.getName());
+            }
+
         } else {
-            builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer, $T.class, context))$<",
-                    fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName(), refSpec.getJpClassName());
+            if (fieldSpec.getSetter() != null) {
+                builder.addStatement("$>object.$L$L($LHandler.deserialize(deserializer, $T.class, context))$<",
+                        fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName(), refSpec.getJpClassName());
+            } else {
+                // case of all-args constructor
+                builder.addStatement("$>$L = $LHandler.deserialize(deserializer, $T.class, context)$<",
+                        fieldSpec.getName(), fieldSpec.getName(), refSpec.getJpClassName());
+            }
         }
     }
 

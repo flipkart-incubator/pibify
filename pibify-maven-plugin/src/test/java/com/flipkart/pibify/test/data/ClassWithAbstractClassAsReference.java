@@ -7,7 +7,7 @@ import com.flipkart.pibify.core.Pibify;
  * Author bageshwar.pn
  * Date 08/12/24
  */
-public class ClassWithBaseClassAsReference {
+public class ClassWithAbstractClassAsReference {
 
     @Pibify(1)
     public AbstractClassWithNativeFields abstractReference1;

@@ -4,8 +4,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.flipkart.pibify.ThirdPartyProcessorResult;
 import com.flipkart.pibify.codegen.CodeGenSpec;
 import com.flipkart.pibify.codegen.ThirdPartyProcessor;
-import com.flipkart.pibify.codegen.log.CodeSpecGenLog;
-import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 
 import java.lang.reflect.Constructor;
 import java.util.Arrays;
@@ -25,10 +23,6 @@ public class JsonCreatorFactory implements ThirdPartyProcessor {
         List<Constructor<?>> constructors = Arrays.stream(type.getDeclaredConstructors())
                 .filter(c -> c.getAnnotation(JsonCreator.class) != null)
                 .collect(Collectors.toList());
-
-        if (!constructors.isEmpty()) {
-            result.addLog(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Cannot process a class with `@JsonCreator` annotated constructor"));
-        }
 
         // TODO implement JsonCreatorFactory
 

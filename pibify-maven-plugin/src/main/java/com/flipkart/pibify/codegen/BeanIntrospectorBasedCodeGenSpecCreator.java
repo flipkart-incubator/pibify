@@ -1,6 +1,8 @@
 package com.flipkart.pibify.codegen;
 
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.flipkart.pibify.ThirdPartyProcessorResult;
 import com.flipkart.pibify.codegen.log.CodeSpecGenLog;
 import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
@@ -21,7 +23,9 @@ import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
@@ -184,7 +188,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
         Class<?> sType = type.getSuperclass();
         int shiftBy = MAX_FIELD_COUNT;
-        while (!Object.class.equals(sType)) {
+        while (!(Object.class.equals(sType) || Enum.class.equals(sType))) {
             CodeGenSpec codeGenSpec = createImpl(sType);
             for (CodeGenSpec.FieldSpec field : codeGenSpec.getFields()) {
                 field.setIndex(field.getIndex() + shiftBy);
@@ -233,7 +237,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 spec.setAbstract(true);
             }
 
-            validate(type);
+            validate(type, spec);
 
             Map<Integer, CodeGenSpec.FieldSpec> mapOfFields = new HashMap<>();
             // This set is used to find duplicate field names (case-insensitive)
@@ -282,13 +286,36 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                             continue;
                         }
                     } else {
-                        if (namesToBeanInfo.get(name).getReadMethod() == null
-                                || namesToBeanInfo.get(name).getWriteMethod() == null) {
-                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/getter missing"));
-                            continue;
+                        Method readMethod = namesToBeanInfo.get(name).getReadMethod();
+                        Method writeMethod = namesToBeanInfo.get(name).getWriteMethod();
+                        if (readMethod == null || writeMethod == null) {
+                            /*
+                            Logic
+                            If read or write methods are null, then we have a problem.
+                            Log the appropriate message based on whether both are missing or getter is missing.
+
+                            If setter is missing but there exists an AllArgs constructor, then we can skip the setter
+                            and directly use the constructor during deserialization.
+                             */
+
+                            if (readMethod == null && writeMethod == null) {
+                                log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/getter missing"));
+                                continue;
+                            }
+
+                            if (readMethod == null) {
+                                log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Getter missing"));
+                                continue;
+                            }
+
+                            if (spec.isHasAllArgsConstructor()) {
+                                fieldSpec.setGetter(readMethod.getName());
+                                // no setter
+                            }
+
                         } else {
-                            fieldSpec.setGetter(namesToBeanInfo.get(name).getReadMethod().getName());
-                            fieldSpec.setSetter(namesToBeanInfo.get(name).getWriteMethod().getName());
+                            fieldSpec.setGetter(readMethod.getName());
+                            fieldSpec.setSetter(writeMethod.getName());
                         }
                     }
 
@@ -306,21 +333,42 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         }
     }
 
-    private void validate(Class<?> type) {
-        checkNoArgsConstructor(type);
+    private void validate(Class<?> type, CodeGenSpec spec) {
+        checkValidConstructor(type, spec);
     }
 
-    private void checkNoArgsConstructor(Class<?> type) {
+    private void checkValidConstructor(Class<?> type, CodeGenSpec spec) {
         boolean found = false;
         for (Constructor<?> declaredConstructor : type.getDeclaredConstructors()) {
             if (declaredConstructor.getParameterCount() == 0) {
                 found = true;
                 break;
+            } else if (declaredConstructor.getAnnotation(JsonCreator.class) != null) {
+                // start clean when processing a JsonCreator constructor
+                spec.getFieldsInAllArgsConstructor().clear();
+                for (Parameter parameter : declaredConstructor.getParameters()) {
+                    JsonProperty jsonProperty = parameter.getAnnotation(JsonProperty.class);
+                    if (jsonProperty == null) {
+                        log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "All constructor parameters in " +
+                                "a @JsonCreator Constructor must be annotated with @JsonProperty"));
+                        // stop processing this constructor
+                        break;
+                    } else {
+                        spec.getFieldsInAllArgsConstructor().add(jsonProperty.value());
+                    }
+                }
+
+                // If we have processed all parameters as valid in the constructor
+                if (declaredConstructor.getParameters().length == spec.getFieldsInAllArgsConstructor().size()) {
+                    spec.setHasAllArgsConstructor(true);
+                    found = true;
+                    break;
+                }
             }
         }
 
         if (!found) {
-            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "NoArgs constructor is mandatory"));
+            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "NoArgs | @JsonCreator constructor is mandatory"));
         }
     }
 
