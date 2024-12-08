@@ -1,6 +1,7 @@
 package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.core.Pibify;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.TypeName;
 
 import java.lang.reflect.ParameterizedType;
@@ -54,7 +55,7 @@ public class CodeGenUtil {
     }
 
     public static boolean isJavaLangObject(CodeGenSpec spec) {
-        return (spec.getClassName().equals("Object") && spec.getPackageName().equals("java.lang"));
+        return ClassName.OBJECT.equals(spec.getJpClassName());
     }
 
     public static boolean isJavaLangObject(TypeName spec) {
@@ -97,9 +98,7 @@ public class CodeGenUtil {
         } else {
             if (type.getNativeType() == CodeGenSpec.DataType.OBJECT
                     || type.getNativeType() == CodeGenSpec.DataType.ENUM) {
-                result.append(type.getReferenceType().getPackageName())
-                        .append(".")
-                        .append(type.getReferenceType().getClassName());
+                result.append(type.getReferenceType().getJpClassName());
             } else if (type.getNativeType() == CodeGenSpec.DataType.ARRAY) {
                 result.append(type.getContainerTypes().get(0).getGenericTypeSignature())
                         .append("[]");
@@ -118,7 +117,7 @@ public class CodeGenUtil {
         String result;
         if (type.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
             if (type.getReferenceType() != null) {
-                result = type.getReferenceType().getPackageName() + "." + type.getReferenceType().getClassName() + "<";
+                result = type.getReferenceType().getJpClassName() + "<";
             } else {
                 switch (type.getCollectionType()) {
                     case SET:

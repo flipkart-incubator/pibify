@@ -55,7 +55,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
     private static void validate(CodeGenSpec codeGenSpec) throws CodeGenException {
         if (codeGenSpec.getFields().isEmpty()) {
-            throw new CodeGenException(codeGenSpec.getPackageName() + "." + codeGenSpec.getClassName() + " does not contain any pibify fields");
+            throw new CodeGenException(codeGenSpec.getJpClassName() + " does not contain any pibify fields");
         }
 
         /*
@@ -97,7 +97,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private TypeSpec.Builder getTypeSpecBuilder(CodeGenSpec codeGenSpec) throws CodeGenException {
-        ClassName thePojo = ClassName.get(codeGenSpec.getPackageName(), codeGenSpec.getClassName());
+        ClassName thePojo = codeGenSpec.getJpClassName();
         TypeSpec.Builder previousClassBuilder = this.classBuilder;
         Map<TypeName, String> previousFields = this.fields;
         this.classBuilder = TypeSpec.classBuilder(codeGenSpec.getClassName() + "Handler");
@@ -590,7 +590,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     private Object getReferenceTypeForContainers(CodeGenSpec.Type realizedType, boolean preferAutoboxed) {
         if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT
                 || realizedType.getNativeType() == CodeGenSpec.DataType.ENUM) {
-            return ClassName.get(realizedType.getReferenceType().getPackageName(), realizedType.getReferenceType().getClassName());
+            return realizedType.getReferenceType().getJpClassName();
         } else {
 
             // if native type is collection or map
@@ -729,8 +729,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     private void defaultDeserializationBlock(CodeGenSpec.FieldSpec fieldSpec, MethodSpec.Builder builder) throws InvalidPibifyAnnotation {
         String enumBlock = "", enumEndBlock = "";
         if (fieldSpec.getType().getNativeType() == CodeGenSpec.DataType.ENUM) {
-            enumBlock = "getEnumValue(" + fieldSpec.getType().getReferenceType().getPackageName() + "."
-                    + fieldSpec.getType().getReferenceType().getClassName() + ".values(),";
+            enumBlock = "getEnumValue(" + fieldSpec.getType().getReferenceType().getJpClassName() + ".values(),";
             enumEndBlock = ")";
         }
 
