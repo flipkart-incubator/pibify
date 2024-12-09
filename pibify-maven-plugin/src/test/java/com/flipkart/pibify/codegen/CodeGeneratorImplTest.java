@@ -61,6 +61,7 @@ import com.flipkart.pibify.test.data.jsoncreator.BothConstructorAndNoSetter;
 import com.flipkart.pibify.test.data.jsoncreator.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.jsoncreator.MismatchedTypes;
 import com.flipkart.pibify.test.data.lombok.BooleanOnLombok;
+import com.flipkart.pibify.test.util.CodePrinterWithLineNumbers;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
@@ -1095,12 +1096,13 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator(null, new JsonCreatorFactory());
         CodeGenSpec codeGenSpec = creator.create(ClassWithJsonCreator.class);
         assertNotNull(codeGenSpec);
+        creator.getLogsForCurrentEntity().forEach(e -> System.out.println(e.getLogMessage()));
         assertTrue(creator.getLogsForCurrentEntity().isEmpty());
 
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
 
         Class[] dependent = new Class[]{ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
         SimpleCompiler compiler = SimpleCompiler.INSTANCE;
