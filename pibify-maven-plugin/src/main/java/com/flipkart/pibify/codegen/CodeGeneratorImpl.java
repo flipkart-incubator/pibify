@@ -23,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -732,7 +733,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 CodeGenSpec.Type type = fieldSpecMap.get(fieldName).getType();
                 builder.addStatement("$T $L = null", type.getjPTypeName(), fieldName);
                 if (CodeGenSpec.DataType.ARRAY.equals(type.getNativeType())) {
-                    builder.addStatement("List<$T> $LList = new $T()",
+                    builder.addStatement("$T<$T> $LList = new $T()", List.class,
                             type.getContainerTypes().get(0).getjPTypeName(), fieldName, ArrayList.class);
                 }
             }
