@@ -1,8 +1,10 @@
-package com.flipkart.pibify.test.data;
+package com.flipkart.pibify.test.data.jsoncreator;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.flipkart.pibify.core.Pibify;
+import com.flipkart.pibify.test.data.AbstractClassWithNativeFields;
+import com.flipkart.pibify.test.data.ConcreteClassBWithNativeFields;
 
 import java.math.BigDecimal;
 import java.util.Arrays;

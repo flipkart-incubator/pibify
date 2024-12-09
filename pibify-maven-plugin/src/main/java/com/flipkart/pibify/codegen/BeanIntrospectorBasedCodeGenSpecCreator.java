@@ -289,8 +289,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     } else {
                         Method readMethod = namesToBeanInfo.get(name).getReadMethod();
                         Method writeMethod = namesToBeanInfo.get(name).getWriteMethod();
-                        if (readMethod == null || writeMethod == null) {
-                            /*
+
+                        /*
                             Logic
                             If read or write methods are null, then we have a problem.
                             Log the appropriate message based on whether both are missing or getter is missing.
@@ -299,27 +299,21 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                             and directly use the constructor during deserialization.
                              */
 
-                            if (readMethod == null && writeMethod == null) {
-                                log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/getter missing"));
-                                continue;
-                            }
-
-                            if (readMethod == null) {
-                                log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Getter missing"));
-                                continue;
-                            }
-
-                            if (spec.hasAllArgsConstructor()) {
-                                fieldSpec.setGetter(readMethod.getName());
-                                // no setter
-                            }
-
-                        } else {
+                        if (readMethod != null) {
                             fieldSpec.setGetter(readMethod.getName());
+                        } else {
+                            // Getter is mandatory
+                            log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Getter missing"));
+                            continue;
+                        }
 
-                            // There is no need to set the setter if there is an AllArgsConstructor
+                        if (writeMethod != null) {
+                            fieldSpec.setSetter(writeMethod.getName());
+                        } else {
+                            // Setter may not be present, if we have an all args constructor
                             if (!spec.hasAllArgsConstructor()) {
-                                fieldSpec.setSetter(writeMethod.getName());
+                                log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/AllArgs missing"));
+                                continue;
                             }
                         }
                     }
@@ -372,7 +366,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         for (Constructor<?> declaredConstructor : type.getDeclaredConstructors()) {
             if (declaredConstructor.getParameterCount() == 0) {
                 found = true;
-                break;
+                //break;
             } else if (declaredConstructor.getAnnotation(JsonCreator.class) != null) {
                 // start clean when processing a JsonCreator constructor
                 spec.getFieldsInAllArgsConstructor().clear();
@@ -392,7 +386,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 if (declaredConstructor.getParameters().length == spec.getFieldsInAllArgsConstructor().size()) {
                     spec.setHasAllArgsConstructor(true);
                     found = true;
-                    break;
+                    //break;
                 }
             }
         }

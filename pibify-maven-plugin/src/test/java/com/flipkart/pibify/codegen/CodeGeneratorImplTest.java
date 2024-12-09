@@ -18,7 +18,6 @@ import com.flipkart.pibify.test.data.ClassWithCollectionsOfEnums;
 import com.flipkart.pibify.test.data.ClassWithEnums;
 import com.flipkart.pibify.test.data.ClassWithInnerClasses;
 import com.flipkart.pibify.test.data.ClassWithInterestingFieldNames;
-import com.flipkart.pibify.test.data.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.ClassWithJsonCreatorWithSetters;
 import com.flipkart.pibify.test.data.ClassWithJsonCreatorWithSettersAndEmptyConstructor;
 import com.flipkart.pibify.test.data.ClassWithMapReference;
@@ -58,7 +57,10 @@ import com.flipkart.pibify.test.data.generics.MapClassLevel4;
 import com.flipkart.pibify.test.data.generics.MapClassLevel5;
 import com.flipkart.pibify.test.data.generics.MapClassLevel6;
 import com.flipkart.pibify.test.data.generics.TertiaryGenericClassForList;
+import com.flipkart.pibify.test.data.jsoncreator.BothConstructorAndNoSetter;
+import com.flipkart.pibify.test.data.jsoncreator.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.jsoncreator.MismatchedTypes;
+import com.flipkart.pibify.test.util.CodePrinterWithLineNumbers;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
@@ -1286,5 +1288,25 @@ public class CodeGeneratorImplTest {
         MismatchedTypes deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload.aString, deserialized.aString);
         assertEquals(testPayload.aDouble, deserialized.aDouble);
+    }
+
+    @Test
+    public void testBothConstructorAndNoSetter() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(BothConstructorAndNoSetter.class);
+        assertNotNull(codeGenSpec);
+
+        creator.getLogsForCurrentEntity().forEach(s -> System.out.println(s.getLogMessage()));
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        BothConstructorAndNoSetter testPayload = BothConstructorAndNoSetter.randomize();
+        testPayload.randomize();
+
+        BothConstructorAndNoSetter deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload.getaString(), deserialized.getaString());
+        assertEquals(testPayload.getaDouble(), deserialized.getaDouble());
     }
 }
