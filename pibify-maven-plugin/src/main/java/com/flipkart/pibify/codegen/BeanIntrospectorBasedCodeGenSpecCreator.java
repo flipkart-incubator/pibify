@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
 public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCreator {
 
     public static final int MAX_FIELD_COUNT = 128;
+    public static final Pattern BOOLEAN_FIELD_PATTERN = Pattern.compile("^is[A-Z].*");
 
     // to memoize results
     private final Map<Class<?>, CodeGenSpec> cache = new HashMap<>();
@@ -276,7 +278,17 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     fieldSpec.setType(getTypeFromJavaType(reflectedField.getName(), reflectedField.getGenericType(),
                             reflectedField.getType()));
 
-                    if (!namesToBeanInfo.containsKey(name)) {
+                    boolean beanInfoFound = namesToBeanInfo.containsKey(name);
+
+                    // boolean not found, try checking after splitting "is" from the field name
+                    if (!beanInfoFound
+                            && CodeGenSpec.DataType.BOOLEAN.equals(fieldSpec.getType().getNativeType())
+                            && BOOLEAN_FIELD_PATTERN.matcher(name.getString()).matches()) {
+                        name = CaseInsensitiveString.of(name.getString().substring(2));
+                        beanInfoFound = namesToBeanInfo.containsKey(name);
+                    }
+
+                    if (!beanInfoFound) {
                         // if we have a public field, use that instead of beanInfo
                         if (Modifier.isPublic(reflectedField.getModifiers())) {
                             fieldSpec.setGetter(name.getString());
