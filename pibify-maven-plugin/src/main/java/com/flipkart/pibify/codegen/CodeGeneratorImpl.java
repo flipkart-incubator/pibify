@@ -18,6 +18,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -700,6 +701,20 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         if (!codeGenSpec.hasAllArgsConstructor()) {
             builder.addStatement("return object");
         } else {
+            // handle array types
+            for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
+                if (CodeGenSpec.DataType.ARRAY.equals(fieldSpec.getType().getNativeType())) {
+
+                    builder.addStatement("$L = new $T[$LList.size()]", fieldSpec.getName(),
+                            fieldSpec.getType().getContainerTypes().get(0).getNativeType().getClazz() == null ?
+                                    fieldSpec.getType().getContainerTypes().get(0).getjPTypeName() :
+                                    fieldSpec.getType().getContainerTypes().get(0).getNativeType().getClazz(), fieldSpec.getName());
+                    builder.addStatement("int i$L = 0", fieldSpec.getName());
+                    builder.beginControlFlow("for ($T element : $LList)", fieldSpec.getType().getContainerTypes().get(0).getjPTypeName(), fieldSpec.getName())
+                            .addStatement("$L[i$L++] = element", fieldSpec.getName(), fieldSpec.getName())
+                            .endControlFlow();
+                }
+            }
             builder.addStatement("return new $T($L)", codeGenSpec.getJpClassName(),
                     String.join(", ", codeGenSpec.getFieldsInAllArgsConstructor()));
         }
@@ -716,6 +731,10 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             for (String fieldName : codeGenSpec.getFieldsInAllArgsConstructor()) {
                 CodeGenSpec.Type type = fieldSpecMap.get(fieldName).getType();
                 builder.addStatement("$T $L = null", type.getjPTypeName(), fieldName);
+                if (CodeGenSpec.DataType.ARRAY.equals(type.getNativeType())) {
+                    builder.addStatement("List<$T> $LList = new $T()",
+                            type.getContainerTypes().get(0).getjPTypeName(), fieldName, ArrayList.class);
+                }
             }
         }
     }
@@ -858,37 +877,52 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
         int tag = TagPredictor.getTagBasedOnField(fieldSpec.getIndex(), getClassForTag(fieldSpec));
         Object typeForContainers = getReferenceTypeForContainers(fieldSpec.getType().getContainerTypes().get(0), false);
-        builder.addStatement("case $L: \n$>$T[] newArray$L", tag, typeForContainers, tag)
-                .addStatement("$>$T[] oldArray$L = object.$L$L$<", typeForContainers, tag, fieldSpec.getGetter(), handleGetterBean(fieldSpec));
-        if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
-            CodeGenSpec refSpec = realizedType.getReferenceType();
-            addHandlerForObjectReference(fieldSpec, builder, refSpec);
-
-            builder.addStatement("$>$T val$L = $LHandler.deserialize(deserializer, $T.class, context)",
-                    typeForContainers, tag, fieldSpec.getName(), typeForContainers);
-        } else {
-            if (realizedType.getNativeType() == CodeGenSpec.DataType.ENUM) {
-                builder.addStatement("$>$T val$L = $T.values()[deserializer.readEnum()]$<",
-                        typeForContainers, tag, typeForContainers);
-            } else {
-                builder.addStatement("$>$T val$L = deserializer.read$L()$<",
-                        typeForContainers, tag, realizedType.getNativeType().getReadWriteMethodName());
-            }
-        }
-
-        builder.beginControlFlow("$>if (oldArray$L == null)$<", tag)
-                .addStatement("$>newArray$L = new $T[]{val$L}$<", tag, typeForContainers, tag)
-                .endControlFlow()
-                .beginControlFlow("$>else$<")
-                .addStatement("$>newArray$L = $T.copyOf(oldArray$L, oldArray$L.length + 1)$<", tag, Arrays.class, tag, tag)
-                .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
-                .endControlFlow();
-
         if (!fieldSpec.useAllArgsConstructor()) {
+            builder.addStatement("case $L: \n$>$T[] newArray$L", tag, typeForContainers, tag)
+                    .addStatement("$>$T[] oldArray$L = object.$L$L$<", typeForContainers, tag, fieldSpec.getGetter(), handleGetterBean(fieldSpec));
+            if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+                CodeGenSpec refSpec = realizedType.getReferenceType();
+                addHandlerForObjectReference(fieldSpec, builder, refSpec);
+
+                builder.addStatement("$>$T val$L = $LHandler.deserialize(deserializer, $T.class, context)",
+                        typeForContainers, tag, fieldSpec.getName(), typeForContainers);
+            } else {
+                if (realizedType.getNativeType() == CodeGenSpec.DataType.ENUM) {
+                    builder.addStatement("$>$T val$L = $T.values()[deserializer.readEnum()]$<",
+                            typeForContainers, tag, typeForContainers);
+                } else {
+                    builder.addStatement("$>$T val$L = deserializer.read$L()$<",
+                            typeForContainers, tag, realizedType.getNativeType().getReadWriteMethodName());
+                }
+            }
+
+            builder.beginControlFlow("$>if (oldArray$L == null)$<", tag)
+                    .addStatement("$>newArray$L = new $T[]{val$L}$<", tag, typeForContainers, tag)
+                    .endControlFlow()
+                    .beginControlFlow("$>else$<")
+                    .addStatement("$>newArray$L = $T.copyOf(oldArray$L, oldArray$L.length + 1)$<", tag, Arrays.class, tag, tag)
+                    .addStatement("$>newArray$L[oldArray$L.length] = val$L$<", tag, tag, tag)
+                    .endControlFlow();
+
             builder.addStatement("$>object.$L$L(newArray$L)$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), tag);
         } else {
-            // case of all-args constructor
-            builder.addStatement("$>$L = newArray$L$<", fieldSpec.getName(), tag);
+            builder.addStatement("case $L: \n$>", tag);
+            if (realizedType.getNativeType() == CodeGenSpec.DataType.OBJECT) {
+                CodeGenSpec refSpec = realizedType.getReferenceType();
+                addHandlerForObjectReference(fieldSpec, builder, refSpec);
+
+                builder.addStatement("$>$T val$L = $LHandler.deserialize(deserializer, $T.class, context)",
+                        typeForContainers, tag, fieldSpec.getName(), typeForContainers);
+            } else {
+                if (realizedType.getNativeType() == CodeGenSpec.DataType.ENUM) {
+                    builder.addStatement("$>$T val$L = $T.values()[deserializer.readEnum()]$<",
+                            typeForContainers, tag, typeForContainers);
+                } else {
+                    builder.addStatement("$>$T val$L = deserializer.read$L()$<",
+                            typeForContainers, tag, realizedType.getNativeType().getReadWriteMethodName());
+                }
+            }
+            builder.addStatement("$>$LList.add(val$L)$<", fieldSpec.getName(), tag);
         }
     }
 
