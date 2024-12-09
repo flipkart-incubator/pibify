@@ -38,6 +38,7 @@ import com.flipkart.pibify.test.data.ConcreteClassBWithNativeFields;
 import com.flipkart.pibify.test.data.ConcreteClassWithNativeFields;
 import com.flipkart.pibify.test.data.SubClassOfClassWithTypeParameterReference;
 import com.flipkart.pibify.test.data.SubClassStringOfClassWithTypeParameterReference;
+import com.flipkart.pibify.test.data.abstracts.SubClassForFinalAbstractField;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeFields;
 import com.flipkart.pibify.test.data.generics.AGenericClass;
@@ -61,7 +62,6 @@ import com.flipkart.pibify.test.data.jsoncreator.BothConstructorAndNoSetter;
 import com.flipkart.pibify.test.data.jsoncreator.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.jsoncreator.MismatchedTypes;
 import com.flipkart.pibify.test.data.lombok.BooleanOnLombok;
-import com.flipkart.pibify.test.util.CodePrinterWithLineNumbers;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
@@ -1102,7 +1102,7 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
 
         Class[] dependent = new Class[]{ConcreteClassWithNativeFields.class, ConcreteClassBWithNativeFields.class};
         SimpleCompiler compiler = SimpleCompiler.INSTANCE;
@@ -1324,6 +1324,25 @@ public class CodeGeneratorImplTest {
         testPayload.randomize();
 
         BooleanOnLombok deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testSubClassForFinalAbstractField() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(SubClassForFinalAbstractField.class);
+        assertNotNull(codeGenSpec);
+        creator.getLogsForCurrentEntity().forEach(e -> System.out.println(e.getLogMessage()));
+        assertEquals(SpecGenLogLevel.INFO, creator.status(SubClassForFinalAbstractField.class));
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        SubClassForFinalAbstractField testPayload = SubClassForFinalAbstractField.randomize();
+        testPayload.randomize();
+
+        SubClassForFinalAbstractField deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
     }
 }

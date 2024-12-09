@@ -322,7 +322,15 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                         if (writeMethod != null) {
                             fieldSpec.setSetter(writeMethod.getName());
                         } else {
+                            // or if the current class is an abstract class and the field is final
+                            // In those cases, the subclass will ensure the parent class is called with the right ctor params
+                            if (spec.isAbstract() && Modifier.isFinal(reflectedField.getModifiers())) {
+                                // don't add this field, since its set always from the base class ctor
+                                log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.INFO, "Ignoring final field in abstract class"));
+                                continue;
+                            }
                             // Setter may not be present, if we have an all args constructor
+
                             if (!spec.hasAllArgsConstructor()) {
                                 log(new FieldSpecGenLog(reflectedField, SpecGenLogLevel.ERROR, "Setter/AllArgs missing"));
                                 continue;
@@ -374,6 +382,12 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private void checkValidConstructor(Class<?> type, CodeGenSpec spec) {
+
+        // No need to validate constructor for abstract classes
+        if (spec.isAbstract()) {
+            return;
+        }
+
         boolean found = false;
         for (Constructor<?> declaredConstructor : type.getDeclaredConstructors()) {
             if (declaredConstructor.getParameterCount() == 0) {
