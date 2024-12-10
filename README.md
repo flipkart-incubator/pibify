@@ -145,3 +145,7 @@ This is the class that the clients use to get an instance of Handler for the sup
 ## Flow for CodeGenerator
 
 ![img_1.png](codegenflow.png)
+
+# Advanced Features
+
+[AdvancedFeatures.md](AdvancedFeatures.md)

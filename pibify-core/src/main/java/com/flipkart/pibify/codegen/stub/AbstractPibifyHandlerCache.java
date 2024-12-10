@@ -28,7 +28,7 @@ import java.util.Vector;
 public abstract class AbstractPibifyHandlerCache {
 
     protected final ImmutableMap.Builder<Class<?>, PibifyGenerated<?>> mapBuilder = ImmutableMap.builder();
-    private static final PibifyGenerated<Object> objectMapperHandler;
+    protected static final PibifyGenerated<Object> objectMapperHandler;
 
     static {
         objectMapperHandler = new PibifyObjectHandlerViaObjectMapper();
@@ -59,8 +59,16 @@ public abstract class AbstractPibifyHandlerCache {
         mapBuilder.put(SerializationContext.class, new SerializationContextHandler());
     }
 
+    protected void packMap(boolean throwIfDuplicates) {
+        if (throwIfDuplicates) {
+            cache = mapBuilder.buildOrThrow();
+        } else {
+            cache = mapBuilder.buildKeepingLast();
+        }
+    }
+
     protected void packMap() {
-        cache = mapBuilder.build();
+        packMap(true);
     }
 
     protected void initializeHandlers() {
