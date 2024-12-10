@@ -12,13 +12,13 @@ import com.flipkart.pibify.core.Pibify;
 public class DuplicatePropertyNames {
 
     @Pibify(1)
-    public String aString;
+    private String aString;
 
     @Pibify(2)
-    public String aString1;
+    private String aString1;
 
     @Pibify(3)
-    public Double aDouble;
+    private Double aDouble;
 
     @JsonCreator
     public DuplicatePropertyNames(@JsonProperty("aString") String aString,
@@ -27,5 +27,17 @@ public class DuplicatePropertyNames {
         this.aString = aString;
         this.aString1 = aString1;
         this.aDouble = aDouble;
+    }
+
+    public String getaString() {
+        return aString;
+    }
+
+    public String getaString1() {
+        return aString1;
+    }
+
+    public Double getaDouble() {
+        return aDouble;
     }
 }

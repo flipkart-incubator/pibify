@@ -61,6 +61,7 @@ import com.flipkart.pibify.test.data.generics.TertiaryGenericClassForList;
 import com.flipkart.pibify.test.data.jsoncreator.BothConstructorAndNoSetter;
 import com.flipkart.pibify.test.data.jsoncreator.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.jsoncreator.MismatchedTypes;
+import com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters;
 import com.flipkart.pibify.test.data.jsoncreator.RenamedBooleanInConstructor;
 import com.flipkart.pibify.test.data.lombok.BooleanOnLombok;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
@@ -1333,6 +1334,9 @@ public class CodeGeneratorImplTest {
         creator.getLogsForCurrentEntity().forEach(e -> System.out.println(e.getLogMessage()));
         assertEquals(SpecGenLogLevel.INFO, creator.status(SubClassForFinalAbstractField.class));
 
+        assertEquals("com.flipkart.pibify.test.data.abstracts.SubClassForFinalAbstractField Ignoring final field in abstract class for str",
+                creator.getLogsForCurrentEntity().stream().findFirst().get().getLogMessage());
+
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
@@ -1357,6 +1361,24 @@ public class CodeGeneratorImplTest {
         RenamedBooleanInConstructor testPayload = RenamedBooleanInConstructor.randomize();
 
         RenamedBooleanInConstructor deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testPartialConstructorWithSetters() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(PartialConstructorWithSetters.class);
+        assertNotNull(codeGenSpec);
+        //creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
+        assertEquals(SpecGenLogLevel.INFO, creator.status(PartialConstructorWithSetters.class));
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        PartialConstructorWithSetters testPayload = PartialConstructorWithSetters.randomize();
+
+        PartialConstructorWithSetters deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
     }
 }

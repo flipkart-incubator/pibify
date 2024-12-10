@@ -357,9 +357,6 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
     }
 
     private void validateAllArgsConstructor(CodeGenSpec spec) {
-        if (spec.getFieldsInAllArgsConstructor().size() != spec.getFields().size()) {
-            log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "All fields must be present in the AllArgsConstructor"));
-        }
 
         Map<String, CodeGenSpec.FieldSpec> fieldSpecMap = spec.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
@@ -381,6 +378,10 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                         spec.getFieldsInAllArgsConstructor().add(index, entry.getKey());
                     }
                 } else {
+                    if (!entry.getValue().hasBeanMethods() || entry.getValue().getSetter() != null) {
+                        // If the field has no setter and no bean methods, then it is not required in the AllArgsConstructor
+                        continue;
+                    }
                     log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Missing Field " + entry.getKey() + " in AllArgsConstructor"));
                 }
             }

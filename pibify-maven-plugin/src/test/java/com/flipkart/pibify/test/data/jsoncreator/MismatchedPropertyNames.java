@@ -12,15 +12,23 @@ import com.flipkart.pibify.core.Pibify;
 public class MismatchedPropertyNames {
 
     @Pibify(1)
-    public String aString;
+    private String aString;
 
-    @Pibify(3)
-    public Double aDouble;
+    @Pibify(2)
+    private Double aDouble;
 
     @JsonCreator
     public MismatchedPropertyNames(@JsonProperty("aString1") String aString,
                                    @JsonProperty("aDouble") Double aDouble) {
         this.aString = aString;
         this.aDouble = aDouble;
+    }
+
+    public String getaString() {
+        return aString;
+    }
+
+    public Double getaDouble() {
+        return aDouble;
     }
 }

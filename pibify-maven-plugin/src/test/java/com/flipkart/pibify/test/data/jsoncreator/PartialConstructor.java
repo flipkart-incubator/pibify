@@ -12,18 +12,30 @@ import com.flipkart.pibify.core.Pibify;
 public class PartialConstructor {
 
     @Pibify(1)
-    public String aString;
+    private String aString;
 
     @Pibify(2)
-    public String aString2;
+    private String aString2;
 
     @Pibify(3)
-    public Double aDouble;
+    private Double aDouble;
 
     @JsonCreator
     public PartialConstructor(@JsonProperty("aString") String aString,
                               @JsonProperty("aDouble") Double aDouble) {
         this.aString = aString;
         this.aDouble = aDouble;
+    }
+
+    public String getaString() {
+        return aString;
+    }
+
+    public String getaString2() {
+        return aString2;
+    }
+
+    public Double getaDouble() {
+        return aDouble;
     }
 }

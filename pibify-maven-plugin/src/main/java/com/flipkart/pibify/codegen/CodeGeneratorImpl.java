@@ -716,8 +716,15 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                             .endControlFlow();
                 }
             }
-            builder.addStatement("return new $T($L)", codeGenSpec.getJpClassName(),
+            builder.addStatement("$T toBeReturned = new $T($L)", codeGenSpec.getJpClassName(), codeGenSpec.getJpClassName(),
                     String.join(", ", codeGenSpec.getFieldsInAllArgsConstructor()));
+            // add fields which have a setter
+            for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
+                if (fieldSpec.getSetter() != null) {
+                    builder.addStatement("toBeReturned.$L$L($L)", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName());
+                }
+            }
+            builder.addStatement("return toBeReturned");
         }
     }
 
@@ -729,12 +736,25 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         } else {
             Map<String, CodeGenSpec.FieldSpec> fieldSpecMap = codeGenSpec.getFields().stream()
                     .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, Function.identity()));
+
+            Set<String> setOfArgConstructorNames = new HashSet<>(codeGenSpec.getFieldsInAllArgsConstructor());
             for (String fieldName : codeGenSpec.getFieldsInAllArgsConstructor()) {
                 CodeGenSpec.Type type = fieldSpecMap.get(fieldName).getType();
                 builder.addStatement("$T $L = null", type.getjPTypeName(), fieldName);
                 if (CodeGenSpec.DataType.ARRAY.equals(type.getNativeType())) {
                     builder.addStatement("$T<$T> $LList = new $T()", List.class,
                             type.getContainerTypes().get(0).getjPTypeName(), fieldName, ArrayList.class);
+                }
+            }
+
+            // add members for fields which have a setter
+            for (CodeGenSpec.FieldSpec fieldSpec : codeGenSpec.getFields()) {
+                if (fieldSpec.getSetter() != null && !setOfArgConstructorNames.contains(fieldSpec.getName())) {
+                    builder.addStatement("$T $L = null", fieldSpec.getType().getjPTypeName(), fieldSpec.getName());
+                    if (CodeGenSpec.DataType.ARRAY.equals(fieldSpec.getType().getNativeType())) {
+                        builder.addStatement("$T<$T> $LList = new $T()", List.class,
+                                fieldSpec.getType().getContainerTypes().get(0).getjPTypeName(), fieldSpec.getName(), ArrayList.class);
+                    }
                 }
             }
         }

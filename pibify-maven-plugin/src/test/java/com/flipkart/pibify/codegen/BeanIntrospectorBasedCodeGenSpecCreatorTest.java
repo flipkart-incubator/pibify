@@ -586,9 +586,9 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals(SpecGenLogLevel.ERROR, creator.status(forTest));
         List<String> msgs = creator.getLogsForCurrentEntity().stream().map(SpecGenLog::getLogMessage).collect(Collectors.toList());
 
-        assertEquals(2, creator.getLogsForCurrentEntity().size());
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructor All fields must be present in the AllArgsConstructor", msgs.get(0));
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructor Missing Field aString2 in AllArgsConstructor", msgs.get(1));
+        assertEquals(1, creator.getLogsForCurrentEntity().size());
+        //assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructor All fields must be present in the AllArgsConstructor", msgs.get(0));
+        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructor Missing Field aString2 in AllArgsConstructor", msgs.get(0));
     }
 
     @Test
@@ -607,11 +607,9 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(forTest);
         assertNotNull(codeGenSpec);
-        assertEquals(SpecGenLogLevel.ERROR, creator.status(forTest));
-        List<String> msgs = creator.getLogsForCurrentEntity().stream().map(SpecGenLog::getLogMessage).collect(Collectors.toList());
-        assertEquals(2, creator.getLogsForCurrentEntity().size());
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters All fields must be present in the AllArgsConstructor", msgs.get(0));
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters Missing Field aString2 in AllArgsConstructor", msgs.get(1));
+        creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
+        assertEquals(SpecGenLogLevel.INFO, creator.status(forTest));
+        assertEquals(0, creator.getLogsForCurrentEntity().size());
     }
 
     @Test
