@@ -364,15 +364,25 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         Map<String, CodeGenSpec.FieldSpec> fieldSpecMap = spec.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
 
-        for (String fieldName : spec.getFieldsInAllArgsConstructor()) {
-            if (!fieldSpecMap.containsKey(fieldName)) {
-                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Additional Field " + fieldName + " in AllArgsConstructor"));
-            }
-        }
-
-        for (String key : fieldSpecMap.keySet()) {
-            if (spec.getFieldsInAllArgsConstructor().stream().noneMatch(f -> f.equals(key))) {
-                log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Mismatch in Field " + key + " in AllArgsConstructor"));
+        for (Map.Entry<String, CodeGenSpec.FieldSpec> entry : fieldSpecMap.entrySet()) {
+            if (spec.getFieldsInAllArgsConstructor().stream().noneMatch(f -> f.equals(entry.getKey()))) {
+                if (CodeGenSpec.DataType.BOOLEAN.equals(entry.getValue().getType().getNativeType())
+                        && BOOLEAN_FIELD_PATTERN.matcher(entry.getKey()).matches()) {
+                    // boolean fields can have the word "is" played around a bit
+                    char[] translatedNameChars = entry.getKey().substring(2).toCharArray();
+                    translatedNameChars[0] = Character.toLowerCase(translatedNameChars[0]);
+                    String translatedName = new String(translatedNameChars);
+                    if (spec.getFieldsInAllArgsConstructor().stream().noneMatch(f -> f.equals(translatedName))) {
+                        log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Missing Field " + entry.getKey() + " in AllArgsConstructor"));
+                    } else {
+                        // If we find a translated name, update the list of fields in AllArgsConstructor
+                        int index = spec.getFieldsInAllArgsConstructor().indexOf(translatedName);
+                        spec.getFieldsInAllArgsConstructor().remove(translatedName);
+                        spec.getFieldsInAllArgsConstructor().add(index, entry.getKey());
+                    }
+                } else {
+                    log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Missing Field " + entry.getKey() + " in AllArgsConstructor"));
+                }
             }
         }
     }

@@ -19,6 +19,7 @@ import com.flipkart.pibify.test.data.jsoncreator.MismatchedPropertyNames;
 import com.flipkart.pibify.test.data.jsoncreator.PartialConstructor;
 import com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithNonPibify;
 import com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters;
+import com.flipkart.pibify.test.data.jsoncreator.RenamedBooleanInConstructor;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -587,7 +588,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
 
         assertEquals(2, creator.getLogsForCurrentEntity().size());
         assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructor All fields must be present in the AllArgsConstructor", msgs.get(0));
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructor Mismatch in Field aString2 in AllArgsConstructor", msgs.get(1));
+        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructor Missing Field aString2 in AllArgsConstructor", msgs.get(1));
     }
 
     @Test
@@ -610,7 +611,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         List<String> msgs = creator.getLogsForCurrentEntity().stream().map(SpecGenLog::getLogMessage).collect(Collectors.toList());
         assertEquals(2, creator.getLogsForCurrentEntity().size());
         assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters All fields must be present in the AllArgsConstructor", msgs.get(0));
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters Mismatch in Field aString2 in AllArgsConstructor", msgs.get(1));
+        assertEquals("com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters Missing Field aString2 in AllArgsConstructor", msgs.get(1));
     }
 
     @Test
@@ -621,9 +622,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNotNull(codeGenSpec);
         assertEquals(SpecGenLogLevel.ERROR, creator.status(forTest));
         List<String> msgs = creator.getLogsForCurrentEntity().stream().map(SpecGenLog::getLogMessage).collect(Collectors.toList());
-        assertEquals(2, msgs.size());
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.MismatchedPropertyNames Additional Field aString1 in AllArgsConstructor", msgs.get(0));
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.MismatchedPropertyNames Mismatch in Field aString in AllArgsConstructor", msgs.get(1));
+        assertEquals(1, msgs.size());
+        assertEquals("com.flipkart.pibify.test.data.jsoncreator.MismatchedPropertyNames Missing Field aString in AllArgsConstructor", msgs.get(0));
     }
 
     @Test
@@ -634,7 +634,18 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertNotNull(codeGenSpec);
         assertEquals(SpecGenLogLevel.ERROR, creator.status(forTest));
         assertEquals(1, creator.getLogsForCurrentEntity().size());
-        assertEquals("com.flipkart.pibify.test.data.jsoncreator.DuplicatePropertyNames Mismatch in Field aString1 in AllArgsConstructor",
+        assertEquals("com.flipkart.pibify.test.data.jsoncreator.DuplicatePropertyNames Missing Field aString1 in AllArgsConstructor",
                 creator.getLogsForCurrentEntity().stream().findFirst().get().getLogMessage());
+    }
+
+    @Test
+    public void testRenamedBooleanInConstructor() throws CodeGenException {
+        Class<?> forTest = RenamedBooleanInConstructor.class;
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(forTest);
+        assertNotNull(codeGenSpec);
+        creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
+        assertEquals(SpecGenLogLevel.INFO, creator.status(forTest));
+        assertEquals(0, creator.getLogsForCurrentEntity().size());
     }
 }

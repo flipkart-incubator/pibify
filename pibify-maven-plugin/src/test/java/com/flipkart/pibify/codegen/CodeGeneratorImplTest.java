@@ -61,6 +61,7 @@ import com.flipkart.pibify.test.data.generics.TertiaryGenericClassForList;
 import com.flipkart.pibify.test.data.jsoncreator.BothConstructorAndNoSetter;
 import com.flipkart.pibify.test.data.jsoncreator.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.jsoncreator.MismatchedTypes;
+import com.flipkart.pibify.test.data.jsoncreator.RenamedBooleanInConstructor;
 import com.flipkart.pibify.test.data.lombok.BooleanOnLombok;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
@@ -1285,7 +1286,6 @@ public class CodeGeneratorImplTest {
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         MismatchedTypes testPayload = MismatchedTypes.randomize();
-        testPayload.randomize();
 
         MismatchedTypes deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload.aString, deserialized.aString);
@@ -1303,7 +1303,6 @@ public class CodeGeneratorImplTest {
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         BothConstructorAndNoSetter testPayload = BothConstructorAndNoSetter.randomize();
-        testPayload.randomize();
 
         BothConstructorAndNoSetter deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload.getaString(), deserialized.getaString());
@@ -1321,7 +1320,6 @@ public class CodeGeneratorImplTest {
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         BooleanOnLombok testPayload = BooleanOnLombok.randomize();
-        testPayload.randomize();
 
         BooleanOnLombok deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
@@ -1340,9 +1338,25 @@ public class CodeGeneratorImplTest {
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         SubClassForFinalAbstractField testPayload = SubClassForFinalAbstractField.randomize();
-        testPayload.randomize();
 
         SubClassForFinalAbstractField deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testRenamedBooleanInConstructor() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(RenamedBooleanInConstructor.class);
+        assertNotNull(codeGenSpec);
+        assertEquals(SpecGenLogLevel.INFO, creator.status(RenamedBooleanInConstructor.class));
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        RenamedBooleanInConstructor testPayload = RenamedBooleanInConstructor.randomize();
+
+        RenamedBooleanInConstructor deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
     }
 }
