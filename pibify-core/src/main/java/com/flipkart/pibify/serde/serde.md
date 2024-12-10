@@ -52,11 +52,11 @@ Jackson
 3.
     - [ ] @JsonProperty with renaming fields (should be noOp)
 4.
-    - [ ] @JsonProperty in constructor
+    - [X] @JsonProperty in constructor
 5.
     - [ ] Explicit @JsonSubtype
 6.
-    - [ ] @JsonCreator
+    - [X] @JsonCreator
 
 Additional Test cases
 
