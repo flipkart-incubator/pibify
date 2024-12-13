@@ -26,6 +26,7 @@ public abstract class PibifyGenerated<T> {
 
     protected static final int DEFAULT_OBJECT_SIZE = 256;
 
+    // TODO add detailed comments about each serialize/deserialize method variation
     public abstract void serialize(T object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException;
 
     public byte[] serialize(T object) throws PibifyCodeExecException {
