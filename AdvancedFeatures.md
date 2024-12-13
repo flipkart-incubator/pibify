@@ -22,6 +22,6 @@ for more details.
 
 ### Parity Check
 
-[ParityCheck.md](Parity Check)
+[Parity Check](ParityCheck.md)
 
 ### String Dictionary
