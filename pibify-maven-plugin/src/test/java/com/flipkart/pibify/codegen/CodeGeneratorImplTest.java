@@ -179,19 +179,12 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
-        //javaFile.writeTo(System.out);
+        //javaFile.getJavaFile().writeTo(new CodePrinterWithLineNumbers(true));
         ClassWithAutoboxFields testPayload = new ClassWithAutoboxFields();
         testPayload.randomize();
         ClassWithAutoboxFields deserialized = invokeGeneratedCode(javaFile.getJavaFile(), testPayload);
 
-        assertEquals(testPayload.getaByte(), deserialized.getaByte());
-        assertEquals(testPayload.getaChar(), deserialized.getaChar());
-        assertEquals(testPayload.getaDouble(), deserialized.getaDouble());
-        assertEquals(testPayload.getaFloat(), deserialized.getaFloat());
-        assertEquals(testPayload.getaLong(), deserialized.getaLong());
-        assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
-        assertEquals(testPayload.getaShort(), deserialized.getaShort());
-        assertEquals(testPayload.getaBoolean(), deserialized.getaBoolean());
+        assertEquals(testPayload, deserialized);
     }
 
 

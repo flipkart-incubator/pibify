@@ -284,8 +284,11 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     if (!beanInfoFound
                             && CodeGenSpec.DataType.BOOLEAN.equals(fieldSpec.getType().getNativeType())
                             && BOOLEAN_FIELD_PATTERN.matcher(name.getString()).matches()) {
-                        name = CaseInsensitiveString.of(name.getString().substring(2));
-                        beanInfoFound = namesToBeanInfo.containsKey(name);
+                        CaseInsensitiveString altName = CaseInsensitiveString.of(name.getString().substring(2));
+                        beanInfoFound = namesToBeanInfo.containsKey(altName);
+                        if (beanInfoFound) {
+                            name = altName;
+                        }
                     }
 
                     if (!beanInfoFound) {
