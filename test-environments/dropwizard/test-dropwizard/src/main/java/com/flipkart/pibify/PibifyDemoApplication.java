@@ -10,6 +10,8 @@ import pibify.generated.pibify.PibifyHandlerCache;
 
 public class PibifyDemoApplication extends Application<PibifyDemoConfiguration> {
 
+    // TODO add integration tests
+
     public static void main(final String[] args) throws Exception {
         new PibifyDemoApplication().run(args);
     }
