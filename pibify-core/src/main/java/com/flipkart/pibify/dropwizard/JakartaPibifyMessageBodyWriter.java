@@ -23,11 +23,11 @@ import java.util.Optional;
  */
 //@Provider Don't want this component to be discovered implicitly
 @Produces({"application/proto"})
-public class PibifyMessageBodyWriter implements MessageBodyWriter<Object> {
+public class JakartaPibifyMessageBodyWriter implements MessageBodyWriter<Object> {
 
     private final AbstractPibifyHandlerCache handlerCache;
 
-    public PibifyMessageBodyWriter(AbstractPibifyHandlerCache handlerCache) {
+    public JakartaPibifyMessageBodyWriter(AbstractPibifyHandlerCache handlerCache) {
         this.handlerCache = handlerCache;
     }
 
