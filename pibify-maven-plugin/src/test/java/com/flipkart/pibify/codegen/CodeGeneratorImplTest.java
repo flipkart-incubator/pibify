@@ -63,6 +63,11 @@ import com.flipkart.pibify.test.data.jsoncreator.ClassWithJsonCreator;
 import com.flipkart.pibify.test.data.jsoncreator.MismatchedTypes;
 import com.flipkart.pibify.test.data.jsoncreator.PartialConstructorWithSetters;
 import com.flipkart.pibify.test.data.jsoncreator.RenamedBooleanInConstructor;
+import com.flipkart.pibify.test.data.jsonsubtype.BaseClassForJsonSubType;
+import com.flipkart.pibify.test.data.jsonsubtype.ClassForJsonSubTypeReferences;
+import com.flipkart.pibify.test.data.jsonsubtype.TypeAForJsonSubtypes;
+import com.flipkart.pibify.test.data.jsonsubtype.TypeBForJsonSubtypes;
+import com.flipkart.pibify.test.data.jsonsubtype.TypeCForJsonSubtypes;
 import com.flipkart.pibify.test.data.lombok.BooleanOnLombok;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
@@ -85,6 +90,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -1372,6 +1378,42 @@ public class CodeGeneratorImplTest {
         PartialConstructorWithSetters testPayload = PartialConstructorWithSetters.randomize();
 
         PartialConstructorWithSetters deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testJsonSubtypes() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassForJsonSubTypeReferences.class);
+        assertNotNull(codeGenSpec);
+        assertFalse(codeGenSpec.hasSubtypes());
+        assertTrue(codeGenSpec.getFields().get(0).getType().getReferenceType().hasSubtypes());
+        assertEquals(SpecGenLogLevel.INFO, creator.status(ClassForJsonSubTypeReferences.class));
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+
+        Class[] dependent = new Class[]{
+                BaseClassForJsonSubType.class,
+                TypeAForJsonSubtypes.class,
+                TypeBForJsonSubtypes.class,
+                TypeCForJsonSubtypes.class
+        };
+        SimpleCompiler compiler = SimpleCompiler.INSTANCE;
+
+        for (Class clazz : dependent) {
+            JavaFile javaFile1 = impl.generate(creator.create(clazz)).getJavaFile();
+            //javaFile1.writeTo(new CodePrinterWithLineNumbers(true));
+            compiler.compile(javaFile1.toJavaFileObject());
+            Class<?> handlerClazz = compiler.loadClass("com.flipkart.pibify.generated." + clazz.getCanonicalName() + "Handler");
+            assertNotNull(handlerClazz);
+        }
+
+        ClassForJsonSubTypeReferences testPayload = ClassForJsonSubTypeReferences.randomize();
+
+        ClassForJsonSubTypeReferences deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
         assertEquals(testPayload, deserialized);
     }
 }

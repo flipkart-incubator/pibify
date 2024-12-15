@@ -349,13 +349,14 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     }
 
     private static ClassName getAbstractOrConcreteJPClassName(CodeGenSpec codeGenSpec) {
-        return (codeGenSpec == null || codeGenSpec.isAbstract())
+        return (codeGenSpec == null || codeGenSpec.isAbstract() || codeGenSpec.hasSubtypes())
                 ? ClassName.OBJECT
                 : codeGenSpec.getJpClassName();
     }
 
     private static TypeName getAbstractOrConcreteJPTypeName(CodeGenSpec.Type containerType) {
-        return (containerType.getReferenceType() != null && containerType.getReferenceType().isAbstract())
+        CodeGenSpec referenceType = containerType.getReferenceType();
+        return (referenceType != null && (referenceType.isAbstract() || referenceType.hasSubtypes()))
                 ? TypeName.OBJECT
                 : containerType.getjPTypeName();
     }
@@ -419,17 +420,20 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
                 CodeGenSpec.Type containerType = fieldSpec.getContainerTypes().get(0);
                 TypeName jpTypeName = getAbstractOrConcreteJPTypeName(containerType);
+                CodeGenSpec referenceType = containerType.getReferenceType();
+                boolean hasSubtypes = referenceType != null && referenceType.hasSubtypes();
                 builder.addStatement("$T value", jpTypeName);
                 builder.beginControlFlow("while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) ");
 
                 if (isNotNative(containerType.getNativeType())) {
                     //value = refHandler.deserialize(deserializer, Class.class);
                     builder.addStatement("value = valueHandler.deserialize(deserializer, $L, context)",
-                            getClassTypeForObjectMapperHandler(containerType, getAbstractOrConcreteJPClassName(containerType.getReferenceType())));
+                            getClassTypeForObjectMapperHandler(containerType, getAbstractOrConcreteJPClassName(referenceType)));
                     //getClassTypeForObjectMapperHandler(containerType, jpTypeName));
 
                     // If we are processing an Object reference, get the MapEntry and use the value
-                    if (isJavaLangObject(jpTypeName)) {
+                    // json subtypes are also treated as object references
+                    if (isJavaLangObject(jpTypeName) || hasSubtypes) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
                     }
                 } else {
@@ -443,9 +447,9 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 //collection.add(value);
                 // refType will be null for native types
-                if (containerType.getReferenceType() != null && containerType.getReferenceType().isAbstract()) {
+                if (referenceType != null && (referenceType.isAbstract() || hasSubtypes)) {
                     // need a typecast from object
-                    builder.addStatement("object.add(($T)value)", containerType.getReferenceType().getJpClassName());
+                    builder.addStatement("object.add(($T)value)", referenceType.getJpClassName());
                 } else {
                     builder.addStatement("object.add(value)");
                 }
@@ -456,6 +460,8 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 CodeGenSpec.Type valueContainerType = fieldSpec.getContainerTypes().get(1);
                 TypeName keyJpTypeName = getAbstractOrConcreteJPTypeName(keyContainerType);
                 TypeName valueJpTypeName = getAbstractOrConcreteJPTypeName(valueContainerType);
+                CodeGenSpec keyReferenceType = keyContainerType.getReferenceType();
+                CodeGenSpec valueReferenceType = valueContainerType.getReferenceType();
 
                 builder.addStatement("$T key", keyJpTypeName);
                 builder.addStatement("$T value", valueJpTypeName);
@@ -463,9 +469,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 if (isNotNative(keyContainerType.getNativeType())) {
                     builder.addStatement("key = keyHandler.deserialize(deserializer, $L, context)",
-                            getClassTypeForObjectMapperHandler(keyContainerType, getAbstractOrConcreteJPClassName(keyContainerType.getReferenceType())));
+                            getClassTypeForObjectMapperHandler(keyContainerType, getAbstractOrConcreteJPClassName(keyReferenceType)));
+
                     // If we are processing an Object reference, get the MapEntry and use the value
-                    if (isJavaLangObject(keyJpTypeName)) {
+                    // json subtypes are also treated as object references
+                    if (isJavaLangObject(keyJpTypeName) || (keyReferenceType != null && keyReferenceType.hasSubtypes())) {
                         builder.addStatement("key = ((Map.Entry<String,Object>)(key)).getValue()");
                     }
                 } else {
@@ -481,9 +489,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 if (isNotNative(valueContainerType.getNativeType())) {
                     builder.addStatement("value = valueHandler.deserialize(deserializer, $L, context)",
-                            getClassTypeForObjectMapperHandler(valueContainerType, getAbstractOrConcreteJPClassName(valueContainerType.getReferenceType())));
+                            getClassTypeForObjectMapperHandler(valueContainerType, getAbstractOrConcreteJPClassName(valueReferenceType)));
+
                     // If we are processing an Object reference, get the MapEntry and use the value
-                    if (isJavaLangObject(valueJpTypeName)) {
+                    // json subtypes are also treated as object references
+                    if (isJavaLangObject(valueJpTypeName) || (valueReferenceType != null && valueReferenceType.hasSubtypes())) {
                         builder.addStatement("value = ((Map.Entry<String,Object>)(value)).getValue()");
                     }
                 } else {
@@ -498,11 +508,11 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 String keyTypecast = "";
                 String valueTypeCast = "";
-                if (keyContainerType.getReferenceType() != null && keyContainerType.getReferenceType().isAbstract()) {
+                if (keyReferenceType != null && (keyReferenceType.isAbstract() || keyReferenceType.hasSubtypes())) {
                     keyTypecast = "(" + keyContainerType.getjPTypeName() + ")";
                 }
 
-                if (valueContainerType.getReferenceType() != null && valueContainerType.getReferenceType().isAbstract()) {
+                if (valueReferenceType != null && (valueReferenceType.isAbstract() || valueReferenceType.hasSubtypes())) {
                     valueTypeCast = "(" + valueContainerType.getjPTypeName() + ")";
                 }
 
@@ -955,10 +965,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         /* If the ref type is abstract, we won't have top level handlers for it. In such cases
          * it has to be treated as an object and let the PibifyObjectHandler resolve it
          * to the right concrete handler based on the runtime type of the object
+         *
+         * Another case is where the refType is a json-subtype. In such cases, we need to use the ObjectHandler
          * */
-        if (CodeGenUtil.isJavaLangObject(refSpec) || refSpec.isAbstract()) {
+        if (CodeGenUtil.isJavaLangObject(refSpec) || refSpec.isAbstract() || refSpec.hasSubtypes()) {
 
-            ClassName referenceClass = refSpec.isAbstract() ? refSpec.getJpClassName() : ClassName.OBJECT;
+            ClassName referenceClass = (refSpec.isAbstract() || refSpec.hasSubtypes())
+                    ? refSpec.getJpClassName() : ClassName.OBJECT;
 
             builder.addStatement("$>$T<$T,$T> $LEntry = (Map.Entry<String,$T>)($LHandler.deserialize(deserializer, context))$<",
                     Map.Entry.class, String.class, referenceClass, fieldSpec.getName(), referenceClass, fieldSpec.getName());
