@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -120,7 +121,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithAutoboxFields.class);
         assertNotNull(codeGenSpec);
-        assertEquals(8, codeGenSpec.getFields().size());
+        assertEquals(10, codeGenSpec.getFields().size());
 
         Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
@@ -187,6 +188,21 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         assertEquals("setaShort", field.getSetter());
         assertEquals(9, field.getIndex());
         assertEquals(CodeGenSpec.DataType.SHORT, field.getType().getNativeType());
+
+        field = nameToFields.get("isAnotherBoolean");
+        assertEquals("isAnotherBoolean", field.getName());
+        assertEquals("getAnotherBoolean", field.getGetter());
+        assertEquals("setAnotherBoolean", field.getSetter());
+        assertEquals(10, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().getNativeType());
+
+        field = nameToFields.get("isPublicBoolean");
+        assertEquals("isPublicBoolean", field.getName());
+        assertEquals("isPublicBoolean", field.getGetter());
+        assertEquals("isPublicBoolean", field.getSetter());
+        assertFalse(field.hasBeanMethods());
+        assertEquals(11, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.BOOLEAN, field.getType().getNativeType());
     }
 
     @Test

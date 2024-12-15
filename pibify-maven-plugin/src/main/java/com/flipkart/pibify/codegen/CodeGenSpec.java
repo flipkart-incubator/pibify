@@ -42,7 +42,8 @@ public class CodeGenSpec {
     private final Map<String, Object> thirdPartyData;
 
     private final List<String> fieldsInAllArgsConstructor;
-    private boolean hasAllArgsConstructor = false;
+    private boolean hasAllArgsConstructor;
+    private boolean hasSubtypes;
 
     public CodeGenSpec(String packageName, String className, boolean isInnerClass) {
         // to ensure the package name in imports does not have $.
@@ -54,6 +55,8 @@ public class CodeGenSpec {
         fieldSpecs = new ArrayList<>();
         thirdPartyData = new HashMap<>();
         fieldsInAllArgsConstructor = new ArrayList<>();
+        hasAllArgsConstructor = false;
+        hasSubtypes = false;
     }
 
     public void addField(FieldSpec fieldSpec) {
@@ -102,6 +105,14 @@ public class CodeGenSpec {
 
     public void setHasAllArgsConstructor(boolean hasAllArgsConstructor) {
         this.hasAllArgsConstructor = hasAllArgsConstructor;
+    }
+
+    public boolean hasSubtypes() {
+        return hasSubtypes;
+    }
+
+    public void setHasSubtypes(boolean hasSubtypes) {
+        this.hasSubtypes = hasSubtypes;
     }
 
     public List<String> getFieldsInAllArgsConstructor() {

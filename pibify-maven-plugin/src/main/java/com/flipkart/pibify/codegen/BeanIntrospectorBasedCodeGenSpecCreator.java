@@ -3,6 +3,7 @@ package com.flipkart.pibify.codegen;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.flipkart.pibify.ThirdPartyProcessorResult;
 import com.flipkart.pibify.codegen.log.CodeSpecGenLog;
 import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
@@ -240,6 +241,7 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             }
 
             validate(type, spec);
+            setClassAttributes(type, spec);
 
             Map<Integer, CodeGenSpec.FieldSpec> mapOfFields = new HashMap<>();
             // This set is used to find duplicate field names (case-insensitive)
@@ -284,8 +286,11 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                     if (!beanInfoFound
                             && CodeGenSpec.DataType.BOOLEAN.equals(fieldSpec.getType().getNativeType())
                             && BOOLEAN_FIELD_PATTERN.matcher(name.getString()).matches()) {
-                        name = CaseInsensitiveString.of(name.getString().substring(2));
-                        beanInfoFound = namesToBeanInfo.containsKey(name);
+                        CaseInsensitiveString altName = CaseInsensitiveString.of(name.getString().substring(2));
+                        beanInfoFound = namesToBeanInfo.containsKey(altName);
+                        if (beanInfoFound) {
+                            name = altName;
+                        }
                     }
 
                     if (!beanInfoFound) {
@@ -354,6 +359,10 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
         } catch (IntrospectionException e) {
             throw new CodeGenException(e.getMessage(), e);
         }
+    }
+
+    private void setClassAttributes(Class<?> type, CodeGenSpec spec) {
+        spec.setHasSubtypes(type.getAnnotation(JsonTypeInfo.class) != null);
     }
 
     private void validateAllArgsConstructor(CodeGenSpec spec) {

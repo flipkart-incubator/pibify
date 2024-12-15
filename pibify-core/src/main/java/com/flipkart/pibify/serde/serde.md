@@ -9,7 +9,7 @@ Support for
 4.
     - [x] Relational Pojo
 5.
-    - [ ] Tertiary Relational pojo with missing annotations on tertiary refs
+    - [x] Tertiary Relational pojo with missing annotations on tertiary refs
 6.
     - [x] Array of Objects
 7.
@@ -54,7 +54,7 @@ Jackson
 4.
     - [X] @JsonProperty in constructor
 5.
-    - [ ] Explicit @JsonSubtype
+    - [x] Explicit @JsonSubtype
 6.
     - [X] @JsonCreator
 

@@ -2,6 +2,8 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.Objects;
+
 /**
  * This class is used for testing native fields handling by pibify
  * Author bageshwar.pn
@@ -33,6 +35,11 @@ public class ClassWithAutoboxFields {
     @Pibify(9)
     private Short aShort = 9;
 
+    @Pibify(11)
+    public Boolean isPublicBoolean;
+    @Pibify(10)
+    private Boolean isAnotherBoolean;
+
     public ClassWithAutoboxFields randomize() {
 
         anInt = (int) (Math.random() * 1000);
@@ -43,6 +50,8 @@ public class ClassWithAutoboxFields {
         aChar = (char) (Math.random() * 100);
         aByte = (byte) (Math.random() * 100);
         aShort = (short) (Math.random() * 100);
+        isAnotherBoolean = Math.random() > 0.5;
+        isPublicBoolean = Math.random() > 0.5;
         return this;
     }
 
@@ -110,33 +119,23 @@ public class ClassWithAutoboxFields {
         this.aShort = aShort;
     }
 
+    public Boolean getAnotherBoolean() {
+        return isAnotherBoolean;
+    }
+
+    public void setAnotherBoolean(Boolean anotherBoolean) {
+        isAnotherBoolean = anotherBoolean;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof ClassWithAutoboxFields)) return false;
         ClassWithAutoboxFields that = (ClassWithAutoboxFields) o;
-
-        if (!anInt.equals(that.anInt)) return false;
-        if (!aLong.equals(that.aLong)) return false;
-        if (!aFloat.equals(that.aFloat)) return false;
-        if (!aDouble.equals(that.aDouble)) return false;
-        if (!aBoolean.equals(that.aBoolean)) return false;
-        if (!aChar.equals(that.aChar)) return false;
-        if (!aByte.equals(that.aByte)) return false;
-        return aShort.equals(that.aShort);
+        return Objects.equals(anInt, that.anInt) && Objects.equals(aLong, that.aLong) && Objects.equals(aFloat, that.aFloat) && Objects.equals(aDouble, that.aDouble) && Objects.equals(aBoolean, that.aBoolean) && Objects.equals(aChar, that.aChar) && Objects.equals(aByte, that.aByte) && Objects.equals(aShort, that.aShort) && Objects.equals(isAnotherBoolean, that.isAnotherBoolean) && Objects.equals(isPublicBoolean, that.isPublicBoolean);
     }
 
     @Override
     public int hashCode() {
-        int result = anInt.hashCode();
-        result = 31 * result + aLong.hashCode();
-        result = 31 * result + aFloat.hashCode();
-        result = 31 * result + aDouble.hashCode();
-        result = 31 * result + aBoolean.hashCode();
-        result = 31 * result + aChar.hashCode();
-        result = 31 * result + aByte.hashCode();
-        result = 31 * result + aShort.hashCode();
-        return result;
+        return Objects.hash(anInt, aLong, aFloat, aDouble, aBoolean, aChar, aByte, aShort, isAnotherBoolean, isPublicBoolean);
     }
 }
