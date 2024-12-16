@@ -9,31 +9,31 @@ import com.flipkart.pibify.core.Pibify;
  */
 public class ClassWithNativeFields {
 
-    @Pibify(1)
+    @Pibify(value = 1)
     private String aString = "2";
 
-    @Pibify(2)
+    @Pibify(value = 2)
     private int anInt = 2;
 
-    @Pibify(3)
+    @Pibify(value = 3)
     private long aLong = 3L;
 
-    @Pibify(4)
+    @Pibify(value = 4)
     private float aFloat = 4.0f;
 
-    @Pibify(5)
+    @Pibify(value = 5)
     private double aDouble = 5.0d;
 
-    @Pibify(6)
+    @Pibify(value = 6)
     private boolean aBoolean = true;
 
-    @Pibify(7)
+    @Pibify(value = 7)
     private char aChar = '7';
 
-    @Pibify(8)
+    @Pibify(value = 8)
     private byte aByte = 8;
 
-    @Pibify(9)
+    @Pibify(value = 9)
     private short aShort = 9;
 
     public String getaString() {

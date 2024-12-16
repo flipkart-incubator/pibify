@@ -9,17 +9,17 @@ import com.flipkart.pibify.core.Pibify;
  */
 public class ClassWithNativeFields {
 
-    @Pibify(1)
+    @Pibify(value = 1)
     private String aString = "2";
 
-    @Pibify(2)
+    @Pibify(value = 2)
     private int anInt = 2;
 
     private long aLong = 3L;
 
     private float aFloat = 4.0f;
 
-    @Pibify(3)
+    @Pibify(value = 3)
     private double aDouble = 5.0d;
 
     private boolean aBoolean = true;

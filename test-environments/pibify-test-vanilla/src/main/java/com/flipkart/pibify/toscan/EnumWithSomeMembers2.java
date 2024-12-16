@@ -9,9 +9,9 @@ import com.flipkart.pibify.core.Pibify;
  */
 public enum EnumWithSomeMembers2 {
 
-    @Pibify(1)
+    @Pibify(value = 1)
     Value1,
-    @Pibify(2)
+    @Pibify(value = 2)
     Value2,
     Value3,
     Value4

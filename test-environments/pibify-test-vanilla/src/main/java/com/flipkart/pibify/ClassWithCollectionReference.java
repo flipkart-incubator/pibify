@@ -12,7 +12,7 @@ import java.util.Objects;
  */
 public class ClassWithCollectionReference {
 
-    @Pibify(1)
+    @Pibify(value = 1)
     Object collectionReference;
 
     public void randomize() {

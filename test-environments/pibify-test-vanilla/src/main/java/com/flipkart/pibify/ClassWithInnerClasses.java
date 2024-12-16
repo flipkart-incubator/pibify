@@ -9,10 +9,10 @@ import com.flipkart.pibify.core.Pibify;
  */
 public class ClassWithInnerClasses {
 
-    @Pibify(1)
+    @Pibify(value = 1)
     private String str1;
 
-    @Pibify(3)
+    @Pibify(value = 3)
     private StaticInnerClass staticInnerClass;
 
     public void randomize() {
@@ -39,10 +39,10 @@ public class ClassWithInnerClasses {
     }
 
     public static class StaticInnerClass {
-        @Pibify(1)
+        @Pibify(value = 1)
         private String str3;
 
-        @Pibify(2)
+        @Pibify(value = 2)
         private StaticInnerInnerClass staticInnerInnerClass;
 
         public String getStr3() {
@@ -68,7 +68,7 @@ public class ClassWithInnerClasses {
         }
 
         public static class StaticInnerInnerClass {
-            @Pibify(1)
+            @Pibify(value = 1)
             private String str33;
 
             public String getStr33() {
