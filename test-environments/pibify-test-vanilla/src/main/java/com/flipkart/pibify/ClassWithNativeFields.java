@@ -119,39 +119,4 @@ public class ClassWithNativeFields {
         aShort = -1;
         aByte = -1;
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ClassWithNativeFields that = (ClassWithNativeFields) o;
-
-        if (anInt != that.anInt) return false;
-        if (aLong != that.aLong) return false;
-        if (Float.compare(that.aFloat, aFloat) != 0) return false;
-        if (Double.compare(that.aDouble, aDouble) != 0) return false;
-        if (aBoolean != that.aBoolean) return false;
-        if (aChar != that.aChar) return false;
-        if (aByte != that.aByte) return false;
-        if (aShort != that.aShort) return false;
-        return aString.equals(that.aString);
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = aString.hashCode();
-        result = 31 * result + anInt;
-        result = 31 * result + (int) (aLong ^ (aLong >>> 32));
-        result = 31 * result + (aFloat != +0.0f ? Float.floatToIntBits(aFloat) : 0);
-        temp = Double.doubleToLongBits(aDouble);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (aBoolean ? 1 : 0);
-        result = 31 * result + (int) aChar;
-        result = 31 * result + (int) aByte;
-        result = 31 * result + (int) aShort;
-        return result;
-    }
 }
