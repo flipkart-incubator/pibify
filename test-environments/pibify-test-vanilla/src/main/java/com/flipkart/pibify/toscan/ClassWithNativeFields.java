@@ -15,13 +15,11 @@ public class ClassWithNativeFields {
     @Pibify(2)
     private int anInt = 2;
 
-    @Pibify(3)
     private long aLong = 3L;
 
-    @Pibify(4)
     private float aFloat = 4.0f;
 
-    @Pibify(5)
+    @Pibify(3)
     private double aDouble = 5.0d;
 
     private boolean aBoolean = true;
