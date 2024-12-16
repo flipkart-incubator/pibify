@@ -3,7 +3,6 @@ package com.flipkart.pibify;
 import com.flipkart.pibify.core.Pibify;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  * This class is used for
@@ -12,7 +11,7 @@ import java.util.Objects;
  */
 public class ClassWithCollectionReference {
 
-    @Pibify(1)
+    @Pibify(value = 1)
     Object collectionReference;
 
     public void randomize() {
@@ -27,19 +26,5 @@ public class ClassWithCollectionReference {
 
     public void setCollectionReference(Object collectionReference) {
         this.collectionReference = collectionReference;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ClassWithCollectionReference that = (ClassWithCollectionReference) o;
-        return Objects.equals(collectionReference, that.collectionReference);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(collectionReference);
     }
 }
