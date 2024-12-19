@@ -2,7 +2,7 @@ package com.flipkart.pibify.test.data.jsonsubtype;
 
 import com.flipkart.pibify.core.Pibify;
 import com.flipkart.pibify.test.data.EnumB;
-import com.google.common.collect.ImmutableMap;
+import com.pibify.shaded.com.google.common.collect.ImmutableMap;
 
 import java.util.Arrays;
 import java.util.List;

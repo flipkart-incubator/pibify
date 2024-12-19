@@ -72,7 +72,7 @@ import com.flipkart.pibify.test.data.lombok.BooleanOnLombok;
 import com.flipkart.pibify.test.util.PibifyHandlerCacheForTest;
 import com.flipkart.pibify.test.util.SimpleCompiler;
 import com.flipkart.pibify.thirdparty.JsonCreatorFactory;
-import com.google.common.collect.Iterables;
+import com.pibify.shaded.com.google.common.collect.Iterables;
 import com.squareup.javapoet.JavaFile;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;

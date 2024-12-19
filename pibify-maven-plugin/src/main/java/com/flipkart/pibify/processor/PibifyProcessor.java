@@ -1,7 +1,5 @@
 package com.flipkart.pibify.processor;
 
-//import com.google.auto.service.AutoService;
-
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
