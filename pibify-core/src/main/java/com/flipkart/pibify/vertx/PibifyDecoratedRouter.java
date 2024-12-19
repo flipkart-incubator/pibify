@@ -35,6 +35,10 @@ public class PibifyDecoratedRouter implements Router {
         return new PibifyDecoratedRouter(underlying, handlerCache, sampler);
     }
 
+    public static Router decorate(Router underlying, AbstractPibifyHandlerCache handlerCache) {
+        return decorate(underlying, handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER);
+    }
+
     public static Router router(Vertx vertx) {
         return io.vertx.ext.web.Router.router(vertx);
     }

@@ -45,6 +45,10 @@ public class PibifyDecoratedRoute implements Route {
         return new PibifyDecoratedRoute(underlying, handlerCache, sampler);
     }
 
+    public static Route decorate(Route underlying, AbstractPibifyHandlerCache handlerCache) {
+        return decorate(underlying, handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER);
+    }
+
     @Override
     public Route putMetadata(String key, Object value) {
         return underlying.putMetadata(key, value);

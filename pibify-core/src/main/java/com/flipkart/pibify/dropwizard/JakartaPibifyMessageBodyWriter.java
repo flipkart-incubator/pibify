@@ -37,6 +37,10 @@ public class JakartaPibifyMessageBodyWriter implements MessageBodyWriter<Object>
         this.sampler = sampler;
     }
 
+    public JakartaPibifyMessageBodyWriter(AbstractPibifyHandlerCache handlerCache) {
+        this(handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER);
+    }
+
 
     @Override
     public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {

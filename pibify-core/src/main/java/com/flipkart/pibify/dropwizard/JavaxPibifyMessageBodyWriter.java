@@ -36,6 +36,10 @@ public class JavaxPibifyMessageBodyWriter implements MessageBodyWriter<Object> {
         this.sampler = sampler;
     }
 
+    public JavaxPibifyMessageBodyWriter(AbstractPibifyHandlerCache handlerCache) {
+        this(handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER);
+    }
+
     @Override
     public boolean isWriteable(Class<?> aClass, Type type, Annotation[] annotations, javax.ws.rs.core.MediaType mediaType) {
         return true;

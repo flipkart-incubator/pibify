@@ -11,6 +11,21 @@ public abstract class AbstractPibifySampler {
     private static final int MAX_SAMPLE = 1000;
 
     /**
+     * To be used in cases the client is not expecting any sampling
+     */
+    public static final AbstractPibifySampler DEFAULT_SAMPLER = new AbstractPibifySampler() {
+        @Override
+        public boolean enabled() {
+            return true;
+        }
+
+        @Override
+        public int getSamplePercentage() {
+            return 1000;
+        }
+    };
+
+    /**
      * @return true if Pibify should be enabled
      */
     public abstract boolean enabled();
