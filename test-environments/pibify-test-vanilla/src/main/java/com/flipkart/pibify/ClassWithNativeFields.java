@@ -9,31 +9,31 @@ import com.flipkart.pibify.core.Pibify;
  */
 public class ClassWithNativeFields {
 
-    @Pibify(1)
+    @Pibify(value = 1)
     private String aString = "2";
 
-    @Pibify(2)
+    @Pibify(value = 2)
     private int anInt = 2;
 
-    @Pibify(3)
+    @Pibify(value = 3)
     private long aLong = 3L;
 
-    @Pibify(4)
+    @Pibify(value = 4)
     private float aFloat = 4.0f;
 
-    @Pibify(5)
+    @Pibify(value = 5)
     private double aDouble = 5.0d;
 
-    @Pibify(6)
+    @Pibify(value = 6)
     private boolean aBoolean = true;
 
-    @Pibify(7)
+    @Pibify(value = 7)
     private char aChar = '7';
 
-    @Pibify(8)
+    @Pibify(value = 8)
     private byte aByte = 8;
 
-    @Pibify(9)
+    @Pibify(value = 9)
     private short aShort = 9;
 
     public String getaString() {
@@ -118,40 +118,5 @@ public class ClassWithNativeFields {
         aLong = -1;
         aShort = -1;
         aByte = -1;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        ClassWithNativeFields that = (ClassWithNativeFields) o;
-
-        if (anInt != that.anInt) return false;
-        if (aLong != that.aLong) return false;
-        if (Float.compare(that.aFloat, aFloat) != 0) return false;
-        if (Double.compare(that.aDouble, aDouble) != 0) return false;
-        if (aBoolean != that.aBoolean) return false;
-        if (aChar != that.aChar) return false;
-        if (aByte != that.aByte) return false;
-        if (aShort != that.aShort) return false;
-        return aString.equals(that.aString);
-    }
-
-    @Override
-    public int hashCode() {
-        int result;
-        long temp;
-        result = aString.hashCode();
-        result = 31 * result + anInt;
-        result = 31 * result + (int) (aLong ^ (aLong >>> 32));
-        result = 31 * result + (aFloat != +0.0f ? Float.floatToIntBits(aFloat) : 0);
-        temp = Double.doubleToLongBits(aDouble);
-        result = 31 * result + (int) (temp ^ (temp >>> 32));
-        result = 31 * result + (aBoolean ? 1 : 0);
-        result = 31 * result + (int) aChar;
-        result = 31 * result + (int) aByte;
-        result = 31 * result + (int) aShort;
-        return result;
     }
 }

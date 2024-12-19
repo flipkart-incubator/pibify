@@ -26,7 +26,7 @@
             <plugin>
                 <groupId>com.flipkart.pibify</groupId>
                 <artifactId>pibify-maven-plugin</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>1.1</version>
                 <executions>
                     <execution>
                         <id>generate-sources</id>
@@ -88,7 +88,7 @@
         <dependency>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-core</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

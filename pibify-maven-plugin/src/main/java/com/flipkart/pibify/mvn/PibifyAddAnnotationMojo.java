@@ -4,6 +4,7 @@ import com.flipkart.pibify.mvn.util.PrefixLog;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
+import com.github.javaparser.ast.Node;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumConstantDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
@@ -160,6 +161,13 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
         }
 
         String fieldName = field.getVariables().get(0).toString();
+
+        boolean reindex = System.getProperty("reindex") != null;
+        // This flag forces a complete re-index of all fields.
+        // This is useful when onboarding pibify to a repo, which has a lot of churn and new fields have been added
+        if (reindex) {
+            field.getAnnotationByName(PIBIFY_ANNOTATION).ifPresent(Node::remove);
+        }
 
         getLog().debug("Processing field: " + fieldName);
         if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent() ||

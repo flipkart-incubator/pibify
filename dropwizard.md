@@ -9,6 +9,12 @@ Follow the below steps to integrate `Pibify` with Dropwizard
 environment.jersey().register(new PibifyMessageBodyWriter(PibifyHandlerCache.getInstance()));
 ```
 
+The constructor of `PibifyMessageBodyWriter` optionally takes an instance of `AbstractPibifySampler` to wire up a
+sampler.
+The sampler lets you control whether Pibify is enabled and if yes, at what percentage of requests.
+
+```java
+
 4. Update all the Resource classes/methods to add the `@Produces("application/proto")` annotation
 
 ```java

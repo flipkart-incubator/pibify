@@ -3,6 +3,7 @@ package com.flipkart.pibify;
 import com.flipkart.pibify.dropwizard.JakartaPibifyMessageBodyWriter;
 import com.flipkart.pibify.paritychecker.resource.JakartaParityCheckerResource;
 import com.flipkart.pibify.resources.SampleResource;
+import com.flipkart.pibify.sampler.AbstractPibifySampler;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
@@ -29,8 +30,21 @@ public class PibifyDemoApplication extends Application<PibifyDemoConfiguration> 
     @Override
     public void run(final PibifyDemoConfiguration configuration,
                     final Environment environment) {
-        environment.jersey().register(new JakartaPibifyMessageBodyWriter(PibifyHandlerCache.getInstance()));
+
+        environment.jersey().register(new JakartaPibifyMessageBodyWriter(PibifyHandlerCache.getInstance(), new PibifySampler()));
         environment.jersey().register(new SampleResource());
         environment.jersey().register(new JakartaParityCheckerResource(PibifyHandlerCache.getInstance()));
+    }
+
+    private static class PibifySampler extends AbstractPibifySampler {
+        @Override
+        public boolean enabled() {
+            return true;
+        }
+
+        @Override
+        public int getSamplePercentage() {
+            return 500;
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.flipkart.pibify.vertx;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+import com.flipkart.pibify.sampler.AbstractPibifySampler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.buffer.Buffer;
@@ -32,14 +33,20 @@ public class PibifyDecoratedRoute implements Route {
 
     private final Route underlying;
     private final AbstractPibifyHandlerCache handlerCache;
+    private final AbstractPibifySampler sampler;
 
-    private PibifyDecoratedRoute(Route underlying, AbstractPibifyHandlerCache handlerCache) {
+    private PibifyDecoratedRoute(Route underlying, AbstractPibifyHandlerCache handlerCache, AbstractPibifySampler sampler) {
         this.underlying = underlying;
         this.handlerCache = handlerCache;
+        this.sampler = sampler;
+    }
+
+    public static Route decorate(Route underlying, AbstractPibifyHandlerCache handlerCache, AbstractPibifySampler sampler) {
+        return new PibifyDecoratedRoute(underlying, handlerCache, sampler);
     }
 
     public static Route decorate(Route underlying, AbstractPibifyHandlerCache handlerCache) {
-        return new PibifyDecoratedRoute(underlying, handlerCache);
+        return decorate(underlying, handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER);
     }
 
     @Override
@@ -191,8 +198,7 @@ public class PibifyDecoratedRoute implements Route {
                 function.apply(ctx)
                         .onFailure(ctx::fail)
                         .onSuccess(body -> {
-                            if (ctx.parsedHeaders().accept().contains(HEADER_PIBIFY)) {
-                                System.out.println("Responding from decorator pibify");
+                            if (sampler.shouldSample() && ctx.parsedHeaders().accept().contains(HEADER_PIBIFY)) {
                                 ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, HEADER_PIBIFY.value());
 
                                 try {

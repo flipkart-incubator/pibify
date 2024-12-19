@@ -16,6 +16,7 @@
 
 package com.flipkart.pibify;
 
+import com.flipkart.pibify.sampler.AbstractPibifySampler;
 import com.flipkart.pibify.vertx.PibifyDecoratedRouter;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
@@ -51,7 +52,7 @@ public class SimpleREST extends AbstractVerticle {
 
         setUpInitialData();
 
-        Router router = PibifyDecoratedRouter.decorate(Router.router(vertx), PibifyHandlerCacheImpl.getInstance());
+        Router router = PibifyDecoratedRouter.decorate(Router.router(vertx), PibifyHandlerCacheImpl.getInstance(), new PibifySampler());
 
         router.route().handler(BodyHandler.create());
         router.get("/products/:productID").handler(this::handleGetProduct);
@@ -113,5 +114,18 @@ public class SimpleREST extends AbstractVerticle {
 
     private void addProduct(JsonObject product) {
         products.put(product.getString("id"), product);
+    }
+
+    private static class PibifySampler extends AbstractPibifySampler {
+
+        @Override
+        public boolean enabled() {
+            return true;
+        }
+
+        @Override
+        public int getSamplePercentage() {
+            return 500;
+        }
     }
 }

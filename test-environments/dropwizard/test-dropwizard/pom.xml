@@ -79,8 +79,7 @@
         <dependency>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-core</artifactId>
-            <version>1.0-SNAPSHOT</version>
-            <scope>compile</scope>
+            <version>1.2-SNAPSHOT</version>
         </dependency>
     </dependencies>
 
@@ -123,7 +122,7 @@
             <plugin>
                 <groupId>com.flipkart.pibify</groupId>
                 <artifactId>pibify-maven-plugin</artifactId>
-                <version>1.0-SNAPSHOT</version>
+                <version>1.2-SNAPSHOT</version>
                 <configuration>
                     <excludes>
                         <!--                            <exclude>com/flipkart/pibify/toskip/**</exclude>-->

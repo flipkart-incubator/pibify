@@ -1,6 +1,6 @@
 package com.flipkart.pibify.codegen;
 
-import com.google.common.collect.ImmutableMap;
+import com.pibify.shaded.com.google.common.collect.ImmutableMap;
 
 import java.util.HashMap;
 import java.util.Map;

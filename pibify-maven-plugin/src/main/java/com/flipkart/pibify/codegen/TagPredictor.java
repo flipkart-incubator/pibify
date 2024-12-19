@@ -2,8 +2,8 @@ package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.core.Pibify;
 import com.flipkart.pibify.validation.InvalidPibifyAnnotation;
-import com.google.common.collect.ImmutableMap;
-import com.google.protobuf.WireFormat;
+import com.pibify.shaded.com.google.common.collect.ImmutableMap;
+import com.pibify.shaded.com.google.protobuf.WireFormat;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
