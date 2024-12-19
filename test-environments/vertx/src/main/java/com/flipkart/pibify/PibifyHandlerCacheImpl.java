@@ -16,6 +16,7 @@ public class PibifyHandlerCacheImpl extends AbstractPibifyHandlerCache {
     }
 
     public PibifyHandlerCacheImpl() {
+        packMap();
     }
 
     public static PibifyHandlerCacheImpl getInstance() {

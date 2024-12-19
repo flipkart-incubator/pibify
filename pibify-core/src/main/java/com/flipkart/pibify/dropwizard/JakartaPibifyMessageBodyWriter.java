@@ -4,13 +4,13 @@ import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
 import com.flipkart.pibify.sampler.AbstractPibifySampler;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.ext.MessageBodyWriter;
 
-import javax.inject.Inject;
-import javax.ws.rs.Produces;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.ext.MessageBodyWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.annotation.Annotation;
@@ -24,48 +24,50 @@ import java.util.Optional;
  * Date 02/12/24
  */
 @Produces({"application/proto"})
-public class JavaxPibifyMessageBodyWriter implements MessageBodyWriter<Object> {
+public class JakartaPibifyMessageBodyWriter implements MessageBodyWriter<Object> {
 
     private final AbstractPibifyHandlerCache handlerCache;
     private final AbstractPibifySampler sampler;
-    @Inject
-    private javax.ws.rs.ext.Providers providers;
 
-    public JavaxPibifyMessageBodyWriter(AbstractPibifyHandlerCache handlerCache, AbstractPibifySampler sampler) {
+    @Inject
+    private jakarta.ws.rs.ext.Providers providers;
+
+    public JakartaPibifyMessageBodyWriter(AbstractPibifyHandlerCache handlerCache, AbstractPibifySampler sampler) {
         this.handlerCache = handlerCache;
         this.sampler = sampler;
     }
 
+
     @Override
-    public boolean isWriteable(Class<?> aClass, Type type, Annotation[] annotations, javax.ws.rs.core.MediaType mediaType) {
+    public boolean isWriteable(Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType) {
+        // accept everything
         return true;
     }
 
-    @Override
-    public long getSize(Object o, Class<?> aClass, Type type, Annotation[] annotations, javax.ws.rs.core.MediaType mediaType) {
-        return 0;
-    }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("rawtypes")
     @Override
-    public void writeTo(Object object, Class<?> aClass, Type type, Annotation[] annotations, MediaType mediaType, MultivaluedMap<String, Object> httpHeaders, OutputStream outputStream) throws IOException, javax.ws.rs.WebApplicationException {
+    public void writeTo(Object object, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
+                        MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream)
+            throws IOException, WebApplicationException {
 
         if (sampler.shouldSample()) {
-            Optional<? extends PibifyGenerated> handler = handlerCache.getHandler(aClass);
+            Optional<? extends PibifyGenerated> handler = handlerCache.getHandler(type);
             if (handler.isPresent()) {
                 try {
-                    outputStream.write(handler.get().serialize(object));
+                    //noinspection unchecked
+                    entityStream.write(handler.get().serialize(object));
                 } catch (PibifyCodeExecException e) {
                     throw new WebApplicationException(e);
                 }
             } else {
-                throw new WebApplicationException("Handler missing for class " + aClass.getName());
+                throw new WebApplicationException("Handler missing for class " + type.getName());
             }
         } else {
-            MessageBodyWriter writer = getDefaultWriter(aClass, type, mediaType);
+            MessageBodyWriter writer = getDefaultWriter(type, genericType, mediaType);
             if (writer != null) {
                 httpHeaders.putSingle("Content-Type", MediaType.APPLICATION_JSON);
-                writer.writeTo(object, aClass, type, annotations, mediaType, httpHeaders, outputStream);
+                writer.writeTo(object, type, genericType, annotations, mediaType, httpHeaders, entityStream);
             } else {
                 throw new WebApplicationException("No suitable writer found for type: " + type);
             }
