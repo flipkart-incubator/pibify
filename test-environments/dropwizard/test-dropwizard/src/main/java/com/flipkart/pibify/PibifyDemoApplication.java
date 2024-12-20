@@ -46,11 +46,6 @@ public class PibifyDemoApplication extends Application<PibifyDemoConfiguration> 
 
     private static class PibifySampler extends AbstractPibifySampler {
         @Override
-        public boolean enabled() {
-            return true;
-        }
-
-        @Override
         public int getSamplePercentage() {
             return 500;
         }
