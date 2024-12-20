@@ -1,7 +1,7 @@
 package com.flipkart.pibify.paritychecker;
 
 /**
- * This interface is designed for
+ * Functional Interface to check parity of pibified object
  * Author bageshwar.pn
  * Date 12/12/24
  */

@@ -1,7 +1,7 @@
 package com.flipkart.pibify.paritychecker.filter;
 
 /**
- * This class is used for
+ * Parity Filter for Jakarta based webapps
  * Author bageshwar.pn
  * Date 12/12/24
  */

@@ -9,7 +9,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * This class is used for
+ * This class hosts the logic to perform the actual parity and trigger relevant callbacks
  * Author bageshwar.pn
  * Date 12/12/24
  */
