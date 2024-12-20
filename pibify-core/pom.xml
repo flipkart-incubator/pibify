@@ -110,6 +110,7 @@
             <version>3.26.3</version>
             <!-- When clients wish to use parity check, they would need to explicitly add this dependency -->
             <scope>compile</scope>
+        </dependency>
         <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>

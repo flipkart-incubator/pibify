@@ -42,18 +42,19 @@ public class PibifyParityChecker implements IParityChecker {
             parityCheckerListener.parityCheckError(object, null, requestContext,
                     new IllegalArgumentException("No handler found for object " + object.getClass()));
         } else {
+            Object pibifiedObject = null;
             try {
                 byte[] pibified = handler.get().serialize(object);
                 // Convert the byte array back to an object via pibify
-                Object pibifiedObject = handler.get().deserialize(pibified, object.getClass());
+                pibifiedObject = handler.get().deserialize(pibified, object.getClass());
 
                 // Compare the original object with the pibified object
                 RecursiveComparisonAssert<?> assertionObject = Assertions.assertThat(object).usingRecursiveComparison().isEqualTo(pibifiedObject);
                 parityCheckerListener.parityCheckSucceeded(object, pibifiedObject, requestContext);
             } catch (AssertionError ae) {
-                parityCheckerListener.parityCheckFailed(object, null, requestContext, ae);
+                parityCheckerListener.parityCheckFailed(object, pibifiedObject, requestContext, ae);
             } catch (Throwable t) {
-                parityCheckerListener.parityCheckError(object, null, requestContext, t);
+                parityCheckerListener.parityCheckError(object, pibifiedObject, requestContext, t);
             }
         }
     }

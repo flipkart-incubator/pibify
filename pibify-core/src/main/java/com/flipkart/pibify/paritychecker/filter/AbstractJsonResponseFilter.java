@@ -2,6 +2,7 @@ package com.flipkart.pibify.paritychecker.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.pibify.paritychecker.IParityChecker;
+import com.flipkart.pibify.sampler.AbstractPibifySampler;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +27,7 @@ public abstract class AbstractJsonResponseFilter<RequestContextType, ResponseCon
     protected final ObjectMapper objectMapper;
     protected final ExecutorService executorService;
     protected final IParityChecker parityChecker;
+    protected final AbstractPibifySampler sampler;
 
     /**
      * Constructor with configurable executor service and response processor
@@ -34,7 +36,8 @@ public abstract class AbstractJsonResponseFilter<RequestContextType, ResponseCon
      * @param corePoolSize  Minimum number of threads to keep in the pool
      * @param maxPoolSize   Maximum number of threads in the pool
      */
-    public AbstractJsonResponseFilter(IParityChecker parityChecker, int corePoolSize, int maxPoolSize) {
+    public AbstractJsonResponseFilter(IParityChecker parityChecker, AbstractPibifySampler sampler, int corePoolSize, int maxPoolSize) {
+        this.sampler = sampler;
         this.objectMapper = new ObjectMapper();
         this.parityChecker = parityChecker;
 
@@ -95,7 +98,7 @@ public abstract class AbstractJsonResponseFilter<RequestContextType, ResponseCon
      */
     public void filter(RequestContextType requestContext, ResponseContextType responseContext) throws IOException {
         // Check if response is JSON
-        if (isJsonResponse(responseContext)) {
+        if (this.sampler.shouldSample() && isJsonResponse(responseContext)) {
             try {
                 // Capture the response entity
                 Object responseEntity = getResponseEntity(responseContext);

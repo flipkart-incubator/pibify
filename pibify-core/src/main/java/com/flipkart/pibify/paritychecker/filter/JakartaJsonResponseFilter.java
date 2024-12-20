@@ -7,6 +7,7 @@ package com.flipkart.pibify.paritychecker.filter;
  */
 
 import com.flipkart.pibify.paritychecker.IParityChecker;
+import com.flipkart.pibify.sampler.AbstractPibifySampler;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerResponseContext;
 import jakarta.ws.rs.container.ContainerResponseFilter;
@@ -17,8 +18,12 @@ import jakarta.ws.rs.ext.Provider;
 public class JakartaJsonResponseFilter extends AbstractJsonResponseFilter<ContainerRequestContext, ContainerResponseContext>
         implements ContainerResponseFilter {
 
-    public JakartaJsonResponseFilter(IParityChecker parityChecker, int corePoolSize, int maxPoolSize) {
-        super(parityChecker, corePoolSize, maxPoolSize);
+    public JakartaJsonResponseFilter(IParityChecker parityChecker, AbstractPibifySampler sampler, int corePoolSize, int maxPoolSize) {
+        super(parityChecker, sampler, corePoolSize, maxPoolSize);
+    }
+
+    public JakartaJsonResponseFilter(IParityChecker parityChecker, AbstractPibifySampler sampler) {
+        this(parityChecker, sampler, 10, 100);
     }
 
     @Override

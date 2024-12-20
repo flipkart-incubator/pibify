@@ -28,6 +28,7 @@ public abstract class AbstractPibifySampler {
     /**
      * @return true if Pibify should be enabled
      */
+    // TODO This method can be removed and the logic can only pivot on `getSamplePercentage`
     public abstract boolean enabled();
 
     /**

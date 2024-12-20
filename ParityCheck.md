@@ -25,10 +25,30 @@ Client can hook a `IParityCheckerListener` to get the details and emit metrics/l
 ```
 
 2. Register the appropriate filter in the Dropwizard application - `JakartaJsonResponseFilter` or
-   `JavaxJsonResponseFilter`
-2. Pass an instance of `PibifyParityChecker`. This would expect an implementation of `IParityCheckerListener` and a
-   supplier for request context to be passed
-3. Implement the `IParityCheckerListener` to get the callbacks for the comparison results
+   `JavaxJsonResponseFilter`. This filter needs an instance of `IParityChecker` and `AbstractPibifySampler` to be
+   passed.
+
+#### IParityChecker
+
+This class holds the logic of running the parity check. It expects an implementation of `IParityCheckerListener`
+for triggering parity check status callbacks and a supplier for request context to be passed.
+The `PibifyHandlerCache` is needed to run a cycle of serde for the actual parity check.
+
+```java
+IParityChecker parityChecker = new PibifyParityChecker(PibifyHandlerCache.getInstance(), new IParityCheckerListener() {...
+}, Optional.of(() -> null));
+```
+
+#### AbstractPibifySampler
+
+This class holds the logic of sampling the request for parity check. Implementation expect a sample % to be returned in
+a call back method.
+
+#### IParityCheckerListener
+
+This interface contains the callbacks for the parity check results. The methods are called with the expected and actual
+objects and the result of the comparison.
+Implementations of this class can hook up to the respective metric/logging systems to emit the results.
 
 ## Parity Check Resource
 
