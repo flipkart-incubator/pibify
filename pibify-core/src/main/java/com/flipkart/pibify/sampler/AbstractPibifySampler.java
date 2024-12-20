@@ -14,10 +14,6 @@ public abstract class AbstractPibifySampler {
      * To be used in cases the client is not expecting any sampling
      */
     public static final AbstractPibifySampler DEFAULT_SAMPLER = new AbstractPibifySampler() {
-        @Override
-        public boolean enabled() {
-            return true;
-        }
 
         @Override
         public int getSamplePercentage() {
@@ -26,19 +22,15 @@ public abstract class AbstractPibifySampler {
     };
 
     /**
-     * @return true if Pibify should be enabled
-     */
-    public abstract boolean enabled();
-
-    /**
      * @return An int between 0 and 1000 to denote a 0.1 % traffic to flow to pibify, Sampled randomly
      */
     public abstract int getSamplePercentage();
 
     public final boolean shouldSample() {
-        if (enabled()) {
+        int samplePercentage = getSamplePercentage();
+        if (samplePercentage != 0) {
             long current = System.currentTimeMillis();
-            return current % (MAX_SAMPLE / getSamplePercentage()) == 0;
+            return current % (MAX_SAMPLE / samplePercentage) == 0;
         } else {
             return false;
         }

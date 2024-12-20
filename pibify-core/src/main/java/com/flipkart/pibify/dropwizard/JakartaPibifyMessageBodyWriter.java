@@ -28,7 +28,7 @@ public class JakartaPibifyMessageBodyWriter implements MessageBodyWriter<Object>
 
     private final AbstractPibifyHandlerCache handlerCache;
     private final AbstractPibifySampler sampler;
-
+  
     @Inject
     private jakarta.ws.rs.ext.Providers providers;
 
@@ -54,7 +54,6 @@ public class JakartaPibifyMessageBodyWriter implements MessageBodyWriter<Object>
     public void writeTo(Object object, Class<?> type, Type genericType, Annotation[] annotations, MediaType mediaType,
                         MultivaluedMap<String, Object> httpHeaders, OutputStream entityStream)
             throws IOException, WebApplicationException {
-
         if (sampler.shouldSample()) {
             Optional<? extends PibifyGenerated> handler = handlerCache.getHandler(type);
             if (handler.isPresent()) {
