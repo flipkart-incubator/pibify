@@ -3,6 +3,7 @@ package com.flipkart.pibify.vertx;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
+import com.flipkart.pibify.paritychecker.IParityChecker;
 import com.flipkart.pibify.sampler.AbstractPibifySampler;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -33,21 +34,26 @@ public class PibifyDecoratedRoute implements Route {
 
     private final Route underlying;
     private final AbstractPibifyHandlerCache handlerCache;
-    private final AbstractPibifySampler sampler;
+    private final AbstractPibifySampler goLiveSampler;
+    private final IParityChecker parityChecker;
 
-    private PibifyDecoratedRoute(Route underlying, AbstractPibifyHandlerCache handlerCache, AbstractPibifySampler sampler) {
+    private PibifyDecoratedRoute(Route underlying, AbstractPibifyHandlerCache handlerCache,
+                                 AbstractPibifySampler goLiveSampler,
+                                 IParityChecker parityChecker) {
         this.underlying = underlying;
         this.handlerCache = handlerCache;
-        this.sampler = sampler;
+        this.goLiveSampler = goLiveSampler;
+        this.parityChecker = parityChecker;
     }
 
-    public static Route decorate(Route underlying, AbstractPibifyHandlerCache handlerCache, AbstractPibifySampler sampler) {
-        return new PibifyDecoratedRoute(underlying, handlerCache, sampler);
+    public static Route decorate(Route underlying, AbstractPibifyHandlerCache handlerCache,
+                                 AbstractPibifySampler goLiveSampler, IParityChecker parityChecker) {
+        return new PibifyDecoratedRoute(underlying, handlerCache, goLiveSampler, parityChecker);
     }
 
-    public static Route decorate(Route underlying, AbstractPibifyHandlerCache handlerCache) {
-        return decorate(underlying, handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER);
-    }
+//    public static Route decorate(Route underlying, AbstractPibifyHandlerCache handlerCache) {
+//        return decorate(underlying, handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER, AbstractPibifySampler.DEFAULT_SAMPLER);
+//    }
 
     @Override
     public Route putMetadata(String key, Object value) {
@@ -195,33 +201,35 @@ public class PibifyDecoratedRoute implements Route {
         // add pibify handler and then add default handler
         handler(ctx -> {
             try {
-                function.apply(ctx)
-                        .onFailure(ctx::fail)
-                        .onSuccess(body -> {
-                            if (sampler.shouldSample() && ctx.parsedHeaders().accept().contains(HEADER_PIBIFY)) {
-                                ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, HEADER_PIBIFY.value());
-
-                                try {
-                                    @SuppressWarnings("rawtypes")
-                                    Optional<? extends PibifyGenerated> handler = handlerCache.getHandler(body.getClass());
-                                    if (handler.isPresent()) {
-                                        //noinspection unchecked
-                                        ctx.end(Buffer.buffer(handler.get().serialize(body)));
-                                    } else {
-                                        throw new PibifyCodeExecException("Handler missing for class " + body.getClass().getName());
-                                    }
-                                } catch (Exception e) {
-                                    ctx.fail(e);
-                                }
-                            } else {
-                                ctx.next();
-                            }
-                        });
+                if (goLiveSampler.shouldSample() && ctx.parsedHeaders().accept().contains(HEADER_PIBIFY)) {
+                    function.apply(ctx)
+                            .onFailure(ctx::fail)
+                            .onSuccess(body -> handleSuccess(ctx, body));
+                } else {
+                    ctx.next();
+                }
             } catch (RuntimeException e) {
                 ctx.fail(e);
             }
         });
 
         return underlying.respond(function);
+    }
+
+    private <T> void handleSuccess(RoutingContext ctx, T body) {
+        ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, HEADER_PIBIFY.value());
+
+        try {
+            @SuppressWarnings("rawtypes")
+            Optional<? extends PibifyGenerated> handler = handlerCache.getHandler(body.getClass());
+            if (handler.isPresent()) {
+                //noinspection unchecked
+                ctx.end(Buffer.buffer(handler.get().serialize(body)));
+            } else {
+                throw new PibifyCodeExecException("Handler missing for class " + body.getClass().getName());
+            }
+        } catch (Exception e) {
+            ctx.fail(e);
+        }
     }
 }

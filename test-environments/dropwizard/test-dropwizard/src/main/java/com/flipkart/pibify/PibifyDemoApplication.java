@@ -40,8 +40,9 @@ public class PibifyDemoApplication extends Application<PibifyDemoConfiguration> 
         environment.jersey().register(new JakartaPibifyMessageBodyWriter(PibifyHandlerCache.getInstance(), new PibifySampler()));
         environment.jersey().register(new SampleResource());
         environment.jersey().register(new JakartaParityCheckerResource(PibifyHandlerCache.getInstance()));
-        IParityChecker parityChecker = new PibifyParityChecker(PibifyHandlerCache.getInstance(), new ParityCheckerListener(), Optional.of(() -> null));
-        environment.jersey().register(new JakartaJsonResponseFilter(parityChecker, new PibifySampler()));
+        IParityChecker parityChecker = new PibifyParityChecker(PibifyHandlerCache.getInstance(), new ParityCheckerListener(),
+                Optional.of(() -> null), new PibifySampler());
+        environment.jersey().register(new JakartaJsonResponseFilter(parityChecker));
     }
 
     private static class PibifySampler extends AbstractPibifySampler {

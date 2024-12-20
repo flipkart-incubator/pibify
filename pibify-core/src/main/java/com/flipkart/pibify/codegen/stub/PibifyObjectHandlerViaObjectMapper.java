@@ -67,7 +67,7 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
     public Object deserialize(IDeserializer deserializer, Class<Object> type, SerializationContext context) throws PibifyCodeExecException {
         try {
             int nextTag = deserializer.getNextTag(); // consume start object tag
-            Object deserialized = this.deserialize(deserializer.readObjectAsBytes(), type);
+            Object deserialized = this.deserializeViaMapper(deserializer.readObjectAsBytes(), type);
             nextTag = deserializer.getNextTag(); // consume end object tag
             return deserialized;
         } catch (IOException e) {
@@ -75,8 +75,7 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
         }
     }
 
-    @Override
-    public Object deserialize(byte[] bytes, Class<Object> type) throws PibifyCodeExecException {
+    private Object deserializeViaMapper(byte[] bytes, Class<Object> type) throws PibifyCodeExecException {
         if (type == null) {
             throw new PibifyCodeExecException("Class Type cannot be null");
         }
