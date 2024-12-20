@@ -149,4 +149,6 @@ This is the class that the clients use to get an instance of Handler for the sup
 
 # Advanced Features
 
-[AdvancedFeatures.md](AdvancedFeatures.md)
+[Advanced Features](AdvancedFeatures.md)
+
+[Parity Check](ParityCheck.md)
