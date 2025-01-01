@@ -125,7 +125,7 @@ public class SimpleREST extends AbstractVerticle {
     private static class PibifySampler extends AbstractPibifySampler {
         @Override
         public int getSamplePercentage() {
-            return 1000;
+            return 500;
         }
     }
 
@@ -133,17 +133,17 @@ public class SimpleREST extends AbstractVerticle {
 
         @Override
         public void parityCheckSucceeded(Object primary, Object pibified, Object requestContext) {
-            System.out.println("Parity check succeeded");
+            System.out.println(Thread.currentThread() + "Parity check succeeded");
         }
 
         @Override
         public void parityCheckFailed(Object primary, Object pibified, Object requestContext, AssertionError ae) {
-            System.out.println("Parity check failed");
+            System.out.println(Thread.currentThread() + "Parity check failed");
         }
 
         @Override
         public void parityCheckError(Object primary, Object pibified, Object requestContext, Throwable e) {
-            System.out.println("Parity check error");
+            System.out.println(Thread.currentThread() + "Parity check error");
         }
     }
 }

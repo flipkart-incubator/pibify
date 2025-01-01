@@ -198,14 +198,19 @@ public class PibifyDecoratedRoute implements Route {
 
     @Override
     public <T> Route respond(Function<RoutingContext, Future<T>> function) {
-        // add pibify handler and then add default handler
         handler(ctx -> {
             try {
                 if (goLiveSampler.shouldSample() && ctx.parsedHeaders().accept().contains(HEADER_PIBIFY)) {
-                    function.apply(ctx)
-                            .onFailure(ctx::fail)
+                    // if goLive is enabled and client is accepting proto
+                    function.apply(ctx).onFailure(ctx::fail)
                             .onSuccess(body -> handleSuccess(ctx, body));
                 } else {
+                    // for non-pibify requests, if sampling is enabled
+                    if (parityChecker.shouldSample()) {
+                        ctx.response().endHandler(end -> {
+                            function.apply(ctx).onSuccess(object -> parityChecker.checkParity(object, true));
+                        });
+                    }
                     ctx.next();
                 }
             } catch (RuntimeException e) {

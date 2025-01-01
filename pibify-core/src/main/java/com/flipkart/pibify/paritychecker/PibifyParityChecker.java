@@ -63,12 +63,26 @@ public class PibifyParityChecker implements IParityChecker {
         );
     }
 
+    /**
+     * @param object           The object to check for parity
+     * @param skipSamplerCheck This flag is used to skip the internal sampler check
+     */
     @Override
-    public void checkParity(Object object) {
-        if (this.sampler.shouldSample()) {
+    public void checkParity(Object object, boolean skipSamplerCheck) {
+        // skipSamplerCheck lets clients control the sampler behavior from outside
+        // This is helpful in cases where the cost of preparing the object for parity check is high (recompute)
+        // and clients want to incur that cost only when the object will be used for parity check.
+        // In those cases, the `shouldSample` on this class can be used to check sampling state in the main thread
+        // and prepare the object and submit for parity check only if needed.
+        if (skipSamplerCheck || this.sampler.shouldSample()) {
             // Submit async task to process response
             executorService.submit(() -> checkParityImpl(object));
         }
+    }
+
+    @Override
+    public boolean shouldSample() {
+        return this.sampler.shouldSample();
     }
 
     @SuppressWarnings("unchecked")
