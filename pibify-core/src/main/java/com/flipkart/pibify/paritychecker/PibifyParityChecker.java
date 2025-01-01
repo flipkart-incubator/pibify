@@ -73,28 +73,34 @@ public class PibifyParityChecker implements IParityChecker {
 
     @SuppressWarnings("unchecked")
     private void checkParityImpl(Object object) {
-        // Convert the object to a byte array via pibify
-        Optional<? extends PibifyGenerated> handler = cache.getHandler(object.getClass());
+        Object requestContext = null;
+        Object pibifiedObject = null;
+        try {
+            // Convert the object to a byte array via pibify
+            Optional<? extends PibifyGenerated> handler = cache.getHandler(object.getClass());
 
-        Object requestContext = this.requestContextSupplier.get();
-        if (!handler.isPresent()) {
-            parityCheckerListener.parityCheckError(object, null, requestContext,
-                    new IllegalArgumentException("No handler found for object " + object.getClass()));
-        } else {
-            Object pibifiedObject = null;
-            try {
-                byte[] pibified = handler.get().serialize(object);
-                // Convert the byte array back to an object via pibify
-                pibifiedObject = handler.get().deserialize(pibified, object.getClass());
+            requestContext = this.requestContextSupplier.get();
+            if (!handler.isPresent()) {
+                parityCheckerListener.parityCheckError(object, null, requestContext,
+                        new IllegalArgumentException("No handler found for object " + object.getClass()));
+            } else {
 
-                // Compare the original object with the pibified object
-                RecursiveComparisonAssert<?> assertionObject = Assertions.assertThat(object).usingRecursiveComparison().isEqualTo(pibifiedObject);
-                parityCheckerListener.parityCheckSucceeded(object, pibifiedObject, requestContext);
-            } catch (AssertionError ae) {
-                parityCheckerListener.parityCheckFailed(object, pibifiedObject, requestContext, ae);
-            } catch (Throwable t) {
-                parityCheckerListener.parityCheckError(object, pibifiedObject, requestContext, t);
+                try {
+                    byte[] pibified = handler.get().serialize(object);
+                    // Convert the byte array back to an object via pibify
+                    pibifiedObject = handler.get().deserialize(pibified, object.getClass());
+
+                    // Compare the original object with the pibified object
+                    RecursiveComparisonAssert<?> assertionObject = Assertions.assertThat(object).usingRecursiveComparison().isEqualTo(pibifiedObject);
+                    parityCheckerListener.parityCheckSucceeded(object, pibifiedObject, requestContext);
+                } catch (AssertionError ae) {
+                    parityCheckerListener.parityCheckFailed(object, pibifiedObject, requestContext, ae);
+                } catch (Throwable t) {
+                    parityCheckerListener.parityCheckError(object, pibifiedObject, requestContext, t);
+                }
             }
+        } catch (Exception e) {
+            parityCheckerListener.parityCheckError(object, pibifiedObject, requestContext, e);
         }
     }
 }
