@@ -16,7 +16,6 @@ Client can hook a `IParityCheckerListener` to get the details and emit metrics/l
 1. Add the maven dependency for assertJ
 
 ```xml
-
 <dependency>
     <groupId>org.assertj</groupId>
     <artifactId>assertj-core</artifactId>
@@ -36,7 +35,8 @@ The `PibifyHandlerCache` is needed to run a cycle of serde for the actual parity
 
 ```java
 IParityChecker parityChecker = new PibifyParityChecker(PibifyHandlerCache.getInstance(), new IParityCheckerListener() {...
-}, Optional.of(() -> null));
+}, Optional.of(() -> null), new AbstractPibifySampler() {...
+});
 ```
 
 #### AbstractPibifySampler
@@ -49,6 +49,28 @@ a call back method.
 This interface contains the callbacks for the parity check results. The methods are called with the expected and actual
 objects and the result of the comparison.
 Implementations of this class can hook up to the respective metric/logging systems to emit the results.
+
+### Implementation in Vert.x
+
+1. Add the maven dependency for assertJ
+
+```xml
+
+<dependency>
+   <groupId>org.assertj</groupId>
+   <artifactId>assertj-core</artifactId>
+   <version>3.26.3</version>
+</dependency>
+```
+
+2. Pass the parity checker instance to the decorator
+
+```java
+IParityChecker parityChecker = new PibifyParityChecker(PibifyHandlerCache.getInstance(), new IParityCheckerListener() {...
+},
+        null, new AbstractPibifySampler() {...
+});
+```
 
 ## Parity Check Resource
 

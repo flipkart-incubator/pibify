@@ -27,7 +27,7 @@ public class PibifyDecoratedRouter implements Router {
     private final AbstractPibifySampler goLiveSampler;
     private final IParityChecker parityChecker;
 
-    public PibifyDecoratedRouter(Router underlying, AbstractPibifyHandlerCache handlerCache,
+    private PibifyDecoratedRouter(Router underlying, AbstractPibifyHandlerCache handlerCache,
                                  AbstractPibifySampler goLiveSampler, IParityChecker parityChecker) {
         this.underlying = underlying;
         this.handlerCache = handlerCache;
@@ -35,13 +35,40 @@ public class PibifyDecoratedRouter implements Router {
         this.parityChecker = parityChecker;
     }
 
+    /**
+     * Use this decorator if both golive sampling and parity check is needed
+     *
+     * @param underlying    The main router
+     * @param handlerCache  An instance of the handler cache
+     * @param goLiveSampler An instance of the go live sampler
+     * @param parityChecker An instance of the parity checker
+     * @return
+     */
     public static Router decorate(Router underlying, AbstractPibifyHandlerCache handlerCache,
                                   AbstractPibifySampler goLiveSampler, IParityChecker parityChecker) {
         return new PibifyDecoratedRouter(underlying, handlerCache, goLiveSampler, parityChecker);
     }
 
+    /**
+     * Use this decorator if golive sampling is not needed, but parity check is needed
+     * @param underlying The main router
+     * @param handlerCache An instance of the handler cache
+     * @param parityChecker An instance of the parity checker
+     * @return The decorated route
+     */
     public static Router decorate(Router underlying, AbstractPibifyHandlerCache handlerCache, IParityChecker parityChecker) {
         return decorate(underlying, handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER, parityChecker);
+    }
+
+    /**
+     * Use this decorator if parity check and golive sampling is not needed
+     *
+     * @param underlying   The main router
+     * @param handlerCache An instance of the handler cache
+     * @return The decorated route
+     */
+    public static Router decorate(Router underlying, AbstractPibifyHandlerCache handlerCache) {
+        return decorate(underlying, handlerCache, AbstractPibifySampler.DEFAULT_SAMPLER, IParityChecker.NO_OP);
     }
 
     public static Router router(Vertx vertx) {

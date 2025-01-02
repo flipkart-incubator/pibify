@@ -25,3 +25,24 @@ for more details.
 [Parity Check](ParityCheck.md)
 
 ### String Dictionary
+
+If a field in a Pojo is a String and has a repeated set of values, it can be annotated with
+`@Pibify(value = 1, dictionary = true)`.
+This will ensure that the serialized form of the Pojo will have the dictionary values replaced with the index of the
+value in the dictionary.
+This can improve the serialization size of the Pojo and reduce cpu for serde ops.
+
+### Getting an instance of PibifyCacheHandler
+
+The `PibifyHandlerCache` is a singleton class that can be accessed by calling `getInstance()` method.
+But this class is generated as part of the maven `package` and is not available in the IDE for direct import readily.
+This can cause compilation issues in the IDE (although it would always work in mvn). To resolve this, clients can use
+a helper method
+
+```java
+// Replace the FQDN with the actual FQDN of the PibifyHandlerCache
+AbstractPibifyHandlerCache handlerCache = AbstractPibifyHandlerCache.getConcreteInstance(
+                "<<FQDN.Of.PibifyHandlerCache>>");
+```
+
+This ensure that the IDE is able to resolve the class and the code compiles without any issues.
