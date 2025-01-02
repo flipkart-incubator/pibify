@@ -8,6 +8,21 @@ package com.flipkart.pibify.paritychecker;
 public interface IParityChecker {
 
     /**
+     * To be used in cases the client is not expecting any parity check
+     */
+    IParityChecker NO_OP = new IParityChecker() {
+        @Override
+        public void checkParity(Object object, boolean skipSamplerCheck) {
+            // No-op
+        }
+
+        @Override
+        public boolean shouldSample() {
+            return false;
+        }
+    };
+
+    /**
      * Checks the parity of the object. Internally ensures that the sampling check is performed.
      *
      * @param object
