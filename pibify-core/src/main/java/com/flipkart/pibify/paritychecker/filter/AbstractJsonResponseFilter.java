@@ -2,13 +2,8 @@ package com.flipkart.pibify.paritychecker.filter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.flipkart.pibify.paritychecker.IParityChecker;
-import com.flipkart.pibify.sampler.AbstractPibifySampler;
 
 import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /**
@@ -25,28 +20,16 @@ public abstract class AbstractJsonResponseFilter<RequestContextType, ResponseCon
     private static final Logger LOGGER = Logger.getLogger(AbstractJsonResponseFilter.class.getName());
 
     protected final ObjectMapper objectMapper;
-    protected final ExecutorService executorService;
     protected final IParityChecker parityChecker;
-    protected final AbstractPibifySampler sampler;
 
     /**
      * Constructor with configurable executor service and response processor
      *
      * @param parityChecker The processor to handle response objects
-     * @param corePoolSize  Minimum number of threads to keep in the pool
-     * @param maxPoolSize   Maximum number of threads in the pool
      */
-    public AbstractJsonResponseFilter(IParityChecker parityChecker, AbstractPibifySampler sampler, int corePoolSize, int maxPoolSize) {
-        this.sampler = sampler;
+    public AbstractJsonResponseFilter(IParityChecker parityChecker) {
         this.objectMapper = new ObjectMapper();
         this.parityChecker = parityChecker;
-
-        // Create a custom thread pool with a bounded queue and a drop policy
-        this.executorService = new ThreadPoolExecutor(corePoolSize, maxPoolSize,
-                60L, TimeUnit.SECONDS,         // keep-alive time for idle threads
-                new LinkedBlockingQueue<>(100), // bounded queue with 100 capacity
-                new ThreadPoolExecutor.DiscardPolicy() // silently drop tasks if queue is full
-        );
     }
 
     /**
@@ -98,31 +81,14 @@ public abstract class AbstractJsonResponseFilter<RequestContextType, ResponseCon
      */
     public void filter(RequestContextType requestContext, ResponseContextType responseContext) throws IOException {
         // Check if response is JSON
-        if (this.sampler.shouldSample() && isJsonResponse(responseContext)) {
+        if (isJsonResponse(responseContext)) {
             try {
-                // Capture the response entity
-                Object responseEntity = getResponseEntity(responseContext);
-
-                // Submit async task to process response
-                executorService.submit(() -> processResponse(responseEntity));
+                // Capture the response entity and process it
+                processResponse(getResponseEntity(responseContext));
             } catch (Exception e) {
                 // Log but do not rethrow to prevent impacting original response
                 LOGGER.fine("Error in async response processing " + e.getMessage());
             }
-        }
-    }
-
-    /**
-     * Shutdown method to gracefully close the executor service
-     */
-    public void shutdown() {
-        executorService.shutdown();
-        try {
-            if (!executorService.awaitTermination(800, TimeUnit.MILLISECONDS)) {
-                executorService.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executorService.shutdownNow();
         }
     }
 }

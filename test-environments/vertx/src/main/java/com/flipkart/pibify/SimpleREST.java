@@ -16,6 +16,8 @@
 
 package com.flipkart.pibify;
 
+import com.flipkart.pibify.paritychecker.IParityCheckerListener;
+import com.flipkart.pibify.paritychecker.PibifyParityChecker;
 import com.flipkart.pibify.sampler.AbstractPibifySampler;
 import com.flipkart.pibify.vertx.PibifyDecoratedRouter;
 import io.vertx.core.AbstractVerticle;
@@ -52,7 +54,11 @@ public class SimpleREST extends AbstractVerticle {
 
         setUpInitialData();
 
-        Router router = PibifyDecoratedRouter.decorate(Router.router(vertx), PibifyHandlerCacheImpl.getInstance(), new PibifySampler());
+        Router router = PibifyDecoratedRouter.decorate(Router.router(vertx), PibifyHandlerCacheImpl.getInstance(),
+                new PibifySampler(), new PibifyParityChecker(PibifyHandlerCacheImpl.getInstance(),
+                        new PibifyParityCheckListener(),
+                        null,
+                        new PibifySampler()));
 
         router.route().handler(BodyHandler.create());
         router.get("/products/:productID").handler(this::handleGetProduct);
@@ -70,7 +76,7 @@ public class SimpleREST extends AbstractVerticle {
             Promise<List<Product>> promise = Promise.promise();
             CompletableFuture.runAsync(() -> {
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(1);
                     promise.complete(productList);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
@@ -120,6 +126,24 @@ public class SimpleREST extends AbstractVerticle {
         @Override
         public int getSamplePercentage() {
             return 500;
+        }
+    }
+
+    private static class PibifyParityCheckListener implements IParityCheckerListener {
+
+        @Override
+        public void parityCheckSucceeded(Object primary, Object pibified, Object requestContext) {
+            System.out.println(Thread.currentThread() + "Parity check succeeded");
+        }
+
+        @Override
+        public void parityCheckFailed(Object primary, Object pibified, Object requestContext, AssertionError ae) {
+            System.out.println(Thread.currentThread() + "Parity check failed");
+        }
+
+        @Override
+        public void parityCheckError(Object primary, Object pibified, Object requestContext, Throwable e) {
+            System.out.println(Thread.currentThread() + "Parity check error");
         }
     }
 }

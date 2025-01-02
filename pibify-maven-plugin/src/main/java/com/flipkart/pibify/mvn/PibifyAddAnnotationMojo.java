@@ -76,8 +76,11 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
 
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.setBasedir(directoryPath);
-        String[] excludePatterns = excludes.toArray(new String[0]);
-        scanner.setExcludes(excludePatterns);
+        if (excludes != null) {
+            String[] excludePatterns = excludes.toArray(new String[0]);
+            scanner.setExcludes(excludePatterns);
+        }
+
         scanner.addDefaultExcludes();
         scanner.scan();
 

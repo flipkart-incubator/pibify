@@ -26,7 +26,12 @@ public abstract class AbstractPibifySampler {
      */
     public abstract int getSamplePercentage();
 
-    public final boolean shouldSample() {
+    /**
+     * Clients can override this method to implement their own sampling logic
+     *
+     * @return
+     */
+    public boolean shouldSample() {
         int samplePercentage = getSamplePercentage();
         if (samplePercentage != 0) {
             long current = System.currentTimeMillis();

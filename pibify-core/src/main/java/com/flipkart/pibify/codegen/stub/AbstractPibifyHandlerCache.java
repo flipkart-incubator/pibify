@@ -2,6 +2,7 @@ package com.flipkart.pibify.codegen.stub;
 
 import com.google.common.collect.ImmutableMap;
 
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -90,5 +91,22 @@ public abstract class AbstractPibifyHandlerCache {
 
         //noinspection unchecked
         return Optional.of((PibifyGenerated<T>) pibifyGenerated);
+    }
+
+    /**
+     * This helper method lets clients get an instance of the concrete implementation of the cache.
+     * It's needed to let the clients avoid compilation errors,
+     * which can happen when the pibify sources have not been generated
+     *
+     * @param fqdn
+     * @return
+     */
+    public static AbstractPibifyHandlerCache getConcreteInstance(String fqdn) {
+        try {
+            return (AbstractPibifyHandlerCache) Class.forName(fqdn).getMethod("getInstance").invoke(null);
+        } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException |
+                 ClassNotFoundException e) {
+            throw new RuntimeException("Unable to instantiate " + fqdn, e);
+        }
     }
 }
