@@ -6,10 +6,10 @@ Follow the below steps to integrate `Pibify` with Dropwizard
 
 ```java
 // PibifyHandlerCache will be generated as part of the code gen
-environment.jersey().register(new PibifyMessageBodyWriter(PibifyHandlerCache.getInstance()));
+environment.jersey().register(new JavaxPibifyMessageBodyWriter(PibifyHandlerCache.getInstance()));
 ```
 
-The constructor of `PibifyMessageBodyWriter` optionally takes an instance of `AbstractPibifySampler` to wire up a
+The constructor of `JavaxPibifyMessageBodyWriter` optionally takes an instance of `AbstractPibifySampler` to wire up a
 sampler.
 The sampler lets you control whether Pibify is enabled and if yes, at what percentage of requests.
 
