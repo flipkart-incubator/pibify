@@ -33,6 +33,7 @@ import com.flipkart.pibify.test.data.ClassWithReferences;
 import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange1;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange2;
+import com.flipkart.pibify.test.data.ClassWithSelfReference;
 import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
 import com.flipkart.pibify.test.data.ConcreteClassBWithNativeFields;
 import com.flipkart.pibify.test.data.ConcreteClassWithNativeFields;
@@ -1414,6 +1415,24 @@ public class CodeGeneratorImplTest {
         ClassForJsonSubTypeReferences testPayload = ClassForJsonSubTypeReferences.randomize();
 
         ClassForJsonSubTypeReferences deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testRecursiveModel() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithSelfReference.class);
+        assertNotNull(codeGenSpec);
+        //creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
+        assertEquals(SpecGenLogLevel.INFO, creator.status(ClassWithSelfReference.class));
+
+        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        ClassWithSelfReference testPayload = ClassWithSelfReference.randomize();
+
+        ClassWithSelfReference deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
     }
 }

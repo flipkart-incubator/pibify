@@ -228,6 +228,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
             }
 
             CodeGenSpec spec = getCodeGenSpec(type);
+            // Put intermediate objects in the cache too, to handle recursive models
+            cache.put(type, spec);
 
             // If the class under processing is an enum, there is no need of a codespec.
             // enum cardinals are directly used in pibify
@@ -511,7 +513,6 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
                     processorResult.getLogs().forEach(this::log);
                 }
-                cache.put(type, codeGenSpec);
             }
 
             return cache.get(type);

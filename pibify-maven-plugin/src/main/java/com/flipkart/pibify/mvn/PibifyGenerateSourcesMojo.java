@@ -32,6 +32,10 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This class is used for being the entry point to the code gen module
@@ -62,8 +66,14 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
     @Parameter()
     private List<String> excludes;
 
+    private ExecutorService fileWriterThreadPool;
+
     public PibifyGenerateSourcesMojo() {
         getLog().info("Initiated PibifyGenerateSourcesMojo ");
+        this.fileWriterThreadPool = new ThreadPoolExecutor(20, 50,
+                120L, TimeUnit.SECONDS,         // keep-alive time for idle threads
+                new LinkedBlockingQueue<>(100000), // bounded queue with 100 capacity
+                new ThreadPoolExecutor.CallerRunsPolicy()); // silently drop tasks if queue is full
     }
 
     @Override
@@ -115,16 +125,19 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         List<String> classesWithErrors = new ArrayList<>();
         List<String> skippedClasses = new ArrayList<>();
 
+        int i = 0;
         for (Class<?> pibifyAnnotatedClass : pibifyAnnotatedClasses) {
+            i++;
             try {
-                getLog().debug("Processing file " + pibifyAnnotatedClass.getName());
+                String fileCount = i + "\\" + pibifyAnnotatedClasses.size() + "\t";
+                getLog().debug("Processing file " + fileCount + pibifyAnnotatedClass.getName());
+                System.out.print("\r" + fileCount);
                 CodeGenSpec codeGenSpec = codeGenSpecCreator.create(pibifyAnnotatedClass);
                 printCodeSpecGenLogs(codeGenSpecCreator);
                 if (SpecGenLogLevel.INFO.equals(codeGenSpecCreator.status(pibifyAnnotatedClass))) {
                     if (generateHandler(pibifyAnnotatedClass)) {
                         JavaFileWrapper javaFile = codeGenerator.generate(codeGenSpec);
-                        getLog().debug("Writing Java File " + javaFile.getPackageName().replaceAll("\\.", "/") + "/" + codeGenSpec.getClassName() + ".java");
-                        javaFile.getJavaFile().writeTo(outputDirectory);
+                        writeFile(javaFile);
                         handlerCacheGenerator.add(pibifyAnnotatedClass, javaFile.getClassName());
                     } else {
                         skippedClasses.add(pibifyAnnotatedClass.getName());
@@ -163,6 +176,17 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         if (!project.getCompileSourceRoots().contains(outputDirectory.getPath())) {
             project.addCompileSourceRoot(outputDirectory.getPath());
         }
+    }
+
+    private void writeFile(JavaFileWrapper javaFile) throws IOException {
+        this.fileWriterThreadPool.submit(() -> {
+            try {
+                getLog().debug("Writing Java File " + javaFile.getPackageName().replaceAll("\\.", "/") + "/" + javaFile.getClassName() + ".java");
+                javaFile.getJavaFile().writeTo(outputDirectory);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     private boolean generateHandler(Class<?> pibifyAnnotatedClass) {
