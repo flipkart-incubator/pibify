@@ -460,33 +460,23 @@ public class CodeGeneratorImplTest {
         ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassHierarchy2B testPayload = new ClassHierarchy2B();
         testPayload.randomize();
 
         ClassHierarchy2B deserialized = invokeGeneratedCode(javaFile, testPayload);
-
-        assertEquals(testPayload.getMember1(), deserialized.getMember1());
-        assertEquals(testPayload.getStr1(), deserialized.getStr1());
-        assertEquals(testPayload.getStr2(), deserialized.getStr2());
-        assertEquals(testPayload.getStr3(), deserialized.getStr3());
-        assertEquals(testPayload.getStr4(), deserialized.getStr4());
+        assertEquals(testPayload, deserialized);
 
         codeGenSpec = creator.create(ClassHierarchy2A.class);
 
         javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassHierarchy2A testPayload1 = new ClassHierarchy2A();
         testPayload1.randomize();
 
         ClassHierarchy2A deserialized1 = invokeGeneratedCode(javaFile, testPayload1);
-
-        assertEquals(testPayload1.getMember2(), deserialized1.getMember2());
-        assertEquals(testPayload1.getStr1(), deserialized1.getStr1());
-        assertEquals(testPayload1.getStr2(), deserialized1.getStr2());
-        assertEquals(testPayload1.getStr3(), deserialized1.getStr3());
-        assertEquals(testPayload1.getStr4(), deserialized1.getStr4());
+        assertEquals(testPayload1, deserialized1);
 
         codeGenSpec = creator.create(ClassHierarchy3A.class);
 
@@ -497,13 +487,7 @@ public class CodeGeneratorImplTest {
         testPayload1.randomize();
 
         ClassHierarchy3A deserialized2 = invokeGeneratedCode(javaFile, testPayload2);
-
-        assertEquals(testPayload2.getMember2(), deserialized2.getMember2());
-        assertEquals(testPayload2.getMember3(), deserialized2.getMember3());
-        assertEquals(testPayload2.getStr1(), deserialized2.getStr1());
-        assertEquals(testPayload2.getStr2(), deserialized2.getStr2());
-        assertEquals(testPayload2.getStr3(), deserialized2.getStr3());
-        assertEquals(testPayload2.getStr4(), deserialized2.getStr4());
+        assertEquals(testPayload2, deserialized2);
     }
 
     @Test
