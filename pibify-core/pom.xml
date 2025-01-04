@@ -4,7 +4,7 @@
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-core</artifactId>
     <packaging>jar</packaging>
-    <version>1.4-SNAPSHOT</version>
+    <version>1.4</version>
     <name>pibify-core</name>
     <properties>
         <protobuf-java.version>4.28.2</protobuf-java.version>
