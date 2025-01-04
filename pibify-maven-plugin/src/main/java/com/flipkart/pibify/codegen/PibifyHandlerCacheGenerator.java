@@ -59,8 +59,15 @@ public class PibifyHandlerCacheGenerator {
         return wrapper;
     }
 
+    private static String packageCompatibleString(String input) {
+        return input
+                .replaceAll("-", ".")      // Replace hyphens with dots
+                .replaceAll("[^a-zA-Z0-9.]", "")  // Remove any characters that aren't letters, numbers, or dots
+                .replaceAll("^[0-9]+|\\.[0-9]+", ""); // Remove leading numbers or numbers after dots
+    }
+
     private String getPackageNameFromGroupAndModule(String moduleGroupId, String moduleArtifactId) {
-        return moduleGroupId + ".generated." + moduleGroupId;
+        return packageCompatibleString(moduleGroupId) + ".pibify.generated." + packageCompatibleString(moduleArtifactId);
     }
 
 
