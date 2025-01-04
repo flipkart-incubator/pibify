@@ -274,13 +274,13 @@ public class CodeGeneratorImpl implements ICodeGenerator {
             if (fieldSpec.getNativeType() == CodeGenSpec.DataType.COLLECTION) {
                 builder.beginControlFlow("for ($L value : object)", signature);
 
-                addWriterBlockForCollectionHandler(fieldSpec, builder, 0, "value", 1, "valueHandler");
+                addWriterBlockForCollectionHandler(fieldSpec, builder, 0, "value", 1, "value0Handler");
             } else if (fieldSpec.getNativeType() == CodeGenSpec.DataType.MAP) {
                 builder.beginControlFlow("for (java.util.Map.Entry<$L, $L> entry : object.entrySet())",
                         signature, fieldSpec.getContainerTypes().get(1).getGenericTypeSignature());
 
-                addWriterBlockForCollectionHandler(fieldSpec, builder, 0, "entry.getKey()", 1, "keyHandler");
-                addWriterBlockForCollectionHandler(fieldSpec, builder, 1, "entry.getValue()", 2, "valueHandler");
+                addWriterBlockForCollectionHandler(fieldSpec, builder, 0, "entry.getKey()", 1, "key0Handler");
+                addWriterBlockForCollectionHandler(fieldSpec, builder, 1, "entry.getValue()", 2, "value1Handler");
             } else {
                 throw new UnsupportedOperationException();
             }
@@ -430,7 +430,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
 
                 if (isNotNative(containerType.getNativeType())) {
                     //value = refHandler.deserialize(deserializer, Class.class);
-                    builder.addStatement("value = valueHandler.deserialize(deserializer, $L, context)",
+                    builder.addStatement("value = value0Handler.deserialize(deserializer, $L, context)",
                             getClassTypeForObjectMapperHandler(containerType, getAbstractOrConcreteJPClassName(referenceType)));
                     //getClassTypeForObjectMapperHandler(containerType, jpTypeName));
 
@@ -471,7 +471,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.beginControlFlow("while (tag != 0 && tag != PibifyGenerated.getEndObjectTag())");
 
                 if (isNotNative(keyContainerType.getNativeType())) {
-                    builder.addStatement("key = keyHandler.deserialize(deserializer, $L, context)",
+                    builder.addStatement("key = key0Handler.deserialize(deserializer, $L, context)",
                             getClassTypeForObjectMapperHandler(keyContainerType, getAbstractOrConcreteJPClassName(keyReferenceType)));
 
                     // If we are processing an Object reference, get the MapEntry and use the value
@@ -491,7 +491,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.addStatement("tag = deserializer.getNextTag()");
 
                 if (isNotNative(valueContainerType.getNativeType())) {
-                    builder.addStatement("value = valueHandler.deserialize(deserializer, $L, context)",
+                    builder.addStatement("value = value1Handler.deserialize(deserializer, $L, context)",
                             getClassTypeForObjectMapperHandler(valueContainerType, getAbstractOrConcreteJPClassName(valueReferenceType)));
 
                     // If we are processing an Object reference, get the MapEntry and use the value
@@ -878,7 +878,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
         } else {
             // case of all-args constructor
             builder.addStatement("$L = $LHandler.deserialize(deserializer, context)",
-                    fieldSpec.getName() + fieldSpec.getIndex(), fieldSpec.getName());
+                    fieldSpec.getName(), fieldSpec.getName() + fieldSpec.getIndex());
         }
 
     }
@@ -982,7 +982,7 @@ public class CodeGeneratorImpl implements ICodeGenerator {
                 builder.addStatement("$>object.$L$L($LEntry.getValue())$<", fieldSpec.getSetter(), handleBeanSetter(fieldSpec), fieldSpec.getName() + fieldSpec.getIndex());
             } else {
                 // case of all-args constructor
-                builder.addStatement("$>$L = $LEntry.getValue()$<", fieldSpec.getName(), fieldSpec.getName());
+                builder.addStatement("$>$L = $LEntry.getValue()$<", fieldSpec.getName(), fieldSpec.getName() + fieldSpec.getIndex());
             }
 
         } else {
