@@ -66,6 +66,6 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
     @Override
     public void initialize(AbstractPibifyHandlerCache pibifyHandlerCache) {
         super.initialize(pibifyHandlerCache);
-        objectHandler = this.pibifyHandlerCache.getHandler(Object.class).get();
+        objectHandler = pibifyHandlerCache.getHandler(Object.class).get();
     }
 }
