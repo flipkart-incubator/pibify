@@ -73,7 +73,7 @@ public abstract class AbstractPibifyHandlerCache {
     }
 
     protected void initializeHandlers() {
-        cache.values().forEach(PibifyGenerated::initialize);
+        cache.values().forEach(this::initializeHandler);
     }
 
     public <T> Optional<PibifyGenerated<T>> getHandler(Class<T> clazz) {
@@ -108,5 +108,9 @@ public abstract class AbstractPibifyHandlerCache {
                  ClassNotFoundException e) {
             throw new RuntimeException("Unable to instantiate " + fqdn, e);
         }
+    }
+
+    private void initializeHandler(PibifyGenerated<?> handler) {
+        handler.initialize(this);
     }
 }
