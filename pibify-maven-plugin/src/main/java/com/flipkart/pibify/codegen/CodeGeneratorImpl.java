@@ -1,5 +1,6 @@
 package com.flipkart.pibify.codegen;
 
+import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.codegen.stub.SerializationContext;
@@ -44,16 +45,13 @@ import static com.flipkart.pibify.core.Constants.PIBIFY_GENERATED_PACKAGE_NAME;
  */
 public class CodeGeneratorImpl implements ICodeGenerator {
 
-    private final String handlerCacheClassName;
-
     /*
     Internal State
      */
     private TypeSpec.Builder classBuilder;
     private Map<TypeName, String> fields;
 
-    public CodeGeneratorImpl(String handlerCacheClassName) {
-        this.handlerCacheClassName = handlerCacheClassName + ".getInstance().getHandler";
+    public CodeGeneratorImpl() {
         fields = new HashMap<>();
     }
 
@@ -221,15 +219,16 @@ public class CodeGeneratorImpl implements ICodeGenerator {
     private MethodSpec getInitializeMethod(boolean initializeInternals) {
         MethodSpec.Builder builder = MethodSpec.methodBuilder("initialize")
                 .addModifiers(Modifier.PUBLIC)
+                .addParameter(AbstractPibifyHandlerCache.class, "pibifyHandlerCache")
                 .addAnnotation(Override.class);
 
         for (Map.Entry<TypeName, String> entry : fields.entrySet()) {
-            builder.addStatement("$L = $L($T.class).get()", entry.getValue(), handlerCacheClassName, entry.getKey());
+            builder.addStatement("$L = pibifyHandlerCache.getHandler($T.class).get()", entry.getValue(), entry.getKey());
         }
 
         if (initializeInternals) {
             builder.beginControlFlow("for (PibifyGenerated internalHandler : HANDLER_MAP.values())")
-                    .addStatement("internalHandler.initialize()")
+                    .addStatement("internalHandler.initialize(pibifyHandlerCache)")
                     .endControlFlow();
         }
 

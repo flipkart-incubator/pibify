@@ -120,7 +120,7 @@ public class PibifyGenerateSourcesMojo extends AbstractMojo {
         // TODO consume config from pom
         PibifyConfiguration.builder().build();
         PibifyHandlerCacheGenerator handlerCacheGenerator = new PibifyHandlerCacheGenerator(project.getGroupId(), project.getArtifactId());
-        ICodeGenerator codeGenerator = new CodeGeneratorImpl(handlerCacheGenerator.getClassName());
+        ICodeGenerator codeGenerator = new CodeGeneratorImpl();
         Set<Class<?>> pibifyAnnotatedClasses = scanner.getPibifyAnnotatedClasses(project.getBuild().getOutputDirectory(), excludes);
         List<String> classesWithErrors = new ArrayList<>();
         List<String> skippedClasses = new ArrayList<>();
