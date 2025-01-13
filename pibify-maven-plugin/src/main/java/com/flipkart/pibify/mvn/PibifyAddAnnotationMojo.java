@@ -10,6 +10,7 @@ import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.EnumConstantDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.IntegerLiteralExpr;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -27,6 +28,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -86,7 +88,7 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
                 List<Path> changedFiles = provider.changedFiles(getLog(), Paths.get(project.getCompileSourceRoots().get(0)));
                 for (Path changedFile : changedFiles) {
                     getLog().info("Annotating " + changedFile.toString());
-                    processFile(changedFile);
+                    processFile(changedFile, incremental);
                 }
             } catch (Exception e) {
                 getLog().error("Error in incremental build", e);
@@ -108,12 +110,12 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
         scanner.scan();
         getLog().info("Excluded files: " + Arrays.asList(scanner.getExcludedFiles()));
         for (String path : scanner.getIncludedFiles()) {
-            processFile(Paths.get(directoryPath, path));
+            processFile(Paths.get(directoryPath, path), incremental);
         }
         getLog().info("Finished processing directory: " + directoryPath);
     }
 
-    private void processFile(Path filePath) {
+    private void processFile(Path filePath, boolean incremental) {
         getLog().debug("Processing file: " + filePath);
         try {
             CompilationUnit cu = StaticJavaParser.parse(filePath);
@@ -127,7 +129,12 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
                     }
                 }
             }
-            AtomicInteger counter = new AtomicInteger(1);
+            AtomicInteger counter;
+            if (incremental) {
+                counter = new AtomicInteger(getMaxPibifyIndex(cu));
+            } else {
+                counter = new AtomicInteger(1);
+            }
             boolean importAdded = addPibifyImport(cu);
             boolean updated = processFields(cu, counter);
             updated = updated | processEnumConstants(cu, counter);
@@ -142,6 +149,37 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
         } catch (IOException e) {
             getLog().error("Error writing to file: " + filePath, e);
         }
+    }
+
+    private int getMaxPibifyIndex(CompilationUnit cu) {
+        int max = 1;
+        for (FieldDeclaration field : cu.findAll(FieldDeclaration.class)) {
+            if (!field.isStatic()) {
+                if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent()) {
+                    AnnotationExpr expr = field.getAnnotationByName(PIBIFY_ANNOTATION).get().asAnnotationExpr();
+                    int idx = 0;
+                    if (expr.isSingleMemberAnnotationExpr()) {
+                        // is of the form `@Pibify(1)`
+                        idx = expr.asSingleMemberAnnotationExpr().getMemberValue().asIntegerLiteralExpr().asNumber().intValue();
+                    } else if (expr.isNormalAnnotationExpr()) {
+                        // is of the form `@Pibify(value = 1)`
+                        Optional<Integer> value = expr.asNormalAnnotationExpr().getPairs().stream().filter(f -> f.getNameAsString().equals("value")).map(f -> f.getValue().asIntegerLiteralExpr().asNumber().intValue()).findFirst();
+                        if (value.isPresent()) {
+                            idx = value.get();
+                        } else {
+                            throw new RuntimeException("Missing value key in Pibify Annotation");
+                        }
+                    } else {
+                        // is of an unknown form
+                        throw new RuntimeException("Unknown Expressions in Pibify Annotation");
+                    }
+                    if (idx > max) {
+                        max = idx;
+                    }
+                }
+            }
+        }
+        return max + 1;
     }
 
     private boolean addPibifyImport(CompilationUnit cu) {
@@ -187,7 +225,10 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
         getLog().debug("Processing field: " + fieldName);
         if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent() || field.getAnnotationByName(JSON_IGNORE).isPresent()) {
             getLog().info("Skipping field: " + fieldName);
-            counter.incrementAndGet();
+            if (!incremental) {
+                // don't skip count in case of incremental builds, else it leads to double counting.
+                counter.incrementAndGet();
+            }
             return false;
         } else {
             // TODO Support deprecated fields by understanding the last seen index
