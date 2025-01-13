@@ -1,5 +1,6 @@
 package com.flipkart.pibify.mvn;
 
+import com.flipkart.pibify.mvn.interfaces.IncrementalBuildProvider;
 import com.flipkart.pibify.mvn.util.PrefixLog;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
@@ -37,26 +38,33 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PibifyAddAnnotationMojo extends AbstractMojo {
 
     private static final String PIBIFY_IMPORT = "com.flipkart.pibify.core.Pibify";
+
     private static final String PIBIFY_ANNOTATION = "Pibify";
+
     private static final String JSON_IGNORE = "JsonIgnore";
+
     @Parameter(defaultValue = "${project}", required = true, readonly = true)
     private MavenProject project;
 
     @Parameter()
     private List<String> excludes;
 
+    @Parameter(defaultValue = "false")
+    private boolean incremental;
+
+    @Parameter()
+    private String incrementalBuildProvider;
+
     public PibifyAddAnnotationMojo() {
         getLog().info("Initiated PibifyAddAnnotationMojo ");
     }
 
     public static void main(String[] args) {
-
         PibifyAddAnnotationMojo mojo = new PibifyAddAnnotationMojo();
         if (args.length != 1) {
-            mojo.getLog().error("Usage: java PibifyAnnotator <directory>");
+            mojo.getLog().error("Usage: java PibifyAddAnnotationMojo <directory>");
             System.exit(1);
         }
-
         String directoryPath = args[0];
         mojo.processDirectory(directoryPath);
     }
@@ -68,24 +76,37 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
 
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
-        processDirectory(project.getCompileSourceRoots().get(0));
+        if (incremental) {
+            getLog().info("Annotating incrementally");
+            try {
+                if (incrementalBuildProvider == null || incrementalBuildProvider.isEmpty()) {
+                    throw new MojoExecutionException("Incremental Build Provider is not set");
+                }
+                IncrementalBuildProvider provider = (IncrementalBuildProvider) Class.forName(incrementalBuildProvider).getDeclaredConstructor().newInstance();
+                List<Path> changedFiles = provider.changedFiles(getLog(), Paths.get(project.getCompileSourceRoots().get(0)));
+                for (Path changedFile : changedFiles) {
+                    getLog().info("Annotating " + changedFile.toString());
+                    processFile(changedFile);
+                }
+            } catch (Exception e) {
+                getLog().error("Error in incremental build", e);
+            }
+        } else {
+            processDirectory(project.getCompileSourceRoots().get(0));
+        }
     }
 
     private void processDirectory(String directoryPath) {
         getLog().debug("Starting to process directory: " + directoryPath);
-
         DirectoryScanner scanner = new DirectoryScanner();
         scanner.setBasedir(directoryPath);
         if (excludes != null) {
             String[] excludePatterns = excludes.toArray(new String[0]);
             scanner.setExcludes(excludePatterns);
         }
-
         scanner.addDefaultExcludes();
         scanner.scan();
-
         getLog().info("Excluded files: " + Arrays.asList(scanner.getExcludedFiles()));
-
         for (String path : scanner.getIncludedFiles()) {
             processFile(Paths.get(directoryPath, path));
         }
@@ -96,7 +117,6 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
         getLog().debug("Processing file: " + filePath);
         try {
             CompilationUnit cu = StaticJavaParser.parse(filePath);
-
             // Skip interfaces
             if (cu.getTypes().size() == 1) {
                 TypeDeclaration<?> type = cu.getType(0);
@@ -105,16 +125,12 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
                         getLog().debug("Skipping interface " + filePath);
                         return;
                     }
-
                 }
             }
-
-
             AtomicInteger counter = new AtomicInteger(1);
             boolean importAdded = addPibifyImport(cu);
             boolean updated = processFields(cu, counter);
             updated = updated | processEnumConstants(cu, counter);
-
             if (updated) {
                 Files.write(filePath, cu.toString().getBytes());
                 getLog().info("File updated: " + filePath);
@@ -145,7 +161,6 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
                 updated = updated | addPibifyAnnotation(f, counter);
             }
         }
-
         return updated;
     }
 
@@ -162,26 +177,21 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
             getLog().error("Multiline fields found: " + field.getVariables().toString());
             throw new RuntimeException(field.getVariables().toString() + " - Multi-variable declarations are not supported. Split them into multiple lines");
         }
-
         String fieldName = field.getVariables().get(0).toString();
-
         boolean reindex = System.getProperty("reindex") != null;
         // This flag forces a complete re-index of all fields.
         // This is useful when onboarding pibify to a repo, which has a lot of churn and new fields have been added
         if (reindex) {
             field.getAnnotationByName(PIBIFY_ANNOTATION).ifPresent(Node::remove);
         }
-
         getLog().debug("Processing field: " + fieldName);
-        if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent() ||
-                field.getAnnotationByName(JSON_IGNORE).isPresent()) {
+        if (field.getAnnotationByName(PIBIFY_ANNOTATION).isPresent() || field.getAnnotationByName(JSON_IGNORE).isPresent()) {
             getLog().info("Skipping field: " + fieldName);
             counter.incrementAndGet();
             return false;
         } else {
             // TODO Support deprecated fields by understanding the last seen index
-            field.addAndGetAnnotation(PIBIFY_ANNOTATION)
-                    .addPair("value", new IntegerLiteralExpr(String.valueOf(counter.getAndIncrement())));
+            field.addAndGetAnnotation(PIBIFY_ANNOTATION).addPair("value", new IntegerLiteralExpr(String.valueOf(counter.getAndIncrement())));
             getLog().debug("Added @Pibify annotation to field: " + fieldName);
             return true;
         }
@@ -194,8 +204,7 @@ public class PibifyAddAnnotationMojo extends AbstractMojo {
             return false;
         } else {
             // TODO Support deprecated fields by understanding the last seen index
-            enumConstant.addAndGetAnnotation(PIBIFY_ANNOTATION)
-                    .addPair("value", new IntegerLiteralExpr(String.valueOf(counter.getAndIncrement())));
+            enumConstant.addAndGetAnnotation(PIBIFY_ANNOTATION).addPair("value", new IntegerLiteralExpr(String.valueOf(counter.getAndIncrement())));
             getLog().debug("Added @Pibify annotation to enum constant: " + enumConstant);
             return true;
         }
