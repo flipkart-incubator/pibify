@@ -19,13 +19,7 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
 
     private static final Logger logger = Logger.getLogger(PibifyMapHandler.class.getName());
 
-    // Cache to look-up for the handler at runtime
-    private final AbstractPibifyHandlerCache pibifyHandlerCache;
     private PibifyGenerated<Object> objectHandler;
-
-    public PibifyMapHandler(AbstractPibifyHandlerCache pibifyHandlerCache) {
-        this.pibifyHandlerCache = pibifyHandlerCache;
-    }
 
     @Override
     public void serialize(Map object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
@@ -70,8 +64,8 @@ public class PibifyMapHandler extends PibifyGenerated<Map> {
     }
 
     @Override
-    public void initialize() {
-        super.initialize();
-        objectHandler = this.pibifyHandlerCache.getHandler(Object.class).get();
+    public void initialize(AbstractPibifyHandlerCache pibifyHandlerCache) {
+        super.initialize(pibifyHandlerCache);
+        objectHandler = pibifyHandlerCache.getHandler(Object.class).get();
     }
 }

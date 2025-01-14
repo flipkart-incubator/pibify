@@ -20,12 +20,7 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
 
     private static final Logger logger = Logger.getLogger(PibifyCollectionHandler.class.getName());
 
-    // Cache to look-up for the handler at runtime
-    private final AbstractPibifyHandlerCache pibifyHandlerCache;
-
-    public PibifyCollectionHandler(AbstractPibifyHandlerCache pibifyHandlerCache) {
-        this.pibifyHandlerCache = pibifyHandlerCache;
-    }
+    private PibifyGenerated<Object> valueHandler;
 
     @Override
     public void serialize(Collection object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
@@ -34,8 +29,6 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
         }
 
         logger.fine("Serializing via PibifyCollectionHandler, consider moving away from Object References for Collections");
-
-        PibifyGenerated<Object> valueHandler = pibifyHandlerCache.getHandler(Object.class).get();
         try {
             for (java.lang.Object value : object) {
                 serializer.writeObject(1, valueHandler, value, context);
@@ -51,7 +44,6 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
             logger.fine("Deserializing via PibifyCollectionHandler, consider moving away from Object References for Collections");
             int tag = deserializer.getNextTag();
             Collection object = clazz.getDeclaredConstructor().newInstance();
-            PibifyGenerated<Object> valueHandler = pibifyHandlerCache.getHandler(Object.class).get();
             Object value;
             while (tag != 0 && tag != PibifyGenerated.getEndObjectTag()) {
                 value = valueHandler.deserialize(deserializer, java.lang.Object.class, context);
@@ -63,5 +55,11 @@ public class PibifyCollectionHandler extends PibifyGenerated<Collection> {
         } catch (Exception e) {
             throw new PibifyCodeExecException(e);
         }
+    }
+
+    @Override
+    public void initialize(AbstractPibifyHandlerCache pibifyHandlerCache) {
+        super.initialize(pibifyHandlerCache);
+        valueHandler = pibifyHandlerCache.getHandler(Object.class).get();
     }
 }

@@ -40,13 +40,13 @@ public abstract class AbstractPibifyHandlerCache {
     protected AbstractPibifyHandlerCache() {
         mapBuilder.put(Object.class, new PibifyObjectHandler(this));
 
-        PibifyMapHandler mapHandler = new PibifyMapHandler(this);
+        PibifyMapHandler mapHandler = new PibifyMapHandler();
         mapBuilder.put(Map.class, mapHandler);
         mapBuilder.put(HashMap.class, mapHandler);
         mapBuilder.put(TreeMap.class, mapHandler);
         mapBuilder.put(LinkedHashMap.class, mapHandler);
 
-        PibifyCollectionHandler collectionHandler = new PibifyCollectionHandler(this);
+        PibifyCollectionHandler collectionHandler = new PibifyCollectionHandler();
         mapBuilder.put(ArrayList.class, collectionHandler);
         mapBuilder.put(Vector.class, collectionHandler);
         mapBuilder.put(ArrayDeque.class, collectionHandler);
@@ -73,7 +73,7 @@ public abstract class AbstractPibifyHandlerCache {
     }
 
     protected void initializeHandlers() {
-        cache.values().forEach(PibifyGenerated::initialize);
+        cache.values().forEach(this::initializeHandler);
     }
 
     public <T> Optional<PibifyGenerated<T>> getHandler(Class<T> clazz) {
@@ -108,5 +108,9 @@ public abstract class AbstractPibifyHandlerCache {
                  ClassNotFoundException e) {
             throw new RuntimeException("Unable to instantiate " + fqdn, e);
         }
+    }
+
+    private void initializeHandler(PibifyGenerated<?> handler) {
+        handler.initialize(this);
     }
 }

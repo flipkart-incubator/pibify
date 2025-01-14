@@ -12,22 +12,29 @@ public class ClassWithNativeFields {
     @Pibify(value = 1)
     private String aString = "2";
 
-    @Pibify(value = 2)
+    //@Pibify(value = 2)
+    @Pibify(value = 4)
     private int anInt = 2;
 
+    @Pibify(value = 5)
     private long aLong = 3L;
 
+    @Pibify(value = 6)
     private float aFloat = 4.0f;
 
     @Pibify(value = 3)
     private double aDouble = 5.0d;
 
+    @Pibify(value = 7)
     private boolean aBoolean = true;
 
+    @Pibify(value = 8)
     private char aChar = '7';
 
+    @Pibify(value = 9)
     private byte aByte = 8;
 
+    @Pibify(value = 10)
     private short aShort = 9;
 
     public String getaString() {

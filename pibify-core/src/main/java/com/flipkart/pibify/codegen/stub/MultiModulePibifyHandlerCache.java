@@ -7,13 +7,7 @@ package com.flipkart.pibify.codegen.stub;
  */
 public class MultiModulePibifyHandlerCache extends AbstractPibifyHandlerCache {
 
-    private static final MultiModulePibifyHandlerCache INSTANCE;
-
-    static {
-        INSTANCE = new MultiModulePibifyHandlerCache();
-    }
-
-    protected MultiModulePibifyHandlerCache(AbstractPibifyHandlerCache... caches) {
+    public MultiModulePibifyHandlerCache(AbstractPibifyHandlerCache... caches) {
         // When this method is called, the concrete instance of cache are available
         // as per static block by this time, the cache has been backed and the handlers have been initialized
         // Hence just consolidating the maps here.

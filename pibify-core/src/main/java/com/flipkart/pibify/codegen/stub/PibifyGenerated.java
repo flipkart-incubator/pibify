@@ -151,7 +151,7 @@ public abstract class PibifyGenerated<T> {
     /**
      * This method to be implemented by generated code to initialize fields (references to handlers)
      */
-    public void initialize() {
+    public void initialize(AbstractPibifyHandlerCache pibifyHandlerCache) {
 
     }
 }

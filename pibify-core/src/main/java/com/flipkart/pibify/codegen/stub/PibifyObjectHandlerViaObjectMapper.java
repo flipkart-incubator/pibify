@@ -2,6 +2,7 @@ package com.flipkart.pibify.codegen.stub;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
 import com.flipkart.pibify.serde.IDeserializer;
 import com.flipkart.pibify.serde.ISerializer;
@@ -26,6 +27,10 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
     public PibifyObjectHandlerViaObjectMapper() {
         this(new NonPibifyObjectMapper() {
             final ObjectMapper objectMapper = new ObjectMapper();
+
+            {
+                objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+            }
 
             @Override
             public byte[] writeValueAsBytes(Object object) {

@@ -1,6 +1,7 @@
 package com.flipkart.pibify.generated.com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.codegen.PibifyCodeExecException;
+import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
 import com.flipkart.pibify.codegen.stub.PibifyGenerated;
 import com.flipkart.pibify.codegen.stub.SerializationContext;
 import com.flipkart.pibify.serde.IDeserializer;
@@ -98,9 +99,9 @@ public final class ClassWithNativeFieldsHandler extends PibifyGenerated<ClassWit
     }
 
     @Override
-    public void initialize() {
+    public void initialize(AbstractPibifyHandlerCache pibifyHandlerCache) {
         for (PibifyGenerated internalHandler : HANDLER_MAP.values()) {
-            internalHandler.initialize();
+            internalHandler.initialize(pibifyHandlerCache);
         }
     }
 }

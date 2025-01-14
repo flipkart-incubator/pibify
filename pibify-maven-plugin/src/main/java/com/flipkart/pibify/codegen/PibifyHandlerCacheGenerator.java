@@ -9,7 +9,9 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 
 import javax.lang.model.element.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -72,10 +74,11 @@ public class PibifyHandlerCacheGenerator {
 
 
     private TypeSpec.Builder getTypeSpecBuilder() throws CodeGenException {
-        return TypeSpec.classBuilder(PIBIFY_HANDLER_CACHE_CLASS_NAME)
-                .addStaticBlock(getStaticBlock())
+        TypeSpec.Builder classBuilder = TypeSpec.classBuilder(PIBIFY_HANDLER_CACHE_CLASS_NAME);
+        return classBuilder.addStaticBlock(getStaticBlock())
                 .addMethod(getInstanceMethod())
                 .addMethod(getConstructor())
+                .addMethod(getInsertIntoMapMethod(classBuilder, 0))
                 .addField(getInstanceField())
                 .superclass(AbstractPibifyHandlerCache.class);
     }
@@ -90,7 +93,8 @@ public class PibifyHandlerCacheGenerator {
     private MethodSpec getConstructor() {
         return MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PROTECTED)
-                .addCode(getMapInsertBlock())
+                //.addCode(getMapInsertBlock(classBuilder))
+                .addStatement("insertIntoMap0()")
                 .addStatement("packMap()")
                 .build();
     }
@@ -109,10 +113,25 @@ public class PibifyHandlerCacheGenerator {
                 .build();
     }
 
-    private CodeBlock getMapInsertBlock() {
+    private MethodSpec getInsertIntoMapMethod(TypeSpec.Builder classBuilder, int methodIndex) {
+        return MethodSpec.methodBuilder("insertIntoMap" + methodIndex)
+                .addModifiers(Modifier.PRIVATE)
+                .addCode(getMapInsertBlock(classBuilder, methodIndex))
+                .build();
+    }
+
+    private CodeBlock getMapInsertBlock(TypeSpec.Builder classBuilder, int methodIndex) {
         CodeBlock.Builder mapInsertBlock = CodeBlock.builder();
-        for (Map.Entry<Class<?>, ClassName> entry : cache.entrySet()) {
+        List<Map.Entry<Class<?>, ClassName>> entrySet = new ArrayList<>(cache.entrySet());
+        for (int j = methodIndex * 1000, i = 0; j < entrySet.size(); j++, i++) {
+            Map.Entry<Class<?>, ClassName> entry = entrySet.get(j);
             mapInsertBlock.addStatement("mapBuilder.put($T.class, new $T())", entry.getKey(), entry.getValue());
+            i++;
+            if (i > 1000) {
+                mapInsertBlock.addStatement("insertIntoMap$L()", (methodIndex + 1));
+                classBuilder.addMethod(getInsertIntoMapMethod(classBuilder, methodIndex + 1));
+                break;
+            }
         }
 
         return mapInsertBlock.build();

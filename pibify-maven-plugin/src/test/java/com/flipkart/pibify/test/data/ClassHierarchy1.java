@@ -2,6 +2,8 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.Objects;
+
 /**
  * This class is used for
  * Author bageshwar.pn
@@ -18,11 +20,15 @@ abstract public class ClassHierarchy1 {
     @Pibify(1)
     private String str1;
 
+    @Pibify(5)
+    private Object obj1;
+
     public void randomize() {
         str1 = "str" + Math.random();
         str2 = "str" + Math.random();
         str3 = "str" + Math.random();
         str4 = "str" + Math.random();
+        obj1 = "str" + Math.random();
     }
 
     public String getStr1() {
@@ -55,5 +61,25 @@ abstract public class ClassHierarchy1 {
 
     public void setStr4(String str4) {
         this.str4 = str4;
+    }
+
+    public Object getObj1() {
+        return obj1;
+    }
+
+    public void setObj1(Object obj1) {
+        this.obj1 = obj1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ClassHierarchy1)) return false;
+        ClassHierarchy1 that = (ClassHierarchy1) o;
+        return Objects.equals(str3, that.str3) && Objects.equals(str2, that.str2) && Objects.equals(str4, that.str4) && Objects.equals(str1, that.str1) && Objects.equals(obj1, that.obj1);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(str3, str2, str4, str1, obj1);
     }
 }

@@ -2,6 +2,7 @@ package com.flipkart.pibify.codegen;
 
 import com.flipkart.pibify.codegen.log.SpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
+import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
 import com.flipkart.pibify.codegen.stub.PibifyObjectHandler;
 import com.flipkart.pibify.core.PibifyConfiguration;
 import com.flipkart.pibify.test.data.AbstractClassWithNativeFields;
@@ -33,6 +34,7 @@ import com.flipkart.pibify.test.data.ClassWithReferences;
 import com.flipkart.pibify.test.data.ClassWithReferencesToNativeFields;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange1;
 import com.flipkart.pibify.test.data.ClassWithSchemaChange2;
+import com.flipkart.pibify.test.data.ClassWithSelfReference;
 import com.flipkart.pibify.test.data.ClassWithUnresolvedGenericType;
 import com.flipkart.pibify.test.data.ConcreteClassBWithNativeFields;
 import com.flipkart.pibify.test.data.ConcreteClassWithNativeFields;
@@ -117,7 +119,7 @@ public class CodeGeneratorImplTest {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
-        handlerClazz.getMethod("initialize").invoke(handlerInstance);
+        handlerClazz.getMethod("initialize", AbstractPibifyHandlerCache.class).invoke(handlerInstance, PibifyHandlerCacheForTest.getInstance());
         Method serialize = handlerClazz.getMethod("serialize", Object.class);
         byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
 
@@ -142,7 +144,7 @@ public class CodeGeneratorImplTest {
         simpleCompiler.compile(javaFile.toJavaFileObject());
         Class<?> handlerClazz = simpleCompiler.loadClass("com.flipkart.pibify.generated." + data.getClass().getCanonicalName() + "Handler");
         Object handlerInstance = handlerClazz.newInstance();
-        handlerClazz.getMethod("initialize").invoke(handlerInstance);
+        handlerClazz.getMethod("initialize", AbstractPibifyHandlerCache.class).invoke(handlerInstance, PibifyHandlerCacheForTest.getInstance());
         Method serialize = handlerClazz.getMethod("serialize", Object.class);
         byte[] result = (byte[]) serialize.invoke(handlerInstance, data);
         return result;
@@ -154,7 +156,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeFields.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
         //javaFile.getJavaFile().writeTo(new CodePrinterWithLineNumbers(false));
@@ -182,7 +184,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithAutoboxFields.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
         //javaFile.getJavaFile().writeTo(new CodePrinterWithLineNumbers(true));
@@ -200,7 +202,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeArrays.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFileWrapper javaFile = impl.generate(codeGenSpec);
         assertNotNull(javaFile.getJavaFile());
         //javaFile.getJavaFile().writeTo(System.out);
@@ -219,7 +221,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithReferencesToNativeFields.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -254,7 +256,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollections.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -277,7 +279,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithReferences.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
@@ -305,7 +307,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithObjectCollections.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
@@ -347,7 +349,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollectionsOfCollections.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -365,7 +367,7 @@ public class CodeGeneratorImplTest {
     public void testClassWithNoFields() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithNoFields.class);
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         assertThrows(CodeGenException.class, () -> impl.generate(codeGenSpec), "com.flipkart.pibify.test.data.ClassWithNoFields does not contain any pibify fields");
     }
 
@@ -373,7 +375,7 @@ public class CodeGeneratorImplTest {
     public void testAllNullValueInPayload() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassForTestingNullValues.class);
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -402,7 +404,7 @@ public class CodeGeneratorImplTest {
     public void testSomeNullValueInPayload() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassForTestingNullValues.class);
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -456,36 +458,26 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassHierarchy2B.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassHierarchy2B testPayload = new ClassHierarchy2B();
         testPayload.randomize();
 
         ClassHierarchy2B deserialized = invokeGeneratedCode(javaFile, testPayload);
-
-        assertEquals(testPayload.getMember1(), deserialized.getMember1());
-        assertEquals(testPayload.getStr1(), deserialized.getStr1());
-        assertEquals(testPayload.getStr2(), deserialized.getStr2());
-        assertEquals(testPayload.getStr3(), deserialized.getStr3());
-        assertEquals(testPayload.getStr4(), deserialized.getStr4());
+        assertEquals(testPayload, deserialized);
 
         codeGenSpec = creator.create(ClassHierarchy2A.class);
 
         javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
-        //javaFile.writeTo(System.out);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
         ClassHierarchy2A testPayload1 = new ClassHierarchy2A();
         testPayload1.randomize();
 
         ClassHierarchy2A deserialized1 = invokeGeneratedCode(javaFile, testPayload1);
-
-        assertEquals(testPayload1.getMember2(), deserialized1.getMember2());
-        assertEquals(testPayload1.getStr1(), deserialized1.getStr1());
-        assertEquals(testPayload1.getStr2(), deserialized1.getStr2());
-        assertEquals(testPayload1.getStr3(), deserialized1.getStr3());
-        assertEquals(testPayload1.getStr4(), deserialized1.getStr4());
+        assertEquals(testPayload1, deserialized1);
 
         codeGenSpec = creator.create(ClassHierarchy3A.class);
 
@@ -496,13 +488,7 @@ public class CodeGeneratorImplTest {
         testPayload1.randomize();
 
         ClassHierarchy3A deserialized2 = invokeGeneratedCode(javaFile, testPayload2);
-
-        assertEquals(testPayload2.getMember2(), deserialized2.getMember2());
-        assertEquals(testPayload2.getMember3(), deserialized2.getMember3());
-        assertEquals(testPayload2.getStr1(), deserialized2.getStr1());
-        assertEquals(testPayload2.getStr2(), deserialized2.getStr2());
-        assertEquals(testPayload2.getStr3(), deserialized2.getStr3());
-        assertEquals(testPayload2.getStr4(), deserialized2.getStr4());
+        assertEquals(testPayload2, deserialized2);
     }
 
     @Test
@@ -511,7 +497,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithEnums.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -531,7 +517,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithCollectionsOfEnums.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -554,7 +540,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithInnerClasses.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
@@ -575,7 +561,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(SubClassOfClassWithTypeParameterReference.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -603,7 +589,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(SubClassStringOfClassWithTypeParameterReference.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -620,7 +606,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithUnresolvedGenericType.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
@@ -654,7 +640,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithObjectReference.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -687,7 +673,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithCollectionReference.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -709,7 +695,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithMapReference.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -735,7 +721,7 @@ public class CodeGeneratorImplTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithSchemaChange1.class);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -764,7 +750,7 @@ public class CodeGeneratorImplTest {
         assertEquals(SpecGenLogLevel.INFO, creator.status(ClassWithInterestingFieldNames.class));
         assertEquals(5, codeGenSpec.getFields().size());
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -781,7 +767,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ListClassLevel2.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -800,7 +786,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ListClassLevel1.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -819,7 +805,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ListClassLevel3.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -838,7 +824,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ListClassLevel4.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -857,7 +843,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(MapClassLevel1.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -875,7 +861,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(MapClassLevel2.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -893,7 +879,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(MapClassLevel3.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -911,7 +897,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(MapClassLevel4.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -962,7 +948,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(MapClassLevel5.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -981,7 +967,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(MapClassLevel6.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -1008,7 +994,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithNoBeanInfo.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(System.out);
@@ -1035,7 +1021,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(GenericMapFields.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1078,7 +1064,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassForNestedReferenceList.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1100,7 +1086,7 @@ public class CodeGeneratorImplTest {
         creator.getLogsForCurrentEntity().forEach(e -> System.out.println(e.getLogMessage()));
         assertTrue(creator.getLogsForCurrentEntity().isEmpty());
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1130,7 +1116,7 @@ public class CodeGeneratorImplTest {
         List<SpecGenLog> logsForCurrentEntity = creator.getLogsForCurrentEntity().stream().collect(Collectors.toList());
         assertTrue(logsForCurrentEntity.isEmpty());
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         assertThrows(CodeGenException.class, () -> impl.generate(codeGenSpec), "Cannot generate handlers for abstract class: com.flipkart.pibify.test.data.AbstractClassWithNativeFields");
     }
 
@@ -1140,7 +1126,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithReferenceToGenericClass.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1176,7 +1162,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithBasicList.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(false));
@@ -1193,7 +1179,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(ClassWithAbstractClassAsReference.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1224,7 +1210,7 @@ public class CodeGeneratorImplTest {
         assertNotNull(codeGenSpec);
         assertTrue(creator.getLogsForCurrentEntity().isEmpty());
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1253,7 +1239,7 @@ public class CodeGeneratorImplTest {
         assertNotNull(codeGenSpec);
         assertTrue(creator.getLogsForCurrentEntity().isEmpty());
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1281,7 +1267,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(MismatchedTypes.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1298,7 +1284,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(BothConstructorAndNoSetter.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1315,7 +1301,7 @@ public class CodeGeneratorImplTest {
         CodeGenSpec codeGenSpec = creator.create(BooleanOnLombok.class);
         assertNotNull(codeGenSpec);
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1336,7 +1322,7 @@ public class CodeGeneratorImplTest {
         assertEquals("com.flipkart.pibify.test.data.abstracts.SubClassForFinalAbstractField Ignoring final field in abstract class for str",
                 creator.getLogsForCurrentEntity().stream().findFirst().get().getLogMessage());
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1353,7 +1339,7 @@ public class CodeGeneratorImplTest {
         assertNotNull(codeGenSpec);
         assertEquals(SpecGenLogLevel.INFO, creator.status(RenamedBooleanInConstructor.class));
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1371,7 +1357,7 @@ public class CodeGeneratorImplTest {
         //creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
         assertEquals(SpecGenLogLevel.INFO, creator.status(PartialConstructorWithSetters.class));
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1390,7 +1376,7 @@ public class CodeGeneratorImplTest {
         assertTrue(codeGenSpec.getFields().get(0).getType().getReferenceType().hasSubtypes());
         assertEquals(SpecGenLogLevel.INFO, creator.status(ClassForJsonSubTypeReferences.class));
 
-        ICodeGenerator impl = new CodeGeneratorImpl(PibifyHandlerCacheForTest.class.getCanonicalName());
+        ICodeGenerator impl = new CodeGeneratorImpl();
         JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
         assertNotNull(javaFile);
         //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
@@ -1414,6 +1400,24 @@ public class CodeGeneratorImplTest {
         ClassForJsonSubTypeReferences testPayload = ClassForJsonSubTypeReferences.randomize();
 
         ClassForJsonSubTypeReferences deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testRecursiveModel() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithSelfReference.class);
+        assertNotNull(codeGenSpec);
+        //creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
+        assertEquals(SpecGenLogLevel.INFO, creator.status(ClassWithSelfReference.class));
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        ClassWithSelfReference testPayload = ClassWithSelfReference.randomize();
+
+        ClassWithSelfReference deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
     }
 }

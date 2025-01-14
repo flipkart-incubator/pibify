@@ -26,7 +26,7 @@ public class PibifyHandlerCacheForTest extends AbstractPibifyHandlerCache {
     public static <T> void addEntry(Class<T> type, PibifyGenerated<T> handler) {
         if (!getInstance().cache.containsKey(type)) {
             getInstance().mapBuilder.put(type, handler);
-            handler.initialize();
+            handler.initialize(getInstance());
             getInstance().packMap();
         }
     }

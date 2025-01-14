@@ -2,6 +2,8 @@ package com.flipkart.pibify.test.data;
 
 import com.flipkart.pibify.core.Pibify;
 
+import java.util.Objects;
+
 /**
  * This class is used for
  * Author bageshwar.pn
@@ -24,5 +26,18 @@ public class ClassHierarchy2B extends ClassHierarchy1 {
 
     public void setMember1(String member1) {
         this.member1 = member1;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ClassHierarchy2B)) return false;
+        if (!super.equals(o)) return false;
+        ClassHierarchy2B that = (ClassHierarchy2B) o;
+        return Objects.equals(member1, that.member1);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), member1);
     }
 }
