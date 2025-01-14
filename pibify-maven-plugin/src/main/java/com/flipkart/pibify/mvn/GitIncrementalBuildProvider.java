@@ -38,12 +38,19 @@ public class GitIncrementalBuildProvider implements IncrementalBuildProvider {
                 // read the output stream and return the list of files
                 String output = new String(IOUtils.readFully(process.getInputStream(), process.getInputStream().available()));
                 return Arrays.stream(output.split("\n"))
+                        // Filter out modified and added files from git status
                         .filter(s -> s.contains("modified:") || s.contains("added:"))
                         .filter(s -> s.contains(".java"))
+                        // `git status` prints in the format modified:<filename> , hence the split
                         .map(s -> s.split(":")[1])
+                        // to remove leading and trailing spaces
                         .map(String::trim)
+                        // there can be cases if the added/modified file could optionally be staged.
+                        // In those cases `git status` reports it twice
                         .distinct()
-                        .map(Paths::get)
+                        .map(f -> Paths.get(f).toAbsolutePath())
+                        // to filter out files that have been modified in the maven module where the plugin is configured
+                        .filter(p -> p.startsWith(sourceDirectory))
                         .collect(Collectors.toList());
             } else {
                 log.error(new String(IOUtils.readFully(process.getErrorStream(), process.getErrorStream().available())));
