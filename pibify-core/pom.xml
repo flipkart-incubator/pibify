@@ -155,17 +155,4 @@
             <scope>provided</scope>
         </dependency>
     </dependencies>
-
-    <distributionManagement>
-        <repository>
-            <id>fk-jfrog-release</id>
-            <name>libs-rel</name>
-            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
-        </repository>
-        <snapshotRepository>
-            <id>fk-jfrog-snapshot</id>
-            <name>libs-snapshot</name>
-            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
-        </snapshotRepository>
-    </distributionManagement>
 </project>

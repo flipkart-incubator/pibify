@@ -37,34 +37,6 @@
         <dropwizard.version>4.0.10</dropwizard.version>
         <mainClass>com.flipkart.pibify.PibifyDemoApplication</mainClass>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>fk-jfrog-snapshot</id>
-            <name>Flipkart-Artifactory</name>
-            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
-        </repository>
-        <repository>
-            <id>fk-jfrog-release</id>
-            <name>Flipkart-Artifactory</name>
-            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
-        </repository>
-    </repositories>
-
-    <pluginRepositories>
-        <pluginRepository>
-            <id>fk-jfrog-snapshot</id>
-            <name>Flipkart-Artifactory</name>
-            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
-        </pluginRepository>
-        <pluginRepository>
-            <id>fk-jfrog-release</id>
-            <name>Flipkart-Artifactory</name>
-            <url>https://jfrog.fkinternal.com/artifactory/maven_virtual</url>
-        </pluginRepository>
-    </pluginRepositories>
-
-
     <dependencyManagement>
         <dependencies>
             <dependency>
