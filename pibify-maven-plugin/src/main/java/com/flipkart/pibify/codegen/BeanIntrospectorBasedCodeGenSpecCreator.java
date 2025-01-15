@@ -28,6 +28,7 @@ import com.flipkart.pibify.codegen.log.FieldSpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLog;
 import com.flipkart.pibify.codegen.log.SpecGenLogLevel;
 import com.flipkart.pibify.core.Pibify;
+import com.flipkart.pibify.core.PibifyClassMetadata;
 import com.pibify.shaded.com.google.common.collect.ArrayListMultimap;
 import com.pibify.shaded.com.google.common.collect.Multimap;
 import com.squareup.javapoet.ArrayTypeName;
@@ -375,6 +376,8 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
                 validateAllArgsConstructor(spec);
             }
 
+            checkForUsageOfReservedIndices(type, spec);
+
             return spec;
         } catch (IntrospectionException e) {
             throw new CodeGenException(e.getMessage(), e);
@@ -419,6 +422,17 @@ public class BeanIntrospectorBasedCodeGenSpecCreator implements ICodeGenSpecCrea
 
     private void validate(Class<?> type, CodeGenSpec spec) {
         checkValidConstructor(type, spec);
+    }
+
+    private void checkForUsageOfReservedIndices(Class<?> type, CodeGenSpec spec) {
+        PibifyClassMetadata meta = type.getAnnotation(PibifyClassMetadata.class);
+        if (meta != null) {
+            for (int reservedIndex : meta.reservedIndices()) {
+                if (spec.getFields().stream().anyMatch(f -> f.getIndex() == reservedIndex)) {
+                    log(new CodeSpecGenLog(SpecGenLogLevel.ERROR, "Reserved index " + reservedIndex + " is already in use"));
+                }
+            }
+        }
     }
 
     private void checkValidConstructor(Class<?> type, CodeGenSpec spec) {
