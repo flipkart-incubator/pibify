@@ -24,12 +24,12 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>pibify</groupId>
+    <groupId>com.pibify</groupId>
     <artifactId>test-dropwizard</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>PibifyDemo</name>
+    <name>pibify-test-dropwizard</name>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
