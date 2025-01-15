@@ -32,6 +32,15 @@ import java.util.Date;
  */
 public class DateHandler extends PibifyGenerated<Date> {
 
+    /**
+     * Serializes a Date object to a long representation of milliseconds since epoch.
+     *
+     * @param object The Date object to be serialized, can be null
+     * @param serializer The serializer used to write the Date's time value
+     * @param context The serialization context (unused in this implementation)
+     * @throws PibifyCodeExecException if serialization encounters an unexpected error
+     * @throws RuntimeException if an IOException occurs during serialization
+     */
     @Override
     public void serialize(Date object, ISerializer serializer, SerializationContext context) throws PibifyCodeExecException {
         if (object != null) {
@@ -43,6 +52,15 @@ public class DateHandler extends PibifyGenerated<Date> {
         }
     }
 
+    /**
+     * Deserializes a Date object from the provided deserializer.
+     *
+     * @param deserializer The deserializer used to read the Date object
+     * @param type The target Date class type
+     * @param context The serialization context for deserialization
+     * @return A Date object reconstructed from the serialized data, or null if no valid date was found
+     * @throws PibifyCodeExecException If an I/O error occurs during deserialization
+     */
     @Override
     public Date deserialize(IDeserializer deserializer, Class<Date> type, SerializationContext context) throws PibifyCodeExecException {
         try {

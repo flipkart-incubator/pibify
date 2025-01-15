@@ -292,6 +292,22 @@ public class CodeGeneratorImplTest {
         assertArrayEquals(testPayload.getListOfBytes().get(1), deserialized.getListOfBytes().get(1));
     }
 
+    /**
+     * Tests serialization and deserialization of a class with references to other classes.
+     *
+     * This test method verifies that a class containing references to another class can be correctly
+     * serialized and deserialized while maintaining the integrity of its nested object structure.
+     *
+     * The test performs the following steps:
+     * 1. Creates a code generation specification using bean introspection
+     * 2. Generates Java code for the class with references
+     * 3. Creates a test payload with randomized data
+     * 4. Compiles the generated code
+     * 5. Serializes and deserializes the payload
+     * 6. Asserts that the deserialized object is equal to the original payload
+     *
+     * @throws Exception if any error occurs during code generation, compilation, or serialization
+     */
     @Test
     public void testClassWithReferences() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
@@ -316,6 +332,23 @@ public class CodeGeneratorImplTest {
         assertEquals(testPayload, deserialized);
     }
 
+    /**
+     * Tests serialization and deserialization of a class containing collections of objects.
+     *
+     * This test method verifies that a class with various object collections can be correctly
+     * serialized and deserialized, maintaining the integrity of different collection types
+     * including lists, maps, and arrays of objects.
+     *
+     * The test performs the following steps:
+     * 1. Creates a code generation specification for ClassWithObjectCollections
+     * 2. Generates Java code for serialization/deserialization
+     * 3. Randomizes test payload data
+     * 4. Compiles dependent classes
+     * 5. Invokes generated serialization/deserialization code
+     * 6. Compares original and deserialized objects across multiple collection types
+     *
+     * @throws Exception if any error occurs during code generation, compilation, or serialization
+     */
     @Test
     public void testClassWithObjectCollections() throws Exception {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();

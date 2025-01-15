@@ -56,6 +56,27 @@ public abstract class AbstractPibifyHandlerCache {
 
     protected Map<Class<?>, PibifyGenerated<?>> cache;
 
+    /**
+     * Initializes the handler cache by registering handlers for various data types.
+     *
+     * This constructor populates the {@code mapBuilder} with default handlers for:
+     * <ul>
+     *   <li>Base object types: {@code Object}</li>
+     *   <li>Map implementations: {@code Map}, {@code HashMap}, {@code TreeMap}, {@code LinkedHashMap}</li>
+     *   <li>Collection implementations: {@code ArrayList}, {@code Vector}, {@code ArrayDeque}, {@code Stack}</li>
+     *   <li>Set implementations: {@code HashSet}, {@code TreeSet}, {@code LinkedHashSet}</li>
+     *   <li>Special types: {@code BigDecimal}, {@code Date}, {@code SerializationContext}</li>
+     * </ul>
+     *
+     * Each type is associated with an appropriate handler to manage serialization and deserialization.
+     *
+     * @see PibifyObjectHandler
+     * @see PibifyMapHandler
+     * @see PibifyCollectionHandler
+     * @see BigDecimalHandler
+     * @see DateHandler
+     * @see SerializationContextHandler
+     */
     protected AbstractPibifyHandlerCache() {
         mapBuilder.put(Object.class, new PibifyObjectHandler(this));
 
@@ -80,6 +101,13 @@ public abstract class AbstractPibifyHandlerCache {
         mapBuilder.put(SerializationContext.class, new SerializationContextHandler());
     }
 
+    /**
+     * Builds the handler cache map with optional duplicate handling behavior.
+     *
+     * @param throwIfDuplicates Determines the strategy for handling duplicate keys during map construction
+     *                           - If true, throws an exception when duplicate keys are encountered
+     *                           - If false, keeps the last encountered value for duplicate keys
+     */
     protected void packMap(boolean throwIfDuplicates) {
         if (throwIfDuplicates) {
             cache = mapBuilder.buildOrThrow();

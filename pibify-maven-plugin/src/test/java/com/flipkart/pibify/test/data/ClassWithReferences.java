@@ -40,6 +40,12 @@ public class ClassWithReferences {
     @Pibify(3)
     private Date date;
 
+    /**
+     * Randomizes the current instance of ClassWithReferences by setting its properties to random or current values.
+     *
+     * @return the current instance with randomized properties
+     * @see AnotherClassWithNativeCollections#randomize()
+     */
     public ClassWithReferences randomize() {
         aString = "str" + Math.random();
         date = new Date(System.currentTimeMillis());
@@ -60,18 +66,44 @@ public class ClassWithReferences {
         return aString;
     }
 
+    /**
+     * Sets the string value for this instance.
+     *
+     * @param aString the string to be assigned to the {@code aString} field
+     */
     public void setaString(String aString) {
         this.aString = aString;
     }
 
+    /**
+     * Retrieves the current date associated with this instance.
+     *
+     * @return the Date object representing the date of this instance
+     */
     public Date getDate() {
         return date;
     }
 
+    /**
+     * Sets the date for this instance of ClassWithReferences.
+     *
+     * @param date the Date object to be assigned to this instance's date field
+     */
     public void setDate(Date date) {
         this.date = date;
     }
 
+    /**
+     * Compares this {@code ClassWithReferences} instance with another object for equality.
+     *
+     * @param o the object to compare with this instance
+     * @return {@code true} if the objects are equal, {@code false} otherwise
+     *
+     * Two {@code ClassWithReferences} instances are considered equal if they have:
+     * - The same reference object
+     * - The same string value
+     * - The same date
+     */
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof ClassWithReferences)) return false;
@@ -79,6 +111,11 @@ public class ClassWithReferences {
         return Objects.equals(reference, that.reference) && Objects.equals(aString, that.aString) && Objects.equals(date, that.date);
     }
 
+    /**
+     * Generates a hash code for the current instance based on its reference, string, and date fields.
+     *
+     * @return an integer hash code that combines the hash values of the reference, aString, and date fields
+     */
     @Override
     public int hashCode() {
         return Objects.hash(reference, aString, date);

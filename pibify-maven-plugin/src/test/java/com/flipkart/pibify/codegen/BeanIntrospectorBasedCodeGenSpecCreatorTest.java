@@ -319,6 +319,20 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
 
     }
 
+    /**
+     * Tests the creation of a code generation specification for a class with reference fields.
+     *
+     * This test method validates the introspection and specification generation for a class containing
+     * reference fields, including a Date object, a string, and a reference to another class.
+     *
+     * @throws CodeGenException if an error occurs during code generation specification creation
+     *
+     * Verifies the following aspects of the generated specification:
+     * - Correct number of fields (3)
+     * - Detailed field specifications for 'date', 'aString', and 'reference'
+     * - Correct field names, getters, setters, indices, and data types
+     * - Nested field validation for the referenced class
+     */
     @Test
     public void createClassWithReference() throws CodeGenException {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
