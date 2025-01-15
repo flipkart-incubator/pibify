@@ -688,8 +688,11 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(forTest);
         assertNotNull(codeGenSpec);
-        creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
+        List<SpecGenLog> logs = new ArrayList<>(creator.getLogsForCurrentEntity());
+        logs.forEach(l -> System.out.println(l.getLogMessage()));
         assertEquals(SpecGenLogLevel.ERROR, creator.status(forTest));
-        assertEquals(2, creator.getLogsForCurrentEntity().size());
+        assertEquals(2, logs.size());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithSimpleFields Reserved index 2 is already in use", logs.get(0).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithSimpleFields Reserved index 3 is already in use", logs.get(1).getLogMessage());
     }
 }
