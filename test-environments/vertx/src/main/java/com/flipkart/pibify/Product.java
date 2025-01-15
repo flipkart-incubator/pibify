@@ -18,14 +18,25 @@
 
 package com.flipkart.pibify;
 
+import com.flipkart.pibify.core.Pibify;
+
 /**
  * This class is used for
  * Author bageshwar.pn
  * Date 02/10/24
  */
 public class Product {
-    String id, name;
+
+    @Pibify(1)
+    String id;
+
+    @Pibify(2)
+    String name;
+
+    @Pibify(3)
     int weight;
+
+    @Pibify(4)
     double price;
 
     public Product(String id, String name, double price, int weight) {

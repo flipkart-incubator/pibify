@@ -18,6 +18,7 @@
 
 package com.flipkart.pibify;
 
+import com.flipkart.pibify.codegen.stub.AbstractPibifyHandlerCache;
 import com.flipkart.pibify.dropwizard.JakartaPibifyMessageBodyWriter;
 import com.flipkart.pibify.paritychecker.IParityChecker;
 import com.flipkart.pibify.paritychecker.IParityCheckerListener;
@@ -29,7 +30,6 @@ import com.flipkart.pibify.sampler.AbstractPibifySampler;
 import io.dropwizard.core.Application;
 import io.dropwizard.core.setup.Bootstrap;
 import io.dropwizard.core.setup.Environment;
-import pibify.generated.pibify.PibifyHandlerCache;
 
 import java.util.Optional;
 
@@ -55,10 +55,12 @@ public class PibifyDemoApplication extends Application<PibifyDemoConfiguration> 
     public void run(final PibifyDemoConfiguration configuration,
                     final Environment environment) {
 
-        environment.jersey().register(new JakartaPibifyMessageBodyWriter(PibifyHandlerCache.getInstance(), new PibifySampler()));
+        AbstractPibifyHandlerCache handlerCache = AbstractPibifyHandlerCache.getConcreteInstance("com.pibify.pibify.generated.test.dropwizard.PibifyHandlerCache");
+
+        environment.jersey().register(new JakartaPibifyMessageBodyWriter(handlerCache, new PibifySampler()));
         environment.jersey().register(new SampleResource());
-        environment.jersey().register(new JakartaParityCheckerResource(PibifyHandlerCache.getInstance()));
-        IParityChecker parityChecker = new PibifyParityChecker(PibifyHandlerCache.getInstance(), new ParityCheckerListener(),
+        environment.jersey().register(new JakartaParityCheckerResource(handlerCache));
+        IParityChecker parityChecker = new PibifyParityChecker(handlerCache, new ParityCheckerListener(),
                 Optional.of(() -> null), new PibifySampler());
         environment.jersey().register(new JakartaJsonResponseFilter(parityChecker));
     }

@@ -18,12 +18,17 @@
 
 package com.flipkart.pibify.core;
 
+import java.util.logging.Logger;
+
 /**
  * This class is used for configuring pibify
  * Author bageshwar.pn
  * Date 24/09/24
  */
 public class PibifyConfiguration {
+
+    private static final Logger logger = Logger.getLogger(PibifyConfiguration.class.getName());
+
 
     private static PibifyConfiguration INSTANCE;
     private boolean ignoreUnknownFields = true;
@@ -61,7 +66,7 @@ public class PibifyConfiguration {
         synchronized public void build() {
             // A way to keep the static instance pseudo-final
             if (PibifyConfiguration.INSTANCE != null) {
-                throw new IllegalStateException("Re-creating pibify configuration");
+                logger.warning("Re-creating pibify configuration");
             }
             PibifyConfiguration.INSTANCE = config;
         }
