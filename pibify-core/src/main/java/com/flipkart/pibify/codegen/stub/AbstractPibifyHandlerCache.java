@@ -24,6 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -75,6 +76,7 @@ public abstract class AbstractPibifyHandlerCache {
         mapBuilder.put(LinkedHashSet.class, collectionHandler);
 
         mapBuilder.put(BigDecimal.class, new BigDecimalHandler());
+        mapBuilder.put(Date.class, new DateHandler());
         mapBuilder.put(SerializationContext.class, new SerializationContextHandler());
     }
 

@@ -324,12 +324,22 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
         CodeGenSpec codeGenSpec = creator.create(ClassWithReferences.class);
         assertNotNull(codeGenSpec);
-        assertEquals(2, codeGenSpec.getFields().size());
+        assertEquals(3, codeGenSpec.getFields().size());
 
         Map<String, CodeGenSpec.FieldSpec> nameToFields = codeGenSpec.getFields().stream()
                 .collect(Collectors.toMap(CodeGenSpec.FieldSpec::getName, f -> f));
 
-        CodeGenSpec.FieldSpec field = nameToFields.get("aString");
+        CodeGenSpec.FieldSpec field = nameToFields.get("date");
+        assertEquals("date", field.getName());
+        assertEquals("getDate", field.getGetter());
+        assertEquals("setDate", field.getSetter());
+        assertEquals(3, field.getIndex());
+        assertEquals(CodeGenSpec.DataType.OBJECT, field.getType().getNativeType());
+        assertNull(field.getType().getContainerTypes());
+        assertNotNull(field.getType().getReferenceType());
+        assertEquals("java.util.Date", field.getType().getReferenceType().getJpClassName().toString());
+
+        field = nameToFields.get("aString");
         assertEquals("aString", field.getName());
         assertEquals("getaString", field.getGetter());
         assertEquals("setaString", field.getSetter());
