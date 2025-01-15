@@ -25,7 +25,9 @@ private int anIntegerVariable;
 ```
 
 #### Handler
-This is the generated source corresponding to the Pojo where a `@Pibify` annotation is present.
+
+This is the generated source corresponding to the Pojo where a `@Pibify` annotation is present. More
+details [here](Handlers.md)
 
 ```java
 public abstract class PibifyGenerated<T> {

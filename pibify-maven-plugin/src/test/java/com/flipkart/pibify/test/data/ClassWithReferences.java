@@ -21,6 +21,7 @@ package com.flipkart.pibify.test.data;
 import com.flipkart.pibify.core.Pibify;
 import com.flipkart.pibify.test.data.another.AnotherClassWithNativeCollections;
 
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -36,8 +37,12 @@ public class ClassWithReferences {
     @Pibify(2)
     private String aString;
 
+    @Pibify(3)
+    private Date date;
+
     public ClassWithReferences randomize() {
         aString = "str" + Math.random();
+        date = new Date(System.currentTimeMillis());
         reference = new AnotherClassWithNativeCollections();
         reference.randomize();
         return this;
@@ -59,19 +64,23 @@ public class ClassWithReferences {
         this.aString = aString;
     }
 
+    public Date getDate() {
+        return date;
+    }
+
+    public void setDate(Date date) {
+        this.date = date;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
+        if (!(o instanceof ClassWithReferences)) return false;
         ClassWithReferences that = (ClassWithReferences) o;
-        return Objects.equals(reference, that.reference) && Objects.equals(aString, that.aString);
+        return Objects.equals(reference, that.reference) && Objects.equals(aString, that.aString) && Objects.equals(date, that.date);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(reference);
-        result = 31 * result + Objects.hashCode(aString);
-        return result;
+        return Objects.hash(reference, aString, date);
     }
 }

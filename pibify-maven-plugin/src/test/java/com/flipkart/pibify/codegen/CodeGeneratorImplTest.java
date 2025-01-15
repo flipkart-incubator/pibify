@@ -313,11 +313,7 @@ public class CodeGeneratorImplTest {
                 AnotherClassWithNativeCollections.class.getCanonicalName() + "Handler");
 
         ClassWithReferences deserialized = invokeGeneratedCode(compiler, javaFile, testPayload);
-
-        assertEquals(testPayload.getaString(), deserialized.getaString());
-        assertEquals(testPayload.getReference().getaString(), deserialized.getReference().getaString());
-        assertEquals(testPayload.getReference().getAnInt(), deserialized.getReference().getAnInt());
-        assertEquals(testPayload.getReference().getaMap(), deserialized.getReference().getaMap());
+        assertEquals(testPayload, deserialized);
     }
 
     @Test
