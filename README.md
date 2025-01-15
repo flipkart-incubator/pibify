@@ -62,7 +62,7 @@ This is the class that the clients use to get an instance of Handler for the sup
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-core</artifactId>
     <scope>compile</scope>
-   <version>1.5</version>
+   <version>1.6</version>
 </dependency>
 
 ```
@@ -71,7 +71,7 @@ This is the class that the clients use to get an instance of Handler for the sup
 <plugin>
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-maven-plugin</artifactId>
-   <version>1.5</version>
+   <version>1.6</version>
    <configuration>
       <excludes>
          <exclude>com/flipkart/pibify/toskip/**</exclude>

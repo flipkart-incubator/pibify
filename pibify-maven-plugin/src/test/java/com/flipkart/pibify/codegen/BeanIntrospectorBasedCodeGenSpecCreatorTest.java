@@ -32,6 +32,7 @@ import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections;
 import com.flipkart.pibify.test.data.ClassWithNativeCollectionsOfCollections2;
 import com.flipkart.pibify.test.data.ClassWithNativeFields;
 import com.flipkart.pibify.test.data.ClassWithReferences;
+import com.flipkart.pibify.test.data.ClassWithSimpleFields;
 import com.flipkart.pibify.test.data.jsoncreator.DuplicatePropertyNames;
 import com.flipkart.pibify.test.data.jsoncreator.MismatchedPropertyNames;
 import com.flipkart.pibify.test.data.jsoncreator.PartialConstructor;
@@ -679,5 +680,19 @@ public class BeanIntrospectorBasedCodeGenSpecCreatorTest {
         creator.getLogsForCurrentEntity().forEach(l -> System.out.println(l.getLogMessage()));
         assertEquals(SpecGenLogLevel.INFO, creator.status(forTest));
         assertEquals(0, creator.getLogsForCurrentEntity().size());
+    }
+
+    @Test
+    public void testReservedIndices() throws CodeGenException {
+        Class<?> forTest = ClassWithSimpleFields.class;
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(forTest);
+        assertNotNull(codeGenSpec);
+        List<SpecGenLog> logs = new ArrayList<>(creator.getLogsForCurrentEntity());
+        logs.forEach(l -> System.out.println(l.getLogMessage()));
+        assertEquals(SpecGenLogLevel.ERROR, creator.status(forTest));
+        assertEquals(2, logs.size());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithSimpleFields Reserved index 2 is already in use", logs.get(0).getLogMessage());
+        assertEquals("com.flipkart.pibify.test.data.ClassWithSimpleFields Reserved index 3 is already in use", logs.get(1).getLogMessage());
     }
 }

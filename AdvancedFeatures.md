@@ -45,4 +45,28 @@ AbstractPibifyHandlerCache handlerCache = AbstractPibifyHandlerCache.getConcrete
                 "<<FQDN.Of.PibifyHandlerCache>>");
 ```
 
-This ensure that the IDE is able to resolve the class and the code compiles without any issues.
+This ensures that the IDE is able to resolve the class and the code compiles without any issues.
+
+### Reserved Indices
+
+If the client is deprecating a field and removing it from the codebase, it is recommended to mark the index as reserved.
+This can be done by using the `@PibifyClassMetadata` annotation on the pojo and mark the indices which should not be
+used.
+Once this is in place, a validation step will ensure any Pojo that attempts to use a reserved index will fail during
+compile time and the client must choose a different index for their field.
+This helps prevent accidental reuse of indices from deprecated fields, which could cause backward compatibility issues
+when deserializing older data.
+
+For example, if you remove a field that used index 2, you should mark index 2 as reserved to ensure
+it's not accidentally reused by a new field in the future.
+
+```java
+// Indices 2 and 3 were previously used for deprecated fields 'oldStatus' and 'legacyId'
+@PibifyClassMetadata(reservedIndices = {2, 3})
+public class ClassWithSimpleFields {
+    @Pibify(1)
+    private String name;
+    @Pibify(4) // Note: Skipping indices 2 and 3 as they are reserved
+    private int count;
+}
+```

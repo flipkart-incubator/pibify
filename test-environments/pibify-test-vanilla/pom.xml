@@ -46,7 +46,7 @@
         <plugin>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-maven-plugin</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <configuration>
                 <excludes>
                     <exclude>com/flipkart/pibify/toskip/**</exclude>
@@ -68,7 +68,7 @@
         <plugin>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-maven-plugin</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <configuration>
                 <incremental>true</incremental>
                 <incrementalBuildProvider>com.flipkart.pibify.mvn.GitIncrementalBuildProvider</incrementalBuildProvider>
@@ -137,7 +137,7 @@
         <dependency>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-core</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
