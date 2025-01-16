@@ -282,14 +282,7 @@ public class CodeGeneratorImplTest {
         testPayload.randomize();
 
         ClassWithNativeCollections deserialized = invokeGeneratedCode(javaFile, testPayload);
-
-        assertEquals(testPayload.getAnInt(), deserialized.getAnInt());
-        assertEquals(testPayload.getaString(), deserialized.getaString());
-        assertEquals(testPayload.getAnotherString(), deserialized.getAnotherString());
-        assertEquals(testPayload.getaMap(), deserialized.getaMap());
-        assertEquals(testPayload.getAnotherMap(), deserialized.getAnotherMap());
-        assertArrayEquals(testPayload.getListOfBytes().get(0), deserialized.getListOfBytes().get(0));
-        assertArrayEquals(testPayload.getListOfBytes().get(1), deserialized.getListOfBytes().get(1));
+        assertEquals(testPayload, deserialized);
     }
 
     @Test
@@ -1433,5 +1426,28 @@ public class CodeGeneratorImplTest {
 
         ClassWithSelfReference deserialized = invokeGeneratedCode(javaFile, testPayload);
         assertEquals(testPayload, deserialized);
+    }
+
+    @Test
+    public void testClassWithNullCollectionsOrMaps() throws Exception {
+        BeanIntrospectorBasedCodeGenSpecCreator creator = new BeanIntrospectorBasedCodeGenSpecCreator();
+        CodeGenSpec codeGenSpec = creator.create(ClassWithNativeCollections.class);
+        assertNotNull(codeGenSpec);
+        assertEquals(SpecGenLogLevel.INFO, creator.status(ClassWithSelfReference.class));
+
+        ICodeGenerator impl = new CodeGeneratorImpl();
+        JavaFile javaFile = impl.generate(codeGenSpec).getJavaFile();
+        assertNotNull(javaFile);
+        //javaFile.writeTo(new CodePrinterWithLineNumbers(true));
+        ClassWithNativeCollections testPayload = new ClassWithNativeCollections();
+
+        ClassWithNativeCollections deserialized = invokeGeneratedCode(javaFile, testPayload);
+        assertEquals(testPayload, deserialized);
+        assertNull(deserialized.getaMap());
+        assertNull(deserialized.getAnotherString());
+        assertNull(deserialized.getAnotherMap());
+        assertNull(deserialized.getaString());
+        assertNull(deserialized.getAnInt());
+        assertNull(deserialized.getListOfBytes());
     }
 }

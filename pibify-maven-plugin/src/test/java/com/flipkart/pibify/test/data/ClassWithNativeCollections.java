@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -122,5 +123,33 @@ public class ClassWithNativeCollections {
 
     public void setAnotherString(ArrayList<String> anotherString) {
         this.anotherString = anotherString;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof ClassWithNativeCollections)) return false;
+        ClassWithNativeCollections that = (ClassWithNativeCollections) o;
+        return Objects.equals(aString, that.aString) && Objects.equals(anInt, that.anInt) && Objects.equals(aMap, that.aMap) && this.listEquals(that.listOfBytes) && Objects.equals(anotherMap, that.anotherMap) && Objects.equals(anotherString, that.anotherString);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(aString, anInt, aMap, listOfBytes, anotherMap, anotherString);
+    }
+
+    // compare to list of arrays
+    public boolean listEquals(List<byte[]> listOfBytes) {
+
+        if (this.listOfBytes == null && listOfBytes != null) return false;
+
+        if (this.listOfBytes != null && listOfBytes == null) return false;
+
+        if (this.listOfBytes == null) return true;
+
+        if (this.listOfBytes.size() != listOfBytes.size()) return false;
+        for (int i = 0; i < this.listOfBytes.size(); i++) {
+            if (!Arrays.equals(this.listOfBytes.get(i), listOfBytes.get(i))) return false;
+        }
+        return true;
     }
 }
