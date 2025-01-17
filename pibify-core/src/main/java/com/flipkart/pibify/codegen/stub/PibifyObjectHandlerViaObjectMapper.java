@@ -35,7 +35,7 @@ import java.util.logging.Logger;
  */
 public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> {
 
-    private final NonPibifyObjectMapper pibifyObjectMapper;
+    private NonPibifyObjectMapper pibifyObjectMapper;
     private static final Logger logger = Logger.getLogger(PibifyObjectHandlerViaObjectMapper.class.getName());
 
     public PibifyObjectHandlerViaObjectMapper(NonPibifyObjectMapper pibifyObjectMapper) {
@@ -43,31 +43,7 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
     }
 
     public PibifyObjectHandlerViaObjectMapper() {
-        this(new NonPibifyObjectMapper() {
-            final ObjectMapper objectMapper = new ObjectMapper();
-
-            {
-                objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
-            }
-
-            @Override
-            public byte[] writeValueAsBytes(Object object) {
-                try {
-                    return objectMapper.writeValueAsBytes(object);
-                } catch (JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-            @Override
-            public <T> T readObjectFromBytes(byte[] bytes, Class<T> valueType) {
-                try {
-                    return objectMapper.readValue(bytes, valueType);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
+        this(new NonPibifyObjectMapperImpl());
     }
 
     @Override
@@ -104,5 +80,42 @@ public class PibifyObjectHandlerViaObjectMapper extends PibifyGenerated<Object> 
         }
         logger.fine("Deserializing via ObjectMapper " + type.getName());
         return pibifyObjectMapper.readObjectFromBytes(bytes, type);
+    }
+
+    public synchronized void overrideObjectMapper(ObjectMapper objectMapper) {
+        this.pibifyObjectMapper = new NonPibifyObjectMapperImpl(objectMapper);
+    }
+
+    static class NonPibifyObjectMapperImpl implements NonPibifyObjectMapper {
+
+        ObjectMapper objectMapper;
+
+        public NonPibifyObjectMapperImpl() {
+            objectMapper = new ObjectMapper();
+            objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+        }
+
+        public NonPibifyObjectMapperImpl(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
+        }
+
+
+        @Override
+        public byte[] writeValueAsBytes(Object object) {
+            try {
+                return objectMapper.writeValueAsBytes(object);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public <T> T readObjectFromBytes(byte[] bytes, Class<T> valueType) {
+            try {
+                return objectMapper.readValue(bytes, valueType);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

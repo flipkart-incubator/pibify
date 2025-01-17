@@ -18,6 +18,7 @@
 
 package com.flipkart.pibify.codegen.stub;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 
 import java.lang.reflect.InvocationTargetException;
@@ -48,7 +49,7 @@ import java.util.Vector;
 public abstract class AbstractPibifyHandlerCache {
 
     protected final ImmutableMap.Builder<Class<?>, PibifyGenerated<?>> mapBuilder = ImmutableMap.builder();
-    protected static final PibifyGenerated<Object> objectMapperHandler;
+    protected static final PibifyObjectHandlerViaObjectMapper objectMapperHandler;
 
     static {
         objectMapperHandler = new PibifyObjectHandlerViaObjectMapper();
@@ -132,5 +133,10 @@ public abstract class AbstractPibifyHandlerCache {
 
     private void initializeHandler(PibifyGenerated<?> handler) {
         handler.initialize(this);
+    }
+
+
+    public synchronized void overrideObjectMapper(ObjectMapper objectMapper) {
+        objectMapperHandler.overrideObjectMapper(objectMapper);
     }
 }
