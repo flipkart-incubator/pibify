@@ -19,14 +19,20 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.flipkart.pibify</groupId>
+    <parent>
+        <groupId>com.flipkart.pibify</groupId>
+        <artifactId>pibify</artifactId>
+        <version>${revision}</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
     <artifactId>pibify-test-lombok</artifactId>
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>
     <name>pibify-test-lombok</name>
 
     <properties>
-        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+
     </properties>
 
     <build>
@@ -44,7 +50,7 @@
             <plugin>
                 <groupId>com.flipkart.pibify</groupId>
                 <artifactId>pibify-maven-plugin</artifactId>
-                <version>1.6</version>
+                <version>${revision}</version>
                 <executions>
                     <execution>
                         <id>generate-sources</id>
@@ -106,7 +112,7 @@
         <dependency>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-core</artifactId>
-            <version>1.6</version>
+            <version>${revision}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

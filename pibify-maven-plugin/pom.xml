@@ -19,9 +19,13 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.flipkart.pibify</groupId>
+        <artifactId>pibify</artifactId>
+        <version>${revision}</version>
+    </parent>
     <packaging>maven-plugin</packaging>
-    <version>1.6</version>
-    <groupId>com.flipkart.pibify</groupId>
+    <version>${revision}</version>
     <artifactId>pibify-maven-plugin</artifactId>
 
     <name>Pibify Maven Plugin</name>
@@ -33,7 +37,6 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <auto-service.version>1.1.1</auto-service.version>
-        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <javapoet.version>1.13.0</javapoet.version>
         <maven.version>3.8.4</maven.version>
     </properties>
@@ -172,7 +175,7 @@
         <dependency>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-core</artifactId>
-            <version>1.6</version>
+            <version>${revision}</version>
         </dependency>
 
         <dependency>
