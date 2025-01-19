@@ -23,8 +23,13 @@
         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.flipkart.pibify</groupId>
+        <artifactId>pibify</artifactId>
+        <version>${revision}</version>
+        <relativePath>../../../pom.xml</relativePath>
+    </parent>
 
-    <groupId>com.pibify</groupId>
     <artifactId>test-dropwizard</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
@@ -69,7 +74,7 @@
         <dependency>
             <groupId>com.flipkart.pibify</groupId>
             <artifactId>pibify-core</artifactId>
-            <version>1.6</version>
+            <version>${revision}</version>
         </dependency>
     </dependencies>
 
@@ -112,7 +117,7 @@
             <plugin>
                 <groupId>com.flipkart.pibify</groupId>
                 <artifactId>pibify-maven-plugin</artifactId>
-                <version>1.6</version>
+                <version>${revision}</version>
                 <configuration>
                     <excludes>
                         <!--                            <exclude>com/flipkart/pibify/toskip/**</exclude>-->

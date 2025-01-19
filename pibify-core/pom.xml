@@ -19,13 +19,19 @@
 <project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.flipkart.pibify</groupId>
+
+    <parent>
+        <groupId>com.flipkart.pibify</groupId>
+        <artifactId>pibify</artifactId>
+        <version>${revision}</version>
+    </parent>
+
     <artifactId>pibify-core</artifactId>
     <packaging>jar</packaging>
-    <version>1.6</version>
+    <version>${revision}</version>
     <name>pibify-core</name>
     <properties>
-        <protobuf-java.version>4.28.2</protobuf-java.version>
+
     </properties>
     <build>
         <plugins>

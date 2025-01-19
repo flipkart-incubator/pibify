@@ -22,10 +22,12 @@
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify</artifactId>
     <packaging>pom</packaging>
-    <version>1.6</version>
+    <version>${revision}</version>
     <name>pibify</name>
     <properties>
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <protobuf-java.version>4.28.2</protobuf-java.version>
+        <revision>1.7-SNAPSHOT</revision>
     </properties>
     <modules>
         <module>pibify-core</module>
@@ -35,4 +37,76 @@
         <module>test-environments/lombok</module>
         <module>test-environments/vertx</module>
     </modules>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.0.1</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <outputDirectory>target</outputDirectory>
+                    <flattenMode>bom</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+                <version>2.2.4</version>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <dotGitDirectory>${project.basedir}/.git</dotGitDirectory>
+                    <prefix>git</prefix>
+                    <verbose>false</verbose>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+                    </generateGitPropertiesFilename>
+                    <format>json</format>
+                    <gitDescribe>
+                        <skip>false</skip>
+                        <always>true</always>
+                        <dirty>-dirty</dirty>
+                    </gitDescribe>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <distributionManagement>
+        <repository>
+            <id>github</id>
+            <name>GitHub flipkart-incubator Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/flipkart-incubator/pibify</url>
+        </repository>
+    </distributionManagement>
 </project>
