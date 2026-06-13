@@ -1,96 +1,57 @@
 # Pibify
 
-Protobuf-ify --> PB-IFY -> Pibify
+Protobuf-ify -> PB-IFY -> Pibify
 
-Serve Java pojos as protobuf over the wire
+Serve Java POJOs as protobuf over the wire.
 
-# Concept
+## What it does
 
-## Test cases
+1. Marks fields using `@Pibify`.
+2. Generates handlers during build using `pibify-maven-plugin`.
+3. Uses generated `PibifyHandlerCache` at runtime for serialization/deserialization.
 
-Refer to the list of test cases [here](pibify-core/src/main/java/com/flipkart/pibify/serde/serde.md)
+## Quick onboarding
 
-## Terminologies
+### Prerequisites
 
-#### `@Pibify`
-This is the annotation to be added on any field of a Pojo class that has to be transported
+- Java 17+
+- Maven 3.8+
 
-```java
+### Add dependencies and plugin
 
-@Pibify(1)
-private String aStringVariable;
+Add `pibify-core` dependency:
 
-@Pibify(2)
-private int anIntegerVariable;
-```
-
-#### Handler
-
-This is the generated source corresponding to the Pojo where a `@Pibify` annotation is present. More
-details [here](Handlers.md)
-
-```java
-public abstract class PibifyGenerated<T> {
-    public abstract byte[] serialize(T object) throws PibifyCodeExecException;
-
-    public abstract T deserialize(byte[] bytes) throws PibifyCodeExecException;
-}
-```
-
-#### `PibifyHandlerCache`
-This is the class that the clients use to get an instance of Handler for the supplied class and then call the serialize or deserialize method on it.
-
-## Flow
-
-![img.png](flow.png)
-
-1. Add the dependency on `pibify-core` library
-2. Add the `pibify-maven-plugin`
-2.
-   1. Use mvn target to annotate all classes within a given module using the mvn goal:
-      `mvn com.flipkart.pibify:pibify-maven-plugin:annotate`
-   1. Or, In the desired pojos, add the `@Pibify(<index>)` annotation manually
-3. The maven plugin scans the source of the project during the build phase and collects all pojos which have the
-   `@Pibify` annotation.
-4. This plugin generates the `Handler` and `PibifyHandlerCache` for the configured module and places them at a suitable place in the package(jar)
-5. Clients use the `PibifyHandlerCache` to get a reference to a `Handler` and call the `serialize`/`deserialize` method
-   on it.
-
-
-# Usage
-1. Add the `pibify-core` dependency
 ```xml
 <dependency>
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-core</artifactId>
     <scope>compile</scope>
-   <version>1.6</version>
+    <version>1.6</version>
 </dependency>
-
 ```
-2. Configure the model mvn module by adding the below plugin config
+
+Add `pibify-maven-plugin` in the model module:
+
 ```xml
 <plugin>
     <groupId>com.flipkart.pibify</groupId>
     <artifactId>pibify-maven-plugin</artifactId>
-   <version>1.6</version>
-   <configuration>
-      <excludes>
-         <exclude>com/flipkart/pibify/toskip/**</exclude>
-         <exclude>com/flipkart/pibify/toskip2/**</exclude>
-      </excludes>
-   </configuration>
-   <dependencies>
-      <!-- 
-      Due to a current limitation in dependency management, the mvn plugin will not be able 
-      to resolve transition dependencies of the module. They need to be copied over explicitly, 
-      if they are needed to compile the models   
-      -->
-      <!-- Copy over all module dependencies here -->
-   </dependencies>
+    <version>1.6</version>
+    <configuration>
+        <excludes>
+            <exclude>com/flipkart/pibify/toskip/**</exclude>
+            <exclude>com/flipkart/pibify/toskip2/**</exclude>
+        </excludes>
+    </configuration>
+    <dependencies>
+        <!--
+        Plugin may not resolve transitive dependencies of the model module.
+        Add required compile-time model dependencies explicitly here.
+        -->
+    </dependencies>
     <executions>
         <execution>
-           <id>generate-pibify-sources</id>
+            <id>generate-pibify-sources</id>
             <goals>
                 <goal>generate</goal>
             </goals>
@@ -104,7 +65,7 @@ This is the class that the clients use to get an instance of Handler for the sup
     <version>3.2.0</version>
     <executions>
         <execution>
-           <id>add-pibify-source</id>
+            <id>add-pibify-source</id>
             <phase>process-classes</phase>
             <goals>
                 <goal>add-source</goal>
@@ -118,41 +79,65 @@ This is the class that the clients use to get an instance of Handler for the sup
     </executions>
 </plugin>
 <plugin>
-<groupId>org.apache.maven.plugins</groupId>
-<artifactId>maven-compiler-plugin</artifactId>
-<version>${maven-compiler-plugin.version}</version>
-<executions>
-   <execution>
-      <id>compile-generated-pibify-sources</id>
-      <phase>prepare-package</phase>
-      <goals>
-         <goal>compile</goal>
-      </goals>
-   </execution>
-</executions>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <version>${maven-compiler-plugin.version}</version>
+    <executions>
+        <execution>
+            <id>compile-generated-pibify-sources</id>
+            <phase>prepare-package</phase>
+            <goals>
+                <goal>compile</goal>
+            </goals>
+        </execution>
+    </executions>
 </plugin>
 ```
 
-3. Either manually tag fields with the `@Pibify` annotation or run the mvn goal
-   `mvn com.flipkart.pibify:pibify-maven-plugin:annotate` to scan through all pojos in the module and add the `@Pibify`
-   annotation. You can also pass an optional system property `-Dreindex` to force overwrite existing Pibify annotations.
-   Make use of the `exclude` config. Refer
-   to [docs](https://maven.apache.org/plugins/maven-resources-plugin/examples/include-exclude.html) for more details.
-4. As part of the `package` mvn goal, the handler code will be generated
+### Annotate model fields
 
-# Integration with application containers
+```bash
+mvn com.flipkart.pibify:pibify-maven-plugin:annotate
+```
 
-1. [vert.x](vertx.md)
-2. [dropwizard](dropwizard.md)
+You can also annotate fields manually:
 
-# Low Level Design Details
+```java
+@Pibify(1)
+private String aStringVariable;
 
-## Flow for CodeGenerator
+@Pibify(2)
+private int anIntegerVariable;
+```
 
-![img_1.png](codegenflow.png)
+### Generate handlers
 
-# Advanced Features
+As part of `mvn package`, handler sources and `PibifyHandlerCache` are generated.
 
-[Advanced Features](AdvancedFeatures.md)
+### Integrate with runtime
 
-[Parity Check](ParityCheck.md)
+Use generated `PibifyHandlerCache` in framework integration points.
+
+## For contributors
+
+```bash
+mvn clean test        # run all tests
+mvn clean package     # build all modules
+mvn -pl test-environments/pibify-test-vanilla -am clean test  # try a sample
+```
+
+See [Setup and First Run](docs/setup.md) for more commands, including Dropwizard and Vert.x sample validation, troubleshooting, and the full integration guide.
+
+## Integrations
+
+1. [vert.x](docs/vertx.md)
+2. [dropwizard](docs/dropwizard.md)
+
+## More docs
+
+- [Onboarding details](docs/setup.md)
+- [Architecture overview](docs/architecture.md)
+- [Handlers](docs/Handlers.md)
+- [Advanced Features](docs/AdvancedFeatures.md)
+- [Parity Check](docs/ParityCheck.md)
+- [Test Cases](docs/TestCases.md)

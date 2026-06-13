@@ -1,7 +1,7 @@
 Follow the below steps to integrate `Pibify` with Vert.x
 
 1. Update the model classes with the `@Pibify` annotation on all the required fields
-2. Follow the `Usage` steps in the [Readme](README.md)
+2. Follow the `Usage` steps in the [Readme](../README.md)
 3. In the application code where new routes are created, Use the decorator
 
 ```java
