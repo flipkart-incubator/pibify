@@ -17,7 +17,7 @@ PibifyHandlerCache2(handler2));
 ```
 
 Refer
-to [MultiModulePibifyHandlerCacheTest.java](pibify-core/src/test/java/com/flipkart/pibify/codegen/stub/MultiModulePibifyHandlerCacheTest.java)
+to [MultiModulePibifyHandlerCacheTest.java](../pibify-core/src/test/java/com/flipkart/pibify/codegen/stub/MultiModulePibifyHandlerCacheTest.java)
 for more details.
 
 ### Parity Check

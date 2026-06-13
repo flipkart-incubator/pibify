@@ -1,7 +1,7 @@
 # Test Cases
 
 This class is auto-generated. Refer to the list of test
-cases [here](pibify-maven-plugin/src/test/java/com/flipkart/pibify/codegen/CodeGeneratorImplTest.java)
+cases [here](../pibify-maven-plugin/src/test/java/com/flipkart/pibify/codegen/CodeGeneratorImplTest.java)
 
 Here are the updated details for each of the supported use cases based on the names of the tests and the classes being
 passed to `CodeGeneratorImpl`:
